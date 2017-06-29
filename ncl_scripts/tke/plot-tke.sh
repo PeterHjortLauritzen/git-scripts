@@ -13,11 +13,11 @@ if ( "$#argv" == 1) then
   set n = 1
   set case = "$argv[$n]" 
   echo "Plotting on one TKE from run directory"
-  ncl 'dir="'$scratch_dir/$case'/run"' 'case="'$case'"' $ncl_dir/plot-tke.ncl
+  ncl 'dir="'$scratch_dir/$case'/run"' 'case="'$case'"' 'ls_option=False' $ncl_dir/plot-tke.ncl
 endif
 if ("$#argv" == 0) then
   echo "Plotting all files in in 'ls *.tke_250hPa.nc' in the current directory"
-  ncl 'dir="'$scratch_dir/$case'/run"' 'case="'$case'"' $ncl_dir/plot-tke.ncl
+  ncl 'dir="'$PWD'"' 'ls_option=True' $ncl_dir/plot-tke.ncl
 endif
 if ("$#argv" > 1) then
   echo "wrong number of arguments specified:"

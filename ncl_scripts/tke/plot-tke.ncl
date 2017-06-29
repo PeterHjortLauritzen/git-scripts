@@ -7,20 +7,29 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 ;
 
 begin
-  print("dir ="+dir)
-  print("case="+case)
+  if (ls_option) then
+    fnames = systemfunc ("ls *.nc")
+    print(fnames)
+    xi = ispan(0,dimsizes(fnames)-1,1)
+    print(xi)
+    legends=fnames
+  else
+    print("dir ="+dir)
+    print("case="+case)
+    fnames =  (/dir+"/"+case+".tke_250hPa.nc"/)
+    print("fnames="+fnames)
+    xi=(/0/)
+    legends=(/case/)
+  end if
   lcompensated = False
   ltsu = True
-  fnames =  (/dir+"/"+case+".tke_250hPa.nc"/)
-  print("fnames="+fnames)
-  xi=(/0/)
-  legends=(/case/)
+
   titletxt = "CESM2.0 CAM3 APE"
 
   avespc   = addfiles(fnames,"r")       ; Open netCDF files.	
   print("fnames = "+fnames)
   output_format = "pdf"
-  out_fname = case
+  out_fname = "tke"
 
   ntime=avespc[0]->ntime
   print("Number of time samples in average: "+ntime)

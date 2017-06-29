@@ -170,7 +170,6 @@ begin
   print(all_files)
 
   fall      = addfiles (all_files, "r")   ; note the "s" of addfile
-  print(all_files)
 
   ListSetType (fall, "cat")             ; concatenate or "merge" (default)
 
