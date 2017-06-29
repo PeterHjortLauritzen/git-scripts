@@ -152,7 +152,7 @@ begin
   ncdf->spc_avg     = dim_avg_n(spc_vdo,0)
   ncdf->spc_avg_div = dim_avg_n(spc_div,0)
   ncdf->spc_avg_rot = dim_avg_n(spc_vor,0)
-
+  ncdf->ntime=ntime
   return(AvgSpc)
 end
 
@@ -165,7 +165,7 @@ begin
 ;  fname = case+"/"+case+".nc"
 ;  all_files = (/fname/)
 
-  ls_command = "ls "+dir+"/"+case+".cam.h0.*.nc"
+  ls_command = "ls "+dir+"/"+case+".cam."+h_number+".*.nc"
   all_files = systemfunc (ls_command)
   print(all_files)
 

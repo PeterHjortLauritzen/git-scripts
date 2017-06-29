@@ -22,7 +22,8 @@ begin
   output_format = "pdf"
   out_fname = case
 
-
+  ntime=avespc[0]->ntime
+  print("Number of time samples in average: "+ntime)
 
   if (lcompensated) then
     out_fname=out_fname+"_compensated"
@@ -83,7 +84,7 @@ end do
   res@tmXBMinorThicknessF = athick 
   res@tmYLMinorThicknessF = athick 
   res@tmBorderThicknessF = athick
-  res@tiMainString           = "Average of 30 daily instantaneous 250mb (u,v)"
+  res@tiMainString           = "Average of "+ntime+" instantaneous 250mb (u,v)"
 ;  res@tiMainString           = "Average of 200 six-hourly instantaneous 250mb (u,v)"
   res@tiXAxisString          = "Spherical Wavenumber k"
   if (lcompensated) then
