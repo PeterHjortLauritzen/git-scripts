@@ -1,0 +1,6 @@
+tke.ncl
+=======
+
+tke.ncl computes the average total kinetic energy spectrum
+
+use the driver script tke.sh
