@@ -11,12 +11,14 @@
 #
 # run CAM4 Aqua-planet with mountains using the spectral-element dynamical core
 #
-# source create_CESM_run_script.sh ne30_ne30 QPC4 cheyenne 1152 nmonths 6 01:30:00 /glade/u/home/pel/release/topo/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc Co92
+# source create_CESM_run_script.sh ne30_ne30 QPC4 cheyenne 1152 nmonths 6 01:30:00 /glade/u/home/pel/release/topo/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc Co92 economy
 #
-# source create_CESM_run_script.sh ne120_ne120 QPC4 cheyenne 11520 nmonths 6 01:30:00 /glade/scratch/pel/topo/ne120np4_nc3000_Co024_Fi001_Oc001_PF_nullRR_Nsw016_c170601.nc Co24
+# source create_CESM_run_script.sh ne30_ne30 QPC6 cheyenne 3456 nmonths 6 02:30:00 /glade/u/home/pel/release/topo/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc Co92 economy
+#
+# source create_CESM_run_script.sh ne120_ne120 QPC4 cheyenne 11520 nmonths 6 01:30:00 /glade/scratch/pel/topo/ne120np4_nc3000_Co024_Fi001_Oc001_PF_nullRR_Nsw016_c170601.nc Co24 economy
 #
 #
-#  source create_CESM_run_script.sh ne30pg3_ne30pg3_mg17 QPC4 cheyenne 1152 nmonths 6 01:30:00 /glade/u/home/pel/release/topo/ne30pg3_nc3000_Co060_Fi001_MulG_PF_nullRR_Nsw042_20170501.nc Co60
+#  source create_CESM_run_script.sh ne30pg3_ne30pg3_mg17 QPC4 cheyenne 1152 nmonths 6 01:30:00 /glade/u/home/pel/release/topo/ne30pg3_nc3000_Co060_Fi001_MulG_PF_nullRR_Nsw042_20170501.nc Co60 economy
 #
 if ( "$#argv" > 10) then
   echo "Too many arguments specified "$#argv
@@ -34,6 +36,7 @@ if ( "$#argv" < 9) then
   echo "  -arg 7 is walltime : e.g., 01:00:00"
   echo "  -arg 8 is topo_file: user specified topo files (if no user specified topo use default)"
   echo "  -arg 9 append case : text to append to case name"
+  echo "  -arg 10 queue      : queue"
   exit
 endif
 #set project_number = "P03010083" #"P03010039" #"P93300042"
@@ -55,6 +58,8 @@ set n = 8
 set user_topo = "$argv[$n]"
 set n = 9
 set append_case_name = "$argv[$n]"
+set n=10
+set queue = "$argv[$n]"
 
 if ($user_topo == "default") then
   setenv caze ${compset}_${res}_pe${pecount}_${stop_n}${stop_option}_{$append_case_name}
@@ -71,10 +76,10 @@ else
 endif
 setenv src "physgrid"
 if ($machine == "cheyenne") then
-    echo "/glade/u/home/$USER/src/$src/cime/scripts/create_newcase --case /glade/scratch/$USER/$caze --compset $compset --res $res --walltime $walltime --pecount $pecount --project P93300042 --run-unsupported" >> $script
+    echo "/glade/u/home/$USER/src/$src/cime/scripts/create_newcase --case /glade/scratch/$USER/$caze --compset $compset --res $res --walltime $walltime --pecount $pecount --project P93300042 --q $queue --run-unsupported" >> $script
     echo "cd /glade/scratch/$USER/$caze" >> $script
 else if ($machine == "hobart") then
-    echo "/home/$USER/src/$src/cime/scripts/create_newcase --case /scratch/cluster/$USER/$caze --compset $compset --res $res --walltime $walltime --q verylong --pecount $pecount --compiler nag --run-unsupported" >> $script
+    echo "/home/$USER/src/$src/cime/scripts/create_newcase --case /scratch/cluster/$USER/$caze --compset $compset --res $res --walltime $walltime --q $queue --pecount $pecount --compiler nag --run-unsupported" >> $script
     echo "cd /scratch/cluster/$USER/$caze" >> script
 else
     echo "Machine $machine not found" 
@@ -106,7 +111,12 @@ else
   echo 'echo "use_topo_file      =    .true.                                              ">> user_nl_cam' >> $script
   echo 'echo "bnd_topo = '\'''$user_topo''\''" >> user_nl_cam' >> $script
   if ($res == "ne30_ne30") then
-  echo 'echo "ncdata = '\''/glade/p/cesmdata/cseg/inputdata/atm/cam/inic/se/cami_0000-01-01_ne30np4_L26_c100108.nc'\''" >> user_nl_cam' >> $script
+    if ($compset == "QPC4") then
+      echo 'echo "ncdata = '\''/glade/p/cesmdata/cseg/inputdata/atm/cam/inic/se/cami_0000-01-01_ne30np4_L26_c100108.nc'\''" >> user_nl_cam' >> $script
+    endif
+    if ($compset == "QPC6") then
+      echo 'echo "ncdata = '\''/glade/p/cesmdata/cseg/inputdata/atm/cam/inic/se/cami_minimal_ne30np4_L32_c151218.nc'\''" >> user_nl_cam' >> $script
+    endif
   endif
   if ($res == "ne120_ne120") then
   echo 'echo "ncdata = '\''/glade/p/cesmdata/cseg/inputdata/atm/cam/inic/se/cami_0000-01-01_ne120np4_L26_c110304.nc'\''" >> user_nl_cam' >> $script
