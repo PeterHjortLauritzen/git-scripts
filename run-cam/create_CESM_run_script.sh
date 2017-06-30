@@ -128,17 +128,17 @@ echo 'echo "fincl2             = '\''U'\'','\''V'\'','\''T'\'','\''PS'\'','\''OM
 echo 'echo "                     '\''OMEGA500'\'','\''PRECT'\'','\''PRECL'\'','\''RELHUM'\'','\''TMQ'\''              ">> user_nl_cam' >> $script
 if ($energy_diags == "energy_diags") then
   echo 'echo "adding energy diagnostics to fincl"' >> $script
-  source $git_scripts/make_energy_diagnostics_fincl.sh $script fincl3
-  echo 'echo "ndens             = 1,1,2                                                 ">> user_nl_cam' >> $script
+  source $git_scripts/make_energy_diagnostics_fincl.sh $script fincl3 fincl4
+  echo 'echo "ndens             = 1,1,2,1                                                 ">> user_nl_cam' >> $script
 endif
 
 
 if ($debug == "debug") then
-  echo 'echo "nhtfrq             = 1,1,1                                                ">> user_nl_cam' >> $script
-  echo 'echo "interpolate_output = .true.,.true.,.true.                                          ">> user_nl_cam' >> $script
+  echo 'echo "nhtfrq             = 1,1,1,1                                                ">> user_nl_cam' >> $script
+  echo 'echo "interpolate_output = .true.,.true.,.true.,.true.                                          ">> user_nl_cam' >> $script
 else
-  echo 'echo "nhtfrq             = -40,0,0                                              ">> user_nl_cam' >> $script
-echo 'echo "interpolate_output = .true.,.true.,.false.                                          ">> user_nl_cam' >> $script
+  echo 'echo "nhtfrq             = -40,0,0,0                                              ">> user_nl_cam' >> $script
+echo 'echo "interpolate_output = .true.,.true.,.false.,.false.                                          ">> user_nl_cam' >> $script
 endif
 
 if ($user_topo == "default") then
