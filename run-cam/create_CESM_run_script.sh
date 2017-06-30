@@ -66,12 +66,19 @@ set queue = "$argv[$n]"
 set n=11
 set debug = "$argv[$n]"
 
-if ($user_topo == "default") then
-  setenv caze ${compset}_${res}_pe${pecount}_${stop_n}${stop_option}_{$append_case_name}_{$machine}_{$debug}
-  setenv script ${compset}_${res}_pe${pecount}_${stop_n}${stop_option}_{$append_case_name}_{$machine}_{$debug}.sh
+if (! -e tmp) then
+  echo "creating directory tmp"
+  mkdir tmp
 else
-  setenv caze ${compset}_with-user-topo_${res}_pe${pecount}_${stop_n}${stop_option}_{$append_case_name}_{$machine}_{$debug}
-  setenv script ${compset}_with-user-topo_${res}_pe${pecount}_${stop_n}${stop_option}_{$append_case_name}_{$machine}_{$debug}.sh
+  echo "directory tmp already exists"
+endif
+
+if ($user_topo == "default") then
+  set caze   = ${compset}_${res}_pe${pecount}_${stop_n}${stop_option}_{$append_case_name}_{$machine}_{$debug}
+  set script = tmp/${caze}.sh
+else
+  set caze   = ${compset}_with-user-topo_${res}_pe${pecount}_${stop_n}${stop_option}_{$append_case_name}_{$machine}_{$debug}
+  set script = tmp/${caze}.sh
 endif
 if (-e $script) then
   echo "$script already exists - ABORT"
@@ -79,7 +86,7 @@ if (-e $script) then
 else
   touch $script
 endif
-setenv src "physgrid"
+set src = "physgrid"
 if ($machine == "cheyenne") then
     echo "/glade/u/home/$USER/src/$src/cime/scripts/create_newcase --case /glade/scratch/$USER/$caze --compset $compset --res $res --walltime $walltime --pecount $pecount --project P93300042 --q $queue --run-unsupported" >> $script
     echo "cd /glade/scratch/$USER/$caze" >> $script
