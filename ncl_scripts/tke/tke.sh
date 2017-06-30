@@ -8,6 +8,9 @@ if ( "$#argv" != 2) then
   echo "  -arg 2 is history file number (e.g., h0)"
   exit
 endif
+#
+# use if (`hostname` == "hobart.cgd.ucar.edu") then instead
+#
 echo "$NCAR_HOST"
 if ("$NCAR_HOST" == "cheyenne") then
   echo "Known computer"
