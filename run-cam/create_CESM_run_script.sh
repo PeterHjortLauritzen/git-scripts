@@ -22,24 +22,25 @@
 #
 #  source create_CESM_run_script.sh ne30pg3_ne30pg3_mg17 QPC4 cheyenne 1152 nmonths 6 01:30:00 /glade/u/home/pel/release/topo/ne30pg3_nc3000_Co060_Fi001_MulG_PF_nullRR_Nsw042_20170501.nc Co60 economy
 #
-if ( "$#argv" > 11) then
+if ( "$#argv" > 12) then
   echo "Too many arguments specified "$#argv
   echo "Aborting"
   exit
 endif
-if ( "$#argv" < 11) then
+if ( "$#argv" < 12) then
   echo "Wrong number of arguments specified:"
-  echo "  -arg 1 is res      : ne30_ne30, ..."
-  echo "  -arg 2 is compset  : FKESSLER QPC4 QPC5 QPC6"
-  echo "  -arg 3 is machine  : cheyenne hobart"
-  echo "  -arg 4 is pecount  : pecount"
-  echo "  -arg 5 is stop unit: nmonths,ndays,nsteps"
-  echo "  -arg 6 is stop_n   : integer"
-  echo "  -arg 7 is walltime : e.g., 01:00:00"
-  echo "  -arg 8 is topo_file: user specified topo files (if no user specified topo use default)"
-  echo "  -arg 9 append case : text to append to case name"
-  echo "  -arg 10 queue      : queue"
-  echo "  -arg 11 debugging  : debug nodebug"
+  echo "  -arg 1 is res       : ne30_ne30, ..."
+  echo "  -arg 2 is compset   : FKESSLER QPC4 QPC5 QPC6"
+  echo "  -arg 3 is machine   : cheyenne hobart"
+  echo "  -arg 4 is pecount   : pecount"
+  echo "  -arg 5 is stop unit : nmonths,ndays,nsteps"
+  echo "  -arg 6 is stop_n    : integer"
+  echo "  -arg 7 is walltime  : e.g., 01:00:00"
+  echo "  -arg 8 is topo_file : user specified topo files (if no user specified topo use default)"
+  echo "  -arg 9 append case  : text to append to case name"
+  echo "  -arg 10 queue       : queue"
+  echo "  -arg 11 debugging   : debug nodebug"
+  echo "  -arg 12 energy diags: energy_diags"
   exit
 endif
 #set project_number = "P03010083" #"P03010039" #"P93300042"
@@ -65,6 +66,8 @@ set n=10
 set queue = "$argv[$n]"
 set n=11
 set debug = "$argv[$n]"
+set n=12
+set energy_diags = "$argv[$n]"
 
 if (! -e tmp) then
   echo "creating directory tmp"
@@ -88,9 +91,11 @@ else
 endif
 set src = "physgrid"
 if ($machine == "cheyenne") then
+    set git_scripts = "/glade/u/home/$USER/git-scripts/run-cam"
     echo "/glade/u/home/$USER/src/$src/cime/scripts/create_newcase --case /glade/scratch/$USER/$caze --compset $compset --res $res --walltime $walltime --pecount $pecount --project P93300042 --q $queue --run-unsupported" >> $script
     echo "cd /glade/scratch/$USER/$caze" >> $script
 else if ($machine == "hobart") then
+    set git_scripts = "/home/$USER/git-scripts/run-cam"
     echo "/home/$USER/src/$src/cime/scripts/create_newcase --case /scratch/cluster/$USER/$caze --compset $compset --res $res --walltime $walltime --q $queue --pecount $pecount --compiler nag --run-unsupported" >> $script
     echo "cd /scratch/cluster/$USER/$caze" >> $script
     echo "./xmlchange NTHRDS=1" >> $script
@@ -121,12 +126,21 @@ echo 'echo "empty_htapes       = .true.                                         
 echo 'echo "fincl1             = '\''U:I'\'','\''V:I'\'','\''T:I'\'','\''PS:I'\''                               ">> user_nl_cam' >> $script
 echo 'echo "fincl2             = '\''U'\'','\''V'\'','\''T'\'','\''PS'\'','\''OMEGA'\'','\''PHIS'\'','\''PSL'\'',                 ">> user_nl_cam' >> $script
 echo 'echo "                     '\''OMEGA500'\'','\''PRECT'\'','\''PRECL'\'','\''RELHUM'\'','\''TMQ'\''              ">> user_nl_cam' >> $script
-if ($debug == "debug") then
-  echo 'echo "nhtfrq             = 1,1                                                  ">> user_nl_cam' >> $script
-else
-  echo 'echo "nhtfrq             = -40,0                                                  ">> user_nl_cam' >> $script
+if ($energy_diags == "energy_diags") then
+  echo 'echo "adding energy diagnostics to fincl"' >> $script
+  source $git_scripts/make_energy_diagnostics_fincl.sh $script fincl3
+  echo 'echo "ndens             = 1,1,2                                                 ">> user_nl_cam' >> $script
 endif
-echo 'echo "interpolate_output = .true.,.true.                                          ">> user_nl_cam' >> $script
+
+
+if ($debug == "debug") then
+  echo 'echo "nhtfrq             = 1,1,1                                                ">> user_nl_cam' >> $script
+  echo 'echo "interpolate_output = .true.,.true.,.true.                                          ">> user_nl_cam' >> $script
+else
+  echo 'echo "nhtfrq             = -40,0,0                                              ">> user_nl_cam' >> $script
+echo 'echo "interpolate_output = .true.,.true.,.false.                                          ">> user_nl_cam' >> $script
+endif
+
 if ($user_topo == "default") then
   echo "use default topo settings"
 else
