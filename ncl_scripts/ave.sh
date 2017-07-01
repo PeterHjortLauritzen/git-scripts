@@ -9,8 +9,11 @@ set n = 1
 set case = "$argv[$n]" 
 set n = 2
 set hn = "$argv[$n]" 
-#set data_dir = "/scratch/cluster/pel/"
-set data_dir = "/glade/scratch/pel/"
+if (`hostname` == "hobart.cgd.ucar.edu") then
+  set data_dir = "/scratch/cluster/pel/"
+else
+  set data_dir = "/glade/scratch/pel/"
+endif
 set files = `ls $data_dir/$case/run/$case.cam.$hn.*`
 echo $files
 ncra $files {$case}.ave.$hn.nc

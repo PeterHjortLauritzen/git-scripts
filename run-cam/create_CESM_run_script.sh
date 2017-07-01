@@ -129,7 +129,7 @@ echo 'echo "                     '\''OMEGA500'\'','\''PRECT'\'','\''PRECL'\'','\
 if ($energy_diags == "energy_diags") then
   echo 'echo "adding energy diagnostics to fincl"' >> $script
   source $git_scripts/make_energy_diagnostics_fincl.sh $script fincl3 fincl4
-  echo 'echo "ndens             = 1,1,2,1                                                 ">> user_nl_cam' >> $script
+  echo 'echo "ndens             = 2,2,1,1                                                 ">> user_nl_cam' >> $script
 endif
 
 
