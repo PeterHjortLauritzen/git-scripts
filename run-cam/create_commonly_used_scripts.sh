@@ -9,6 +9,8 @@ if ( "$#argv" == 0) then
   echo "---------------------------------"
   echo " "
   echo "1. Standard APE CAM4 run (3.5 years simulation; first half year is considered spinup) on Hobart"
+  echo "2. Standard APE CAM5 run (3.5 years simulation; first half year is considered spinup) on Hobart"
+  echo "3. Standard APE CAM6 run (3.5 years simulation; first half year is considered spinup) on Hobart"
   echo " "
   echo "DEBUG (optional argument): If debug then the model just runs 5 time-steps otherwise no debugging."
   echo "-------------------------------------------------------------------------------------------------"
@@ -56,4 +58,30 @@ if ($case == "1") then
 
 #
   source create_CESM_run_script.sh ne30_ne30 QPC4 $machine $pe_count $stop_option $stop_n $walltime default standard_APE $queue $debug $energy_diags
+endif
+
+if ($case == "2") then
+  echo "Producing run script for standard APE CAM5 run (3.5 years simulation; first half year is considered spinup) on Hobart"
+  if ($debug != "debug") then
+    set stop_option = "nmonths"
+    set stop_n      = "42"
+    set walltime    = "72:00:00"
+    set pe_count     = "672"
+  endif
+
+#
+  source create_CESM_run_script.sh ne30_ne30 QPC5 $machine $pe_count $stop_option $stop_n $walltime default standard_APE $queue $debug $energy_diags
+endif
+
+if ($case == "3") then
+  echo "Producing run script for standard APE CAM6 run (3.5 years simulation; first half year is considered spinup) on Hobart"
+  if ($debug != "debug") then
+    set stop_option = "nmonths"
+    set stop_n      = "42"
+    set walltime    = "72:00:00"
+    set pe_count     = "672"
+  endif
+
+#
+  source create_CESM_run_script.sh ne30_ne30 QPC6 $machine $pe_count $stop_option $stop_n $walltime default standard_APE $queue $debug $energy_diags
 endif

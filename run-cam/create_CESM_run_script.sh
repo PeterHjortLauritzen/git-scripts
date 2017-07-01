@@ -137,7 +137,7 @@ if ($debug == "debug") then
   echo 'echo "nhtfrq             = 1,1,1,1                                                ">> user_nl_cam' >> $script
   echo 'echo "interpolate_output = .true.,.true.,.true.,.true.                                          ">> user_nl_cam' >> $script
 else
-  echo 'echo "nhtfrq             = -40,0,0,0                                              ">> user_nl_cam' >> $script
+  echo 'echo "nhtfrq             = -400,0,0,0                                              ">> user_nl_cam' >> $script
 echo 'echo "interpolate_output = .true.,.true.,.false.,.false.                                          ">> user_nl_cam' >> $script
 endif
 
