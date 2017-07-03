@@ -22,13 +22,13 @@
 #
 #  source create_CESM_run_script.sh ne30pg3_ne30pg3_mg17 QPC4 cheyenne 1152 nmonths 6 01:30:00 /glade/u/home/pel/release/topo/ne30pg3_nc3000_Co060_Fi001_MulG_PF_nullRR_Nsw042_20170501.nc Co60 economy
 #
-if ( "$#argv" > 12) then
+if ( "$#argv" > 13) then
   echo "Too many arguments specified "$#argv
   echo "Aborting"
   exit
 endif
-if ( "$#argv" < 12) then
-  echo "Wrong number of arguments specified:"
+if ( "$#argv" < 13) then
+  echo "Wrong number of arguments specified: "$#argv
   echo "  -arg 1 is res       : ne30_ne30, ..."
   echo "  -arg 2 is compset   : FKESSLER QPC4 QPC5 QPC6"
   echo "  -arg 3 is machine   : cheyenne hobart"
@@ -41,6 +41,7 @@ if ( "$#argv" < 12) then
   echo "  -arg 10 queue       : queue"
   echo "  -arg 11 debugging   : debug nodebug"
   echo "  -arg 12 energy diags: energy_diags"
+  echo "  -arg 13 old_visco   : old viscosity settings"
   exit
 endif
 #set project_number = "P03010083" #"P03010039" #"P93300042"
@@ -68,6 +69,8 @@ set n=11
 set debug = "$argv[$n]"
 set n=12
 set energy_diags = "$argv[$n]"
+set n=13
+set old_visco = "$argv[$n]"
 
 if (! -e tmp) then
   echo "creating directory tmp"
@@ -77,10 +80,10 @@ else
 endif
 
 if ($user_topo == "default") then
-  set caze   = ${compset}_${res}_pe${pecount}_${stop_n}${stop_option}_{$append_case_name}_{$machine}_{$debug}
+  set caze   = ${compset}_${res}_pe${pecount}_${stop_n}${stop_option}_{$append_case_name}_{$machine}_{$debug}_{$old_visco}
   set script = tmp/${caze}.sh
 else
-  set caze   = ${compset}_with-user-topo_${res}_pe${pecount}_${stop_n}${stop_option}_{$append_case_name}_{$machine}_{$debug}
+  set caze   = ${compset}_with-user-topo_${res}_pe${pecount}_${stop_n}${stop_option}_{$append_case_name}_{$machine}_{$debug}_{$old_visco}
   set script = tmp/${caze}.sh
 endif
 if (-e $script) then
@@ -158,6 +161,15 @@ else
   echo 'echo "ncdata = '\''/glade/p/cesmdata/cseg/inputdata/atm/cam/inic/se/cami_0000-01-01_ne120np4_L26_c110304.nc'\''" >> user_nl_cam' >> $script
   endif
 endif
+if ($old_visco == "old_visco") then
+  echo "Using old viscosity defaults"
+  echo 'echo "se_nu_div = 6.25E15                                             ">> user_nl_cam' >> $script
+  echo 'echo "se_nu     = 1.00E15                                             ">> user_nl_cam' >> $script
+  echo 'echo "se_nu_p   = 1.00E15                                             ">> user_nl_cam' >> $script
+  echo 'echo "se_hypervis_subcycle   = 3                                             ">> user_nl_cam' >> $script
+  echo 'echo "se_hypervis_on_plevs   = .false.                                             ">> user_nl_cam' >> $script
+endif
+
 echo "./case.build"  >> $script
 echo "./case.submit" >> $script
 echo "script "$script" was successfully created"

@@ -57,7 +57,7 @@ if ($case == "1") then
   endif
 
 #
-  source create_CESM_run_script.sh ne30_ne30 QPC4 $machine $pe_count $stop_option $stop_n $walltime default standard_APE $queue $debug $energy_diags
+  source create_CESM_run_script.sh ne30_ne30 QPC4 $machine $pe_count $stop_option $stop_n $walltime default standard_APE_nofilter $queue $debug $energy_diags v#old_visco
 endif
 
 if ($case == "2") then
