@@ -32,7 +32,7 @@ else
 #echo 'echo "           '\''SE_pBP'\'','\''KE_pBP'\'', ">> user_nl_cam'>> $fname
 #echo 'echo "           '\''SE_pAP'\'','\''KE_pAP'\'', ">> user_nl_cam'>> $fname
 #echo 'echo "           '\''SE_pAM'\'','\''KE_pAM'\'', ">> user_nl_cam'>> $fname
-echo 'echo "           '\''SE_dED'\'','\''KE_dED'\'', ">> user_nl_cam'>> $fname
+echo 'echo "'$fincl' = '\''SE_dED'\'','\''KE_dED'\'', ">> user_nl_cam'>> $fname
 echo 'echo "           '\''SE_dAF'\'','\''KE_dAF'\'', ">> user_nl_cam'>> $fname
 echo 'echo "           '\''SE_dBD'\'','\''KE_dBD'\'', ">> user_nl_cam'>> $fname
 echo 'echo "           '\''SE_dAD'\'','\''KE_dAD'\'', ">> user_nl_cam'>> $fname

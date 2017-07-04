@@ -52,6 +52,10 @@ begin
   ;
   ; check if physics-dynamics variables are present
   ;
+  if (isfilevar(fall,"WV_PDC").and.isfilevar(fall,"WL_PDC")) then
+    print("xxx")
+  end if
+
   if (isfilevar(fall,"WV_PDC")) then
     vars_pdc  = new((/4,nt,ncol/),typeof(tmp(0,0)))
     int_vars_pdc  = new((/4,nt/) ,typeof(tmp(0,0)))
