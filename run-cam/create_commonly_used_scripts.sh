@@ -104,7 +104,7 @@ endif
 if ($case == "10") then
   echo "Standard Held-Suarez run (1200 days) "
   if ($debug != "debug") then
-    set stop_option = "days"
+    set stop_option = "ndays"
     set stop_n      = "1200"
     set walltime    = "72:00:00"
     set pe_count     = "672"
