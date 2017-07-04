@@ -1,23 +1,10 @@
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 
-undef("pass")
-procedure pass(error,eps)
-begin
-  if(abs(error).lt.eps) then
-     print("PASS")
-  else
-     print("FAIL") 
-;     exit()
-  end if
-end
-
-
-
-
 begin
   print("Summary of input to ncl script:")
   print("===============================")
+  print(" ")
   print("nsplit                   ="+nsplit)
   print("rsplit                   ="+rsplit)
   print("hypervis_subcycle        ="+hypervis_subcycle)
@@ -36,24 +23,18 @@ begin
   nc        = -1
   eps       = 1.0D-13
   area      = fall->area   (:  )
-  tmp       = fall->WV_dED(:,:)
+  tmp       = fall->SE_dED(:,:)
   nt        = dimsizes(tmp(:,0))
-  delete(tmp)
-
-  tmp       = fall->WV_pBF(:,:)
-  nt_d      = dimsizes(tmp(:,0))
   ncol      = dimsizes(tmp(0,:))
-
-  if (nt.ne.nt_d) then
-    print("nt and nt_d not the same")
-    exit()
-  end if
-
   ;
   ; check if physics-dynamics variables are present
   ;
-  if (isfilevar(fall,"WV_PDC").and.isfilevar(fall,"WL_PDC")) then
-    print("xxx")
+  if (isfilevar(fall,"WI_pBF").and.isfilevar(fall,"WL_pBF")) then
+    print("File appears to contain variables from a non-dry run - setting wet=True")
+    wet = True
+  else
+    print("File appears to be from a dry run (no WL and no WI) - setting wet=False")
+    wet = False
   end if
 
   if (isfilevar(fall,"WV_PDC")) then
@@ -78,13 +59,15 @@ begin
 
   print(" ")
   print(" ")
-  print("suffix (parameterization side)")
-  print("pBF: state passed to parameterizations, before energy fixer")
-  print("pBP: after energy fixer, before parameterizations")
-  print("pAP: after last phys_update in parameterizations and state saved for energy fixer")
-  print("pAM: after dry mass correction calculate but not used in SE")
-  print(" ")
-  print("history files saved off here")
+  if (wet) then
+    print("suffix (parameterization side)")
+    print("pBF: state passed to parameterizations, before energy fixer")
+    print("pBP: after energy fixer, before parameterizations")
+    print("pAP: after last phys_update in parameterizations and state saved for energy fixer")
+    print("pAM: after dry mass correction calculate but not used in SE")
+    print(" ")
+    print("history files saved off here")
+  end if
   print(" ")
   print("suffix (dynamics)")
   print("dED: state from end of previous dynamics (= pBF + time sampling)")
@@ -108,15 +91,27 @@ begin
   print(" ")
   print(" ")
 
-
-  str_vars      = (/"SE","KE","WV","WL","WI"/);,"TT"/)
-  str_stage     = (/"pBF","pBP","pAP","pAM","dED","dAF","dBD","dAD","dAR","dBF","dBH","dCH","dAH"/)
+  if (wet) then
+    qsize = 3
+    str_vars      = (/"SE","KE","WV","WL","WI"/);,"TT"/)
+    str_stage     = (/"pBF","pBP","pAP","pAM","dED","dAF","dBD","dAD","dAR","dBF","dBH","dCH","dAH"/)
+  else
+    qsize = 0
+    str_vars      = (/"SE","KE"/)
+    str_stage     = (/"dED","dAF","dBD","dAD","dAR","dBF","dBH","dCH","dAH"/)
+  end if
 
   nvars       = dimsizes(str_vars)
   nstage      = dimsizes(str_stage)
   vars        = new((/nvars,nstage,nt,ncol/),typeof(tmp(0,0)))
   subcycle    = new((/nstage/),typeof(tmp(0,0))) 
-  subcycle    = (/1D0,1D0,1D0,1D0,1.0D0,nsplit,nsplit,nsplit,nsplit,nsplit,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle/)
+
+  if (wet) then
+    subcycle    = (/1D0,1D0,1D0,1D0,1.0D0,nsplit,nsplit,nsplit,nsplit,nsplit,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle/)
+  else
+    subcycle    = (/1.0D0,nsplit,nsplit,nsplit,nsplit,nsplit,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle/)
+  end if
+
   tot_energy  = new((/nstage/),typeof(tmp(0,0)))
   tracer_mass = new((/3,nstage/),typeof(tmp(0,0)))
 
@@ -167,16 +162,26 @@ begin
   idCH = str_match_ind(str_stage,"dCH")
   idAH = str_match_ind(str_stage,"dAH")
 
+  if (ismissing(ipBF).or.ismissing(ipBF).or.ismissing(ipAM).or.ismissing(ipAP)) then
+    PhysDiags = False
+    print("Physics diagnostics are not all on file")
+  else
+    PhysDiags = True
+    print("Physics diagnostics are on file")
+  end if
+
   do t=0,nt-1
     print("t="+t)
     do j=0,nstage-1
       tot_energy(j)  = subcycle(j)*(int_vars(0,j,t)+int_vars(1,j,t))
-      idx = str_match_ind(str_vars,"WV")
-      tracer_mass(0,j) = subcycle(j)*(int_vars(idx,j,t))
-      idx = str_match_ind(str_vars,"WL")
-      tracer_mass(1,j) = subcycle(j)*(int_vars(idx,j,t))
-      idx = str_match_ind(str_vars,"WI")
-      tracer_mass(2,j) = subcycle(j)*(int_vars(idx,j,t))
+      if (wet) then
+        idx = str_match_ind(str_vars,"WV")
+        tracer_mass(0,j) = subcycle(j)*(int_vars(idx,j,t))
+        idx = str_match_ind(str_vars,"WL")
+        tracer_mass(1,j) = subcycle(j)*(int_vars(idx,j,t))
+        idx = str_match_ind(str_vars,"WI")
+        tracer_mass(2,j) = subcycle(j)*(int_vars(idx,j,t))
+      end if
     end do
 
     
@@ -197,12 +202,15 @@ begin
        print("in dynamics (cp and dp includes all water variables) and physics (cp=cp_dry in internal energy).")
     end if
 
-    pEFIX    = (tot_energy(ipBP)-tot_energy(ipBF))/dtime
-    pDMEA = (tot_energy(ipAM)-tot_energy(ipAP))/dtime
-    param           = (tot_energy(ipAP)-tot_energy(ipBP))/dtime
+   if (PhysDiags) then
+      pEFIX    = (tot_energy(ipBP)-tot_energy(ipBF))/dtime
+      pDMEA = (tot_energy(ipAM)-tot_energy(ipAP))/dtime
+      param           = (tot_energy(ipAP)-tot_energy(ipBP))/dtime
+      phys_total      = (tot_energy(ipAM)-tot_energy(ipBF))/dtime
+    end if
     dyn_total       = (tot_energy(idBF)-tot_energy(idED))/dtime
-    phys_total      = (tot_energy(ipAM)-tot_energy(ipBF))/dtime
 
+    if (PhysDiags) then
     print(" ")
     print("=================================================================================")
     print("|                                                                               |")
@@ -217,8 +225,10 @@ begin
     value = pEFIX+pDMEA
     print("=> dE/dt dynamical core (estimated from physics)  ")
     print("   dE/dt energy fixer + dE/dt dry mass adjustment "+sprintf("%6.4g",value)+" W/M^2")
-
+    
     print("=> dE/dt physics total                   (pAM-pBF)"+sprintf("%6.4g",phys_total)+" W/M^2")
+    end if
+
     print(" ")
     print("=================================================================================")
     print("|                                                                               |")
@@ -248,45 +258,48 @@ begin
 
     print(" ")
 
-    rate_of_change_physics = (tot_energy(idBD)-tot_energy(idAF))/dtime
-    print("dE/dt physics tendency in dynamics      (dBD-dAF) "+sprintf("%6.4g",rate_of_change_physics)+" W/M^2")
-    value = phys_total-rate_of_change_physics
-    if (ftype .eq. "1") then
+    if (PhysDiags) then
+      rate_of_change_physics = (tot_energy(idBD)-tot_energy(idAF))/dtime
+      print("dE/dt physics tendency in dynamics      (dBD-dAF) "+sprintf("%6.4g",rate_of_change_physics)+" W/M^2")
+      value = phys_total-rate_of_change_physics
+      if (ftype .eq. "1") then
+        print(" ")
+        print("      Consistency check:")
+        print(" ")
+       print("      dE/dt physics tendency in dynamics (dBD-dAF) should exactly match dE/dt physics total (pAM-pBF):"+sprintf("%6.4g",value))
+        print(" ")
+      else
+        print("Dribbling errors (pAM-pBF-(dBD-dAF))"+sprintf("%6.4g",value))
+      end if
+      print("Energy fixer fixes dme_adjust (pDMEA), lack of energy conservation in adiabatic")
+      print("dynamical core (dADIA) and energy lost/gained in physics-dynamics coupling")
+      if (qsize_condensate_loading.eq."1") then
+        print("(dPDC):")
+        str="dPDC"
+      else
+        print("(dPDC) and the difference between the energy definition in dynamics and physics (EDIFF):")
+        str="dPDC+EDIFF"
+      end if
       print(" ")
-      print("      Consistency check:")
-      print(" ")
-      print("      dE/dt physics tendency in dynamics (dBD-dAF) should exactly match dE/dt physics total (pAM-pBF):"+sprintf("%6.4g",value))
-      print(" ")
-    else
-      print("Dribbling errors (pAM-pBF-(dBD-dAF))"+sprintf("%6.4g",value))
+      print("		-pEFIX = pDMEA+dADIA+"+str)
+      print("            ")
+      dPDC = -pEFIX-pDMEA-dADIA
+      print("          => "+str+" = -pEFIX-pDMEA-dADIA = "+sprintf("%6.4g",dPDC))
     end if
-    print("Energy fixer fixes dme_adjust (pDMEA), lack of energy conservation in adiabatic")
-    print("dynamical core (dADIA) and energy lost/gained in physics-dynamics coupling")
-    if (qsize_condensate_loading.eq."1") then
-      print("(dPDC):")
-      str="dPDC"
-    else
-      print("(dPDC) and the difference between the energy definition in dynamics and physics (EDIFF):")
-      str="dPDC+EDIFF"
+
+    if (qsize.gt.0) then
+      print("    ")
+      print("    ")
+      print(" ")
+      print("=================================================================================")
+      print("|                                                                               |")
+      print("| ANALYSIS OF WATER VAPOR, CLOUD LIQUID AND CLOUD ICE BUDGETS                   |")
+      print("|                                                                               |")
+      print("=================================================================================")
+      print(" ")
+      print(" ")
     end if
-    print(" ")
-    print("		-pEFIX = pDMEA+dADIA+"+str)
-    print("            ")
-    dPDC = -pEFIX-pDMEA-dADIA
-    print("          => "+str+" = -pEFIX-pDMEA-dADIA = "+sprintf("%6.4g",dPDC))
-
-
-    print("    ")
-    print("    ")
-    print(" ")
-    print("=================================================================================")
-    print("|                                                                               |")
-    print("| ANALYSIS OF WATER VAPOR, CLOUD LIQUID AND CLOUD ICE BUDGETS                   |")
-    print("|                                                                               |")
-    print("=================================================================================")
-    print(" ")
-    print(" ")
-    do m_cnst=0,2
+    do m_cnst=0,qsize-1
       if (m_cnst.eq.0) then 
         print("Water vapor")
         print("-----------")
