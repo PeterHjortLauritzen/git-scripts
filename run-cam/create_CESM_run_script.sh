@@ -167,7 +167,7 @@ else
     if ($compset == "QPC4") then
       echo 'echo "ncdata = '\''/glade/p/cesmdata/cseg/inputdata/atm/cam/inic/se/cami_0000-01-01_ne30np4_L26_c100108.nc'\''" >> user_nl_cam' >> $script
     endif
-    if ($compset == "QPC6") then
+    if ($compset == "QPC6" || $compset == "FHS94") then
       echo 'echo "ncdata = '\''/glade/p/cesmdata/cseg/inputdata/atm/cam/inic/se/cami_minimal_ne30np4_L32_c151218.nc'\''" >> user_nl_cam' >> $script
     endif
   endif

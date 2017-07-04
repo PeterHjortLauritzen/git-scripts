@@ -114,6 +114,19 @@ if ($case == "10") then
   source create_CESM_run_script.sh ne30_ne30 FHS94 $machine $pe_count $stop_option $stop_n $walltime default vanilla_HS $queue $debug $energy_diags default_visco
 endif
 
+if ($case == "11") then
+  echo "Held-Suarez run (1200 days) with topo"
+  if ($debug != "debug") then
+    set stop_option = "ndays"
+    set stop_n      = "1200"
+    set walltime    = "72:00:00"
+    set pe_count     = "672"
+  endif
+
+#
+  source create_CESM_run_script.sh ne30_ne30 FHS94 $machine $pe_count $stop_option $stop_n $walltime /home/pel/release/topo/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc HS_with_Co92topo $queue $debug $energy_diags default_visco
+endif
+
 
 #/home/pel/src/$src/cime/scripts/create_newcase -case /scratch/cluster/pel/$caze -compset FADIAB -res ne30_ne30 -mach hobart -#-compiler nag --walltime 00:10:00 --run-unsupported 
 #cd /scratch/cluster/pel/$caze
