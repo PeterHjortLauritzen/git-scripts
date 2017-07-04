@@ -8,17 +8,26 @@ if ( "$#argv" == 0) then
   echo "CASE (numeric value) options are:"
   echo "---------------------------------"
   echo " "
-  echo "1. Standard APE CAM4 run (3.5 years simulation; first half year is considered spinup) on Hobart"
-  echo "2. Standard APE CAM5 run (3.5 years simulation; first half year is considered spinup) on Hobart"
-  echo "3. Standard APE CAM6 run (3.5 years simulation; first half year is considered spinup) on Hobart"
+  echo "1. Standard APE CAM4 run (3.5 years simulation; first half year is considered spinup) "
+  echo "2. Standard APE CAM5 run (3.5 years simulation; first half year is considered spinup) "
+  echo "3. Standard APE CAM6 run (3.5 years simulation; first half year is considered spinup) "
   echo " "
+  echo " "
+  echo "10. Standard Held-Suarez run (1200 days) "
+
   echo "DEBUG (optional argument): If debug then the model just runs 5 time-steps otherwise no debugging."
   echo "-------------------------------------------------------------------------------------------------"
   echo " "
   echo "Aborting"
   exit
 endif
-
+#
+##############################################################
+#
+# Aqua-planet configurations
+#
+##############################################################
+#
 set n = 1
 set case = "$argv[$n]"
 
@@ -48,7 +57,7 @@ if (`hostname` == "hobart.cgd.ucar.edu") then
   endif
 endif
 if ($case == "1") then
-  echo "Producing run script for standard APE CAM4 run (3.5 years simulation; first half year is considered spinup) on Hobart"
+  echo "Producing run script for standard APE CAM4 run (3.5 years simulation; first half year is considered spinup) "
   if ($debug != "debug") then
     set stop_option = "nmonths"
     set stop_n      = "42"
@@ -61,7 +70,7 @@ if ($case == "1") then
 endif
 
 if ($case == "2") then
-  echo "Producing run script for standard APE CAM5 run (3.5 years simulation; first half year is considered spinup) on Hobart"
+  echo "Producing run script for standard APE CAM5 run (3.5 years simulation; first half year is considered spinup) "
   if ($debug != "debug") then
     set stop_option = "nmonths"
     set stop_n      = "42"
@@ -74,7 +83,7 @@ if ($case == "2") then
 endif
 
 if ($case == "3") then
-  echo "Producing run script for standard APE CAM6 run (3.5 years simulation; first half year is considered spinup) on Hobart"
+  echo "Producing run script for standard APE CAM6 run (3.5 years simulation; first half year is considered spinup) "
   if ($debug != "debug") then
     set stop_option = "nmonths"
     set stop_n      = "42"
@@ -85,3 +94,27 @@ if ($case == "3") then
 #
   source create_CESM_run_script.sh ne30_ne30 QPC6 $machine $pe_count $stop_option $stop_n $walltime default standard_APE $queue $debug $energy_diags
 endif
+#
+##############################################################
+#
+# Held-Suarez 
+#
+##############################################################
+#
+if ($case == "10") then
+  echo "Standard Held-Suarez run (1200 days) "
+  if ($debug != "debug") then
+    set stop_option = "days"
+    set stop_n      = "1200"
+    set walltime    = "72:00:00"
+    set pe_count     = "672"
+  endif
+
+#
+  source create_CESM_run_script.sh ne30_ne30 FHS94 $machine $pe_count $stop_option $stop_n $walltime default vanilla_HS $queue $debug $energy_diags default_visco
+endif
+
+
+#/home/pel/src/$src/cime/scripts/create_newcase -case /scratch/cluster/pel/$caze -compset FADIAB -res ne30_ne30 -mach hobart -#-compiler nag --walltime 00:10:00 --run-unsupported 
+#cd /scratch/cluster/pel/$caze
+#./xmlchange CAM_CONFIG_OPTS="-phys held_suarez"

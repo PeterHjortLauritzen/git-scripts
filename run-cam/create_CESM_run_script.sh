@@ -115,6 +115,10 @@ echo "./xmlchange DOUT_S=FALSE" >> $script
 # change physics time-step
 #
 #./xmlchange ATM_NCPL=192
+if ($compset == "FHS94") then
+  echo './xmlchange CAM_CONFIG_OPTS="-phys held_suarez -analytic_ic"' >> $script
+endif
+
 
 if ($debug == "debug") then
   echo "Debugging turned on"
@@ -127,12 +131,20 @@ echo "./case.setup" >> $script
 echo 'echo "se_statefreq       = 144                                                    ">> user_nl_cam' >> $script
 echo 'echo "empty_htapes       = .true.                                                 ">> user_nl_cam' >> $script
 echo 'echo "fincl1             = '\''U:I'\'','\''V:I'\'','\''T:I'\'','\''PS:I'\''                               ">> user_nl_cam' >> $script
-echo 'echo "fincl2             = '\''U'\'','\''V'\'','\''T'\'','\''PS'\'','\''OMEGA'\'','\''PHIS'\'','\''PSL'\'',                 ">> user_nl_cam' >> $script
-echo 'echo "                     '\''OMEGA500'\'','\''PRECT'\'','\''PRECL'\'','\''RELHUM'\'','\''TMQ'\''              ">> user_nl_cam' >> $script
 if ($energy_diags == "energy_diags") then
   echo 'echo "adding energy diagnostics to fincl"' >> $script
-  source $git_scripts/make_energy_diagnostics_fincl.sh $script fincl3 fincl4
-  echo 'echo "ndens             = 2,2,1,1                                                 ">> user_nl_cam' >> $script
+  if ($compset == "FHS94") then
+    source $git_scripts/make_energy_diagnostics_fincl.sh $script fincl2 false fincl3
+  else
+    source $git_scripts/make_energy_diagnostics_fincl.sh $script fincl2 true fincl3
+  endif
+  echo 'echo "ndens             = 2,1,1,2                                                 ">> user_nl_cam' >> $script
+endif
+if ($compset != FHS94) then
+  echo 'echo "fincl4             = '\''U'\'','\''V'\'','\''T'\'','\''PS'\'','\''OMEGA'\'','\''PHIS'\'','\''PSL'\'',                 ">> user_nl_cam' >> $script
+  echo 'echo "                     '\''OMEGA500'\'','\''PRECT'\'','\''PRECL'\'','\''RELHUM'\'','\''TMQ'\''              ">> user_nl_cam' >> $script
+else
+  echo "analytic_ic_type='held_suarez_1994'" >> $script
 endif
 
 
@@ -141,9 +153,11 @@ if ($debug == "debug") then
   echo 'echo "interpolate_output = .true.,.true.,.true.,.true.                                          ">> user_nl_cam' >> $script
 else
   echo 'echo "nhtfrq             = -400,0,0,0                                              ">> user_nl_cam' >> $script
-echo 'echo "interpolate_output = .true.,.true.,.false.,.false.                                          ">> user_nl_cam' >> $script
+echo 'echo "interpolate_output = .true.,.false.,.false.,.true.                                          ">> user_nl_cam' >> $script
 endif
-
+#
+# set topo file
+#
 if ($user_topo == "default") then
   echo "use default topo settings"
 else
@@ -169,7 +183,6 @@ if ($old_visco == "old_visco") then
   echo 'echo "se_hypervis_subcycle   = 3                                             ">> user_nl_cam' >> $script
   echo 'echo "se_hypervis_on_plevs   = .false.                                             ">> user_nl_cam' >> $script
 endif
-
 echo "./case.build"  >> $script
 echo "./case.submit" >> $script
 echo "script "$script" was successfully created"
