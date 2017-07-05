@@ -41,8 +41,6 @@ if ( "$#argv" > 1) then
   set debug       = "debug"
   set stop_option = "nsteps"
   set stop_n      = "5"
-  set pe_count    = "144"
-  set walltime    = "00:10:00"
 else
   echo "debug turned off"
   set debug       = "nodebug"
@@ -52,8 +50,17 @@ if (`hostname` == "hobart.cgd.ucar.edu") then
   echo "You are on Hobart"
   if ($debug == "debug") then
     set queue       = "verylong"
+    set pe_count    = "144"
+    set walltime    = "00:10:00"
   else
     set queue       = "monster"
+  endif
+else
+  set machine = "cheyenne"
+  set queue       = "economy"
+  if ($debug == "debug") then
+    set pe_count    = "256"
+    set walltime    = "10:00"
   endif
 endif
 if ($case == "1") then
@@ -61,12 +68,17 @@ if ($case == "1") then
   if ($debug != "debug") then
     set stop_option = "nmonths"
     set stop_n      = "42"
-    set walltime    = "72:00:00"
-    set pe_count     = "672"
+    if ($machine == "hobart") then
+      set walltime    = "72:00:00"
+      set pe_count     = "672"
+    else
+      set walltime    = "01:00"
+      set pe_count     = "1152"
+    endif
   endif
 
 #
-  source create_CESM_run_script.sh ne30_ne30 QPC4 $machine $pe_count $stop_option $stop_n $walltime default qsize_condensate1_ftype1 $queue $debug $energy_diags old_visco
+  source create_CESM_run_script.sh ne30_ne30 QPC4 $machine $pe_count $stop_option $stop_n $walltime default ftype1 $queue $debug $energy_diags new_visco
 endif
 
 if ($case == "2") then
