@@ -94,10 +94,12 @@ else
 endif
 set src = "physgrid"
 if ($machine == "cheyenne") then
+    set inputdata = "/glade/p/cesmdata/cseg/inputdata/atm/cam"
     set git_scripts = "/glade/u/home/$USER/git-scripts/run-cam"
     echo "/glade/u/home/$USER/src/$src/cime/scripts/create_newcase --case /glade/scratch/$USER/$caze --compset $compset --res $res --walltime $walltime --pecount $pecount --project P93300042 --q $queue --run-unsupported" >> $script
     echo "cd /glade/scratch/$USER/$caze" >> $script
 else if ($machine == "hobart") then
+    set inputdata = "/fs/cgd/csm/inputdata/atm/cam"
     set git_scripts = "/home/$USER/git-scripts/run-cam"
     echo "/home/$USER/src/$src/cime/scripts/create_newcase --case /scratch/cluster/$USER/$caze --compset $compset --res $res --walltime $walltime --q $queue --pecount $pecount --compiler nag --run-unsupported" >> $script
     echo "cd /scratch/cluster/$USER/$caze" >> $script
@@ -156,7 +158,7 @@ else
 echo 'echo "interpolate_output = .true.,.false.,.false.,.true.                                          ">> user_nl_cam' >> $script
 endif
 #
-# set topo file
+# set topo file and initial condition (of necessary)
 #
 if ($user_topo == "default") then
   echo "use default topo settings"
@@ -165,14 +167,18 @@ else
   echo 'echo "bnd_topo = '\'''$user_topo''\''" >> user_nl_cam' >> $script
   if ($res == "ne30_ne30") then
     if ($compset == "QPC4") then
-      echo 'echo "ncdata = '\''/glade/p/cesmdata/cseg/inputdata/atm/cam/inic/se/cami_0000-01-01_ne30np4_L26_c100108.nc'\''" >> user_nl_cam' >> $script
+      echo 'echo "ncdata = '\'''$inputdata'/inic/se/cami_0000-01-01_ne30np4_L26_c100108.nc'\''" >> user_nl_cam' >> $script
     endif
-    if ($compset == "QPC6" || $compset == "FHS94") then
-      echo 'echo "ncdata = '\''/glade/p/cesmdata/cseg/inputdata/atm/cam/inic/se/cami_minimal_ne30np4_L32_c151218.nc'\''" >> user_nl_cam' >> $script
+    if ($compset == "QPC6") then
+#      echo 'echo "ncdata = '\'''$inputdata'/inic/se/cami_minimal_ne30np4_L32_c151218.nc'\''" >> user_nl_cam' >> $script
+      echo 'echo "ncdata = '\'''$inputdata'/inic/homme/cami_ne30p4_L32_c160128.nc'\''" >> user_nl_cam' >> $script
+    endif
+    if ($compset == "FHS94") then
+      echo 'echo "ncdata = '\'''$inputdata'/inic/homme/cami-mam3_0000-01-01_ne30np4_L30_c130424.nc'\''" >> user_nl_cam' >> $script
     endif
   endif
   if ($res == "ne120_ne120") then
-  echo 'echo "ncdata = '\''/glade/p/cesmdata/cseg/inputdata/atm/cam/inic/se/cami_0000-01-01_ne120np4_L26_c110304.nc'\''" >> user_nl_cam' >> $script
+  echo 'echo "ncdata = '\'''$inputdata'/inic/se/cami_0000-01-01_ne120np4_L26_c110304.nc'\''" >> user_nl_cam' >> $script
   endif
 endif
 if ($old_visco == "old_visco") then

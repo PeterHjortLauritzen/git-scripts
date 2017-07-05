@@ -124,7 +124,7 @@ if ($case == "11") then
   endif
 
 #
-  source create_CESM_run_script.sh ne30_ne30 FHS94 $machine $pe_count $stop_option $stop_n $walltime /home/pel/release/topo/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc HS_with_Co92topo $queue $debug $energy_diags default_visco
+  source create_CESM_run_script.sh ne30_ne30 FHS94 $machine $pe_count $stop_option $stop_n $walltime /home/pel/release/topo/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc HS_with_Co92topo $queue $debug $energy_diags old_visco
 endif
 
 
