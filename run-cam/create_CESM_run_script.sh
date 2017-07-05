@@ -142,6 +142,7 @@ if ($energy_diags == "energy_diags") then
   endif
   echo 'echo "ndens             = 2,1,1,2                                                 ">> user_nl_cam' >> $script
 endif
+
 if ($compset != FHS94) then
   echo 'echo "fincl4             = '\''U'\'','\''V'\'','\''T'\'','\''PS'\'','\''OMEGA'\'','\''PHIS'\'','\''PSL'\'',                 ">> user_nl_cam' >> $script
   echo 'echo "                     '\''OMEGA500'\'','\''PRECT'\'','\''PRECL'\'','\''RELHUM'\'','\''TMQ'\''              ">> user_nl_cam' >> $script
