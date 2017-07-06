@@ -129,7 +129,7 @@ if ($energy_diags == "energy_diags") then
   if ($compset == "FHS94") then
     source $git_scripts/make_energy_diagnostics_fincl.sh $script fincl$fincl_n false fincl3
     @ fincl_n++
-    set ndens = "$ndens" "$comma""1"
+    set ndens = "$ndens $comma""1"
     set comma = ","
   else
     set tmp_fincl = $fincl_n
@@ -158,7 +158,7 @@ if ($compset != "FHS94" & $compset != "FKESSLER") then
   set comma = ","
 endif
 if ($compset == "FHS94") then
-  echo "analytic_ic_type='held_suarez_1994'" >> $script
+  echo 'echo "analytic_ic_type='held_suarez_1994'" >> user_nl_cam' >> $script
 endif
 
 if ($compset == "FKESSLER") then
