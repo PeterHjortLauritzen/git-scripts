@@ -2,8 +2,8 @@
 #
 #
 #
-if ( "$#argv" == 0) then
-  echo "Script usage: source create_commonly_used_scripts.sh CASE DEBUG"
+if ( "$#argv" <3) then
+  echo "Script usage: source create_commonly_used_scripts.sh case debug energy_diags"
   echo " "
   echo "CASE (numeric value) options are:"
   echo "---------------------------------"
@@ -14,6 +14,9 @@ if ( "$#argv" == 0) then
   echo " "
   echo " "
   echo "10. Standard Held-Suarez run (1200 days) "
+  echo " "
+  echo " "
+  echo "20. Ullirch et al. baroclinic wave with Kessler micro-physics and terminator chemistry"
 
   echo "DEBUG (optional argument): If debug then the model just runs 5 time-steps otherwise no debugging."
   echo "-------------------------------------------------------------------------------------------------"
@@ -30,12 +33,12 @@ endif
 #
 set n = 1
 set case = "$argv[$n]"
-
-set energy_diags = "energy_diags"
-#
-# set variables that are independent of case
-#
-if ( "$#argv" > 1) then
+echo "case is "$case
+set n = 2
+set debug = "$argv[$n]"
+set n = 3
+set energy_diags = "$argv[$n]"
+if ($debug == "debug") then
   echo "debug turned on"
   set n = 2
   set debug       = "debug"
@@ -44,6 +47,13 @@ if ( "$#argv" > 1) then
 else
   echo "debug turned off"
   set debug       = "nodebug"
+endif
+set n = 3
+set energy_diags = "$argv[$n]"
+if ($debug == "energy_diags") then
+  echo "energy diagnostics turned on"
+else
+  echo "energy diagnostics turned off"
 endif
 if (`hostname` == "hobart.cgd.ucar.edu") then
   set machine = "hobart"
@@ -137,6 +147,32 @@ if ($case == "11") then
 
 #
   source create_CESM_run_script.sh ne30_ne30 FHS94 $machine $pe_count $stop_option $stop_n $walltime /home/pel/release/topo/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc HS_with_Co92topo $queue $debug $energy_diags old_visco
+endif
+
+
+#
+###################################################################################
+#
+# ULLRICH ET AL. BAROCLINIC WAVE WITH KESSLER MICROPHYSICS AND TERMINATOR CHEMISTRY
+#
+##################################################################################
+#
+if ($case == "20") then
+  echo "ULLRICH ET AL. BAROCLINIC WAVE WITH KESSLER MICROPHYSICS AND TERMINATOR CHEMISTRY (15 days)"
+  if ($debug != "debug") then
+    set stop_option = "ndays"
+    set stop_n      = "15"
+    if ($machine == "hobart") then
+      set walltime    = "00:15:00"
+      set pe_count     = "672"
+    else
+      set walltime    = "00:15"
+      set pe_count     = "1152"
+    endif
+  endif
+
+#
+  source create_CESM_run_script.sh ne30_ne30 FKESSLER $machine $pe_count $stop_option $stop_n $walltime default standard $queue $debug $energy_diags default_visco
 endif
 
 

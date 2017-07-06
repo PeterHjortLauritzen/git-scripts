@@ -131,32 +131,57 @@ endif
 echo "./case.setup" >> $script
 
 echo 'echo "se_statefreq       = 144                                                    ">> user_nl_cam' >> $script
-echo 'echo "empty_htapes       = .true.                                                 ">> user_nl_cam' >> $script
-echo 'echo "fincl1             = '\''U:I'\'','\''V:I'\'','\''T:I'\'','\''PS:I'\''                               ">> user_nl_cam' >> $script
+set fincl_n = (0 1 2 3 4 5 6 7 8 9 10 11 12 ) 
+@ fincl_n++
+set comma = " "
+set ndens = "= "
 if ($energy_diags == "energy_diags") then
   echo 'echo "adding energy diagnostics to fincl"' >> $script
   if ($compset == "FHS94") then
-    source $git_scripts/make_energy_diagnostics_fincl.sh $script fincl2 false fincl3
+    source $git_scripts/make_energy_diagnostics_fincl.sh $script fincl$fincl_n false fincl3
+    @ fincl_n++
+    set ndens = "$ndens" "$comma""1"
+    set comma = ","
   else
-    source $git_scripts/make_energy_diagnostics_fincl.sh $script fincl2 true fincl3
+    set tmp_fincl = $fincl_n
+    @ fincl_n++
+    set tmp_fincl_plus_one = $fincl_n
+    source $git_scripts/make_energy_diagnostics_fincl.sh $script fincl$tmp_fincl true fincl$tmp_fincl_plus_one
+    echo "xxxxxxxxx"
+    set ndens = "$ndens $comma""1,1"
+    set comma = ","
   endif
-  echo 'echo "ndens             = 2,1,1,2                                                 ">> user_nl_cam' >> $script
 endif
 
-if ($compset != FHS94) then
-  echo 'echo "fincl4             = '\''U'\'','\''V'\'','\''T'\'','\''PS'\'','\''OMEGA'\'','\''PHIS'\'','\''PSL'\'',                 ">> user_nl_cam' >> $script
+if ($case == "QPC4QPC" || $case == "QPC5QPC" || $case == "QPC6QPC" || $case == "FHS94") then
+  echo 'echo "empty_htapes       = .true.                                                 ">> user_nl_cam' >> $script
+  echo 'echo "fincl'$fincl_n'             = '\''U:I'\'','\''V:I'\'','\''T:I'\'','\''PS:I'\''                               ">> user_nl_cam' >> $script
+  @ fincl_n++
+  set ndens = "$ndens $comma""2"
+  set comma = ","
+endif
+
+
+if ($compset != "FHS94" & $compset != "FKESSLER") then
+  echo 'echo "fincl'$fincl_n'             = '\''U'\'','\''V'\'','\''T'\'','\''PS'\'','\''OMEGA'\'','\''PHIS'\'','\''PSL'\'',                 ">> user_nl_cam' >> $script
   echo 'echo "                     '\''OMEGA500'\'','\''PRECT'\'','\''PRECL'\'','\''RELHUM'\'','\''TMQ'\''              ">> user_nl_cam' >> $script
-else
+  @ fincl_n++
+  set ndens = "$ndens $comma""2"
+  set comma = ","
+endif
+if ($compset == "FHS94") then
   echo "analytic_ic_type='held_suarez_1994'" >> $script
 endif
 
-
+if ($compset == "FKESSLER") then
+  echo 'echo "interpolate_output = .true.,.true.,.true.,.true.                                          ">> user_nl_cam' >> $script
+endif
 if ($debug == "debug") then
   echo 'echo "nhtfrq             = 1,1,1,1                                                ">> user_nl_cam' >> $script
   echo 'echo "interpolate_output = .true.,.true.,.true.,.true.                                          ">> user_nl_cam' >> $script
-else
-  echo 'echo "nhtfrq             = -400,0,0,0                                              ">> user_nl_cam' >> $script
-echo 'echo "interpolate_output = .true.,.false.,.false.,.true.                                          ">> user_nl_cam' >> $script
+#else
+#  echo 'echo "nhtfrq             = -400,0,0,0                                              ">> user_nl_cam' >> $script
+#echo 'echo "interpolate_output = .true.,.false.,.false.,.true.                                          ">> user_nl_cam' >> $script
 endif
 #
 # set topo file and initial condition (of necessary)
@@ -190,6 +215,9 @@ if ($old_visco == "old_visco") then
   echo 'echo "se_hypervis_subcycle   = 3                                             ">> user_nl_cam' >> $script
   echo 'echo "se_hypervis_on_plevs   = .false.                                             ">> user_nl_cam' >> $script
 endif
+
+echo 'echo "ndens              '$ndens'                                                 ">> user_nl_cam' >> $script
+
 echo "./case.build"  >> $script
 echo "./case.submit" >> $script
 echo "script "$script" was successfully created"
