@@ -9,18 +9,7 @@
 #
 # Example usage:
 #
-# run CAM4 Aqua-planet with mountains using the spectral-element dynamical core
-#
-# source create_CESM_run_script.sh ne30_ne30 QPC4 cheyenne 1152 nmonths  6 01:30:00 /glade/u/home/pel/release/topo/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc Co92 economy
-#
-# source create_CESM_run_script.sh ne30_ne30 QPC4 hobart    672 nmonths 42 01:30:00 /glade/u/home/pel/release/topo/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc Co92 monster
-#
-# source create_CESM_run_script.sh ne30_ne30 QPC6 cheyenne 3456 nmonths 6 02:30:00 /glade/u/home/pel/release/topo/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc Co92 economy
-#
-# source create_CESM_run_script.sh ne120_ne120 QPC4 cheyenne 11520 nmonths 6 01:30:00 /glade/scratch/pel/topo/ne120np4_nc3000_Co024_Fi001_Oc001_PF_nullRR_Nsw016_c170601.nc Co24 economy
-#
-#
-#  source create_CESM_run_script.sh ne30pg3_ne30pg3_mg17 QPC4 cheyenne 1152 nmonths 6 01:30:00 /glade/u/home/pel/release/topo/ne30pg3_nc3000_Co060_Fi001_MulG_PF_nullRR_Nsw042_20170501.nc Co60 economy
+# see create_commonly_used_scripts.sh
 #
 if ( "$#argv" > 13) then
   echo "Too many arguments specified "$#argv
@@ -147,7 +136,6 @@ if ($energy_diags == "energy_diags") then
     @ fincl_n++
     set tmp_fincl_plus_one = $fincl_n
     source $git_scripts/make_energy_diagnostics_fincl.sh $script fincl$tmp_fincl true fincl$tmp_fincl_plus_one
-    echo "xxxxxxxxx"
     set ndens = "$ndens $comma""1,1"
     set comma = ","
   endif

@@ -174,6 +174,7 @@ begin
     print("t="+t)
     do j=0,nstage-1
       tot_energy(j)  = subcycle(j)*(int_vars(0,j,t)+int_vars(1,j,t))
+;      tot_energy(j)  = subcycle(j)*int_vars(0,j,t)
       if (wet) then
         idx = str_match_ind(str_vars,"WV")
         tracer_mass(0,j) = subcycle(j)*(int_vars(idx,j,t))

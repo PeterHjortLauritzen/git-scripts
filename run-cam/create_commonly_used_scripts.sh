@@ -3,6 +3,7 @@
 #
 #
 if ( "$#argv" <3) then
+  echo " "
   echo "Script usage: source create_commonly_used_scripts.sh case debug energy_diags"
   echo " "
   echo "CASE (numeric value) options are:"
