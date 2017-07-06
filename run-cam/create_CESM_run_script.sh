@@ -134,7 +134,7 @@ echo 'echo "se_statefreq       = 144                                            
 set fincl_n = (0 1 2 3 4 5 6 7 8 9 10 11 12 ) 
 @ fincl_n++
 set comma = " "
-set ndens = "= "
+set ndens = ""
 if ($energy_diags == "energy_diags") then
   echo 'echo "adding energy diagnostics to fincl"' >> $script
   if ($compset == "FHS94") then
@@ -216,7 +216,13 @@ if ($old_visco == "old_visco") then
   echo 'echo "se_hypervis_on_plevs   = .false.                                             ">> user_nl_cam' >> $script
 endif
 
-echo 'echo "ndens              '$ndens'                                                 ">> user_nl_cam' >> $script
+set nchar = `echo $ndens | awk '{print length($0)}'`
+if ($nchar != 0) then
+  #
+  # only echo ndens if it is being altered by this script
+  #
+  echo 'echo "ndens              ='$ndens'                                                 ">> user_nl_cam' >> $script
+endif
 
 echo "./case.build"  >> $script
 echo "./case.submit" >> $script
