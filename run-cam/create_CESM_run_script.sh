@@ -107,18 +107,30 @@ echo "./xmlchange DOUT_S=FALSE" >> $script
 #
 #./xmlchange ATM_NCPL=192
 if ($compset == "FHS94") then
-  echo './xmlchange CAM_CONFIG_OPTS="-phys held_suarez -analytic_ic"' >> $script
+  echo './xmlchange CAM_CONFIG_OPTS="-phys held_suarez"' >> $script
 endif
-
+#
+# code for adding fincl's
+#
+set fincl_n = (0 1 2 3 4 5 6 7 8 9 10 11 12 ) 
+@ fincl_n++
+set comma = " "
+set ndens = ""
 
 if ($debug == "debug") then
   echo "Debugging turned on"
   echo "./xmlchange DEBUG=TRUE" >> $script
   echo './xmlchange --append CAM_CONFIG_OPTS="-nadv_tt=5"' >> $script
+  #
+  # add test tracers to fincl
+  #
+  echo 'echo "fincl'$fincl_n'             = '\''TT_UN:I'\'','\''TT_LW:I'\'','\''TT_MD:I'\'','\''TT_HI:I'\'','\''TTRMD:I'\''              ">> user_nl_cam' >> $script
+  @ fincl_n++
+  set ndens = "$ndens $comma""2"
+  set comma = ","
+
   echo 'echo "se_statefreq       = 1                                                      ">> user_nl_cam' >> $script
-  if ($compset == "FHS94") then
-    echo 'echo "se_statediag_numtrac = 6">> user_nl_cam' >>$script
-  endif
+  echo 'echo "se_statediag_numtrac = 999">> user_nl_cam' >>$script
 else
   echo "Debugging turned off"
   echo 'echo "se_statefreq       = 144                                                    ">> user_nl_cam' >> $script
@@ -126,10 +138,7 @@ endif
 echo "./case.setup" >> $script
 
 
-set fincl_n = (0 1 2 3 4 5 6 7 8 9 10 11 12 ) 
-@ fincl_n++
-set comma = " "
-set ndens = ""
+
 if ($energy_diags == "energy_diags") then
   echo 'echo "adding energy diagnostics to fincl"' >> $script
   if ($compset == "FHS94") then
@@ -164,12 +173,12 @@ if ($compset != "FHS94" & $compset != "FKESSLER") then
   set comma = ","
 endif
 if ($compset == "FHS94") then
-  echo 'echo "analytic_ic_type='\''held_suarez_1994'\''" >> user_nl_cam' >> $script
+  echo 'echo "ncdata = '\'''$inputdata'/inic/se/ape_cam5_ne30np4_L30_c170417.nc'\''" >> user_nl_cam' >> $script
 endif
 
-if ($compset == "FKESSLER") then
-  echo 'echo "interpolate_output = .true.,.true.,.true.,.true.                                          ">> user_nl_cam' >> $script
-endif
+#if ($compset == "FKESSLER") then
+#  echo 'echo "interpolate_output = .true.,.true.,.true.,.true.                                          ">> user_nl_cam' >> $script
+#endif
 if ($debug == "debug") then
   echo 'echo "nhtfrq             = 1,1,1,1                                                ">> user_nl_cam' >> $script
   echo 'echo "interpolate_output = .true.,.true.,.true.,.true.                                          ">> user_nl_cam' >> $script
