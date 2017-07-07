@@ -2,9 +2,11 @@
 #
 #
 #
-if ( "$#argv" <3) then
+if ( "$#argv" <5) then
   echo " "
-  echo "Script usage: source create_commonly_used_scripts.sh case debug energy_diags"
+  echo "Script usage: source create_commonly_used_scripts.sh case res debug energy_diags old_visco"
+  echo " "
+  echo "Supported resolutions: ne30_ne30, ne30pg3_ne30pg3_mg17"
   echo " "
   echo "CASE (numeric value) options are:"
   echo "---------------------------------"
@@ -25,6 +27,7 @@ if ( "$#argv" <3) then
   echo "Aborting"
   exit
 endif
+echo "Number of arguments "$#argv
 #
 ##############################################################
 #
@@ -36,12 +39,11 @@ set n = 1
 set case = "$argv[$n]"
 echo "case is "$case
 set n = 2
-set debug = "$argv[$n]"
+set res = "$argv[$n]"
 set n = 3
-set energy_diags = "$argv[$n]"
+set debug = "$argv[$n]"
 if ($debug == "debug") then
   echo "debug turned on"
-  set n = 2
   set debug       = "debug"
   set stop_option = "nsteps"
   set stop_n      = "5"
@@ -49,13 +51,21 @@ else
   echo "debug turned off"
   set debug       = "nodebug"
 endif
-set n = 3
+set n = 4
 set energy_diags = "$argv[$n]"
 if ($debug == "energy_diags") then
   echo "energy diagnostics turned on"
 else
   echo "energy diagnostics turned off"
 endif
+set n = 5
+set old_visco = "$argv[$n]"
+if ($old_visco == "old_visco") then
+  echo "old viscosity settings"
+else
+  echo "new viscosity settings"
+endif
+
 if (`hostname` == "hobart.cgd.ucar.edu") then
   set machine = "hobart"
   echo "You are on Hobart"
@@ -89,7 +99,7 @@ if ($case == "1") then
   endif
 
 #
-  source create_CESM_run_script.sh ne30_ne30 QPC4 $machine $pe_count $stop_option $stop_n $walltime default ftype1 $queue $debug $energy_diags new_visco
+  source create_CESM_run_script.sh $res QPC4 $machine $pe_count $stop_option $stop_n $walltime default ftype1 $queue $debug $energy_diags $old_visco
 endif
 
 if ($case == "2") then
@@ -102,7 +112,7 @@ if ($case == "2") then
   endif
 
 #
-  source create_CESM_run_script.sh ne30_ne30 QPC5 $machine $pe_count $stop_option $stop_n $walltime default standard_APE $queue $debug $energy_diags
+  source create_CESM_run_script.sh $res QPC5 $machine $pe_count $stop_option $stop_n $walltime default standard_APE $queue $debug $energy_diags $old_visco
 endif
 
 if ($case == "3") then
@@ -115,7 +125,7 @@ if ($case == "3") then
   endif
 
 #
-  source create_CESM_run_script.sh ne30_ne30 QPC6 $machine $pe_count $stop_option $stop_n $walltime default standard_APE $queue $debug $energy_diags
+  source create_CESM_run_script.sh $res QPC6 $machine $pe_count $stop_option $stop_n $walltime default standard_APE $queue $debug $energy_diags $old_visco
 endif
 #
 ##############################################################
@@ -134,7 +144,7 @@ if ($case == "10") then
   endif
 
 #
-  source create_CESM_run_script.sh ne30_ne30 FHS94 $machine $pe_count $stop_option $stop_n $walltime default vanilla_HS $queue $debug $energy_diags default_visco
+  source create_CESM_run_script.sh $res FHS94 $machine $pe_count $stop_option $stop_n $walltime default vanilla_HS $queue $debug $energy_diags $old_visco
 endif
 
 if ($case == "11") then
@@ -147,7 +157,7 @@ if ($case == "11") then
   endif
 
 #
-  source create_CESM_run_script.sh ne30_ne30 FHS94 $machine $pe_count $stop_option $stop_n $walltime /home/pel/release/topo/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc HS_with_Co92topo $queue $debug $energy_diags old_visco
+  source create_CESM_run_script.sh $res FHS94 $machine $pe_count $stop_option $stop_n $walltime /home/pel/release/topo/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc HS_with_Co92topo $queue $debug $energy_diags $old_visco
 endif
 
 
@@ -173,10 +183,10 @@ if ($case == "20") then
   endif
 
 #
-  source create_CESM_run_script.sh ne30_ne30 FKESSLER $machine $pe_count $stop_option $stop_n $walltime default standard $queue $debug $energy_diags default_visco
+  source create_CESM_run_script.sh $res FKESSLER $machine $pe_count $stop_option $stop_n $walltime default standard $queue $debug $energy_diags $old_visco
 endif
 
 
-#/home/pel/src/$src/cime/scripts/create_newcase -case /scratch/cluster/pel/$caze -compset FADIAB -res ne30_ne30 -mach hobart -#-compiler nag --walltime 00:10:00 --run-unsupported 
+#/home/pel/src/$src/cime/scripts/create_newcase -case /scratch/cluster/pel/$caze -compset FADIAB -res $res -mach hobart -#-compiler nag --walltime 00:10:00 --run-unsupported 
 #cd /scratch/cluster/pel/$caze
 #./xmlchange CAM_CONFIG_OPTS="-phys held_suarez"

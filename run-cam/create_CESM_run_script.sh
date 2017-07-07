@@ -114,12 +114,18 @@ endif
 if ($debug == "debug") then
   echo "Debugging turned on"
   echo "./xmlchange DEBUG=TRUE" >> $script
+  echo './xmlchange --append CAM_CONFIG_OPTS="-nadv_tt=5"' >> $script
+  echo 'echo "se_statefreq       = 1                                                      ">> user_nl_cam' >> $script
+  if ($compset == "FHS94") then
+    echo 'echo "se_statediag_numtrac = 6">> user_nl_cam' >>$script
+  endif
 else
   echo "Debugging turned off"
+  echo 'echo "se_statefreq       = 144                                                    ">> user_nl_cam' >> $script
 endif
 echo "./case.setup" >> $script
 
-echo 'echo "se_statefreq       = 144                                                    ">> user_nl_cam' >> $script
+
 set fincl_n = (0 1 2 3 4 5 6 7 8 9 10 11 12 ) 
 @ fincl_n++
 set comma = " "
@@ -158,7 +164,7 @@ if ($compset != "FHS94" & $compset != "FKESSLER") then
   set comma = ","
 endif
 if ($compset == "FHS94") then
-  echo 'echo "analytic_ic_type='held_suarez_1994'" >> user_nl_cam' >> $script
+  echo 'echo "analytic_ic_type='\''held_suarez_1994'\''" >> user_nl_cam' >> $script
 endif
 
 if ($compset == "FKESSLER") then
