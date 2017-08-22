@@ -98,6 +98,10 @@ begin
   dmrdt_dyn  = new((/nt/),typeof(tmp(0,0)))
   dmodt_dyn  = new((/nt/),typeof(tmp(0,0)))
   dmdt_phys = new((/nt/),typeof(tmp(0,0)))
+  dmrdt_phys = new((/nt/),typeof(tmp(0,0)))
+  dmodt_phys = new((/nt/),typeof(tmp(0,0)))
+  mo = new((/nt/),typeof(tmp(0,0)))
+  mr = new((/nt/),typeof(tmp(0,0)))
 
   int_vars  = new((/nvars,nstage,nt/)     ,typeof(tmp(0,0)))
   int_vars  = 0.0D0
@@ -169,6 +173,10 @@ begin
     check_subc(subcycle(idAF),subcycle(idBD))
     rate_of_change_phys = (tot_aam(idBD)-tot_aam(idAF))/dtime
     dmdt_phys(t) = rate_of_change_phys
+    dmrdt_phys(t) = (MR_aam(idBD)-MR_aam(idAF))/dtime
+    dmodt_phys(t) = (MO_aam(idBD)-MO_aam(idAF))/dtime
+    mo(t) = MO_aam(idED)
+    mr(t) = MR_aam(idED)
 
     if (lprint) then
     print(" ")
@@ -208,15 +216,28 @@ begin
  dmodt_dyn&time = time
  dmdt_phys!0 = "time"
  dmdt_phys&time = time
+ dmodt_phys!0 = "time"
+ dmodt_phys&time = time
+ dmrdt_phys!0 = "time"
+ dmrdt_phys&time = time
+ mo!0 = "time"
+ mo&time = time
+ mr!0 = "time"
+ mr&time = time
+
  fname    = "dmdt.nc"
  ncdf     = addfile(fname ,"c")  ; open output netCDF file
-  ; make time and UNLIMITED dimension      ; recommended  for most applications
-  filedimdef(ncdf,"time",-1,True) 
-  ;
-  ncdf->dmdt_dyn = dmdt_dyn
-  ncdf->dmrdt_dyn = dmrdt_dyn
-  ncdf->dmodt_dyn = dmodt_dyn
-  ncdf->dmdt_phys = dmdt_phys
 
+  ; make time and UNLIMITED dimension      ; recommended  for most applications
+;  filedimdef(ncdf,"time",-1,True) 
+  ;
+  ncdf->dmdt_dyn   = dmdt_dyn
+  ncdf->dmrdt_dyn  = dmrdt_dyn
+  ncdf->dmodt_dyn  = dmodt_dyn
+  ncdf->dmdt_phys  = dmdt_phys
+  ncdf->dmrdt_phys = dmrdt_phys
+  ncdf->dmodt_phys = dmodt_phys
+  ncdf->mo   = mo
+  ncdf->mr   = mr
 end
 
