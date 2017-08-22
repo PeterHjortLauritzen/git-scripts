@@ -1,561 +1,356 @@
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 
-undef("pass")
-procedure pass(error,eps)
 begin
-  if(abs(error).lt.eps) then
-     print("PASS")
-  else
-     print("FAIL") 
-;     exit()
-  end if
-end
-
-
-
-
-begin
+  print("Summary of input to ncl script:")
+  print("===============================")
+  print(" ")
+  print("nsplit                   ="+nsplit)
+  print("rsplit                   ="+rsplit)
+  print("hypervis_subcycle        ="+hypervis_subcycle)
+  print("ftype                    ="+ftype)
+  print("qsize_condensate_loading ="+qsize_condensate_loading)
+  print("dtime            ="+dtime)
   fname =  systemfunc("ls "+fname)
   print("File used for axial angular momentum diagnostics "+fname)
+  print("done input summary")
+  print(" ")
   fall = addfile(fname,"r")       ; Open netCDF files.	
-
   ;
   ; initialization
   ;
-  nsplit            = 2.0D0
-  rsplit            = 3.0D0
-  hypervis_subcycle = 3.0D0
+  g = 9.80665D0
   nc        = -1
-  dtime     = 1800.0D0
   eps       = 1.0D-13
-  area_p    = fall->area   (:  )
-  if (nc.gt.0) then
-    area_d    = fall->area_d (:  )
-  else
-    area_d = area_p
-  end if
-  tmp       = fall->WV_dED(:,:)
+  area      = fall->area   (:  )
+  tmp       = fall->MO_dED(:,:)
   nt        = dimsizes(tmp(:,0))
-  ncol_d    = dimsizes(tmp(0,:))
-  delete(tmp)
+  ncol      = dimsizes(tmp(0,:))
 
-  tmp       = fall->WV_pBF(:,:)
-  nt_d      = dimsizes(tmp(:,0))
-  ncol_p    = dimsizes(tmp(0,:))
+  wet = False
 
-  if (ncol_d.gt.ncol_p)
-    ncol = ncol_d
+  print(" ")
+  print(" ")
+  if (wet) then
+    print("suffix (parameterization side)")
+    print("pBF: state passed to parameterizations, before energy fixer")
+    print("pBP: after energy fixer, before parameterizations")
+    print("pAP: after last phys_update in parameterizations and state saved for energy fixer")
+    print("pAM: after dry mass correction calculate but not used in SE")
+    print(" ")
+    print("history files saved off here")
+  end if
+  print(" ")
+  print("suffix (dynamics)")
+  print("dED: state from end of previous dynamics (= pBF + time sampling)")
+  print("   loop over vertical remapping and physics dribbling -------- (nsplit) -------")
+  print("            (dribbling and remapping always done together)                    |")
+  print("          dAF: state from previous remapping                                  |")
+  print("          dBD: state after physics dribble, before dynamics                   |")
+  print("          loop over vertical Lagrangian dynamics --------rsplit-------------  |")
+  print("              dynamics here                                                |  |")
+  print("              loop over hyperviscosity ----------hypervis_sub------------  |  |")
+  print("                 dBH   state before hyperviscosity                      |  |  |")
+  print("                 dCH   state after hyperviscosity                       |  |  |")
+  print("                 dAH   state after hyperviscosity momentum heating      |  |  |")
+  print("              end hyperviscosity loop -----------------------------------  |  |")
+  print("          end of vertical Lagrangian dynamics loop -------------------------  |")
+  print("      dAD  state after dynamics, before vertical remapping                    |")
+  print("      dAR     state after vertical remapping                                  |")
+  print("   end of remapping loop ------------------------------------------------------")
+  print("dBF  state passed to parameterizations = state after last remapping            ")
+  print(" ")
+  print(" ")
+  print(" ")
+
+  if (wet) then
+    qsize = 3
+    str_vars      = (/"MO","MR"/)
+    str_stage     = (/"pBF","pBP","pAP","pAM","dED","dAF","dBD","dAD","dAR","dBF","dBH","dCH","dAH"/)
   else
-    ncol = ncol_p
-  end if
-  if (nt.ne.nt_d) then
-    print("nt and nt_d not the same")
-    exit()
+    qsize = 0
+    str_vars      = (/"MO","MR"/)
+    str_stage     = (/"dED","dAF","dBD","dAD","dAR","dBF","dBH","dCH","dAH"/)
   end if
 
-  ;
-  ; check if physics-dynamics variables are present
-  ;
-  if (isfilevar(fall,"WV_PDC")) then
-    vars_pdc  = new((/4,nt,ncol/),typeof(tmp(0,0)))
-    int_vars_pdc  = new((/4,nt/) ,typeof(tmp(0,0)))
-    pdc_vars_present = True
-    print("PDC vars are present on file")
+  nvars       = dimsizes(str_vars)
+  nstage      = dimsizes(str_stage)
+  vars        = new((/nvars,nstage,nt,ncol/),typeof(tmp(0,0)))
+  subcycle    = new((/nstage/),typeof(tmp(0,0))) 
+
+  if (wet) then
+    subcycle    = (/1D0,1D0,1D0,1D0,1.0D0,nsplit,nsplit,nsplit,nsplit,nsplit,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle/)
   else
-    print("No PDC vars present on file")
-    pdc_vars_present = False
-  end if
-  ;
-  ; check if physics-dynamics variables are present
-  ;
-  if (isfilevar(fall,"TT_pBF")) then
-    TT_vars_present = True
-    print("TT vars are present on file")
-  else
-    print("No TT vars present on file")
-    TT_vars_present = False
+;                   "dED","dAF" ,"dBD" ,"dAD" ,"dAR" ,"dBF","dBH"                          ,"dCH"                          ,"dAH"
+;
+    subcycle    = (/1.0D0,nsplit,nsplit,nsplit,nsplit,1.0D0,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle/)
   end if
 
+  tot_energy  = new((/nstage/),typeof(tmp(0,0)))
+  tracer_mass = new((/3,nstage/),typeof(tmp(0,0)))
 
-  vars      = new((/6,14,nt,ncol/),typeof(tmp(0,0)))
-
-  int_vars  = new((/6,14,nt/)     ,typeof(tmp(0,0)))
-
-  int_water_chg_due_to_parameterizations  = new((/nt/),typeof(tmp(0,0)))
-
-  int_vars      = 0;xxxx .0D0
-
-  str_vars      = (/"SE","KE","WV","WL","WI","TT"/)
-  str_stage     = (/"pBF","pBP","pAP","pAM","dED","dAF","dBM","dBD","dAD","dAR","dBF","dBH","dCH","dAH"/)
-
-
-  if (pdc_vars_present) then
-    str_vars_pdc  = (/"WV","WL","WI","TT"/)
-
-    vars_pdc(0,:,0:ncol_d-1) = fall->WV_PDC(:,:)
-    vars_pdc(1,:,0:ncol_d-1) = fall->WL_PDC(:,:)
-    vars_pdc(2,:,0:ncol_d-1) = fall->WI_PDC(:,:)
-    if (TT_vars_present) then
-      vars_pdc(3,:,0:ncol_d-1) = fall->TT_PDC(:,:)
-    end if
-  end if
-
-
-
-
-  vars(0, 0,:,0:ncol_p-1) = fall->SE_pBF(:,:)
-  vars(0, 1,:,0:ncol_p-1) = fall->SE_pBP(:,:)
-  vars(0, 2,:,0:ncol_p-1) = fall->SE_pAP(:,:)
-  vars(0, 3,:,0:ncol_p-1) = fall->SE_pAM(:,:)
-
-  vars(0, 4,:,0:ncol_d-1) = fall->SE_dED(:,:)
-  vars(0, 5,:,0:ncol_d-1) = fall->SE_dAF(:,:)
-  vars(0, 6,:,0:ncol_d-1) = fall->SE_dAF(:,:) ;used to be dBM xxxxx
-  vars(0, 7,:,0:ncol_d-1) = fall->SE_dBD(:,:)
-  vars(0, 8,:,0:ncol_d-1) = fall->SE_dAD(:,:)
-  vars(0, 9,:,0:ncol_d-1) = fall->SE_dAR(:,:)
-  vars(0,10,:,0:ncol_d-1) = fall->SE_dBF(:,:)
-  vars(0,11,:,0:ncol_d-1) = fall->SE_dBH(:,:)
-  vars(0,12,:,0:ncol_d-1) = fall->SE_dCH(:,:)
-  vars(0,13,:,0:ncol_d-1) = fall->SE_dAH(:,:)
-
-
-
-  vars(1, 0,:,0:ncol_p-1) = fall->KE_pBF(:,:)
-  vars(1, 1,:,0:ncol_p-1) = fall->KE_pBP(:,:)
-  vars(1, 2,:,0:ncol_p-1) = fall->KE_pAP(:,:)
-  vars(1, 3,:,0:ncol_p-1) = fall->KE_pAM(:,:)
-
-  vars(1, 4,:,0:ncol_d-1) = fall->KE_dED(:,:)
-  vars(1, 5,:,0:ncol_d-1) = fall->KE_dAF(:,:)
-  vars(1, 6,:,0:ncol_d-1) = fall->KE_dAF(:,:) ;used to be dBM xxxxx
-  vars(1, 7,:,0:ncol_d-1) = fall->KE_dBD(:,:)
-  vars(1, 8,:,0:ncol_d-1) = fall->KE_dAD(:,:)
-  vars(1, 9,:,0:ncol_d-1) = fall->KE_dAR(:,:)
-  vars(1,10,:,0:ncol_d-1) = fall->KE_dBF(:,:)
-  vars(1,11,:,0:ncol_d-1) = fall->KE_dBH(:,:)
-  vars(1,12,:,0:ncol_d-1) = fall->KE_dCH(:,:)
-  vars(1,13,:,0:ncol_d-1) = fall->KE_dAH(:,:)
-
-
-
-  vars(2, 0,:,0:ncol_p-1) = fall->WV_pBF(:,:)
-  vars(2, 1,:,0:ncol_p-1) = fall->WV_pBP(:,:)
-  vars(2, 2,:,0:ncol_p-1) = fall->WV_pAP(:,:)
-  vars(2, 3,:,0:ncol_p-1) = fall->WV_pAM(:,:)
-
-  vars(2, 4,:,0:ncol_d-1) = fall->WV_dED(:,:)
-  vars(2, 5,:,0:ncol_d-1) = fall->WV_dAF(:,:)
-  vars(2, 6,:,0:ncol_d-1) = fall->WV_dAF(:,:) ;used to be dBM xxxxx
-  vars(2, 7,:,0:ncol_d-1) = fall->WV_dBD(:,:)
-  vars(2, 8,:,0:ncol_d-1) = fall->WV_dAD(:,:)
-  vars(2, 9,:,0:ncol_d-1) = fall->WV_dAR(:,:)
-  vars(2,10,:,0:ncol_d-1) = fall->WV_dBF(:,:)
-  vars(2,11,:,0:ncol_d-1) = fall->WV_dBH(:,:)
-  vars(2,12,:,0:ncol_d-1) = fall->WV_dCH(:,:)
-  vars(2,13,:,0:ncol_d-1) = fall->WV_dAH(:,:)
-
-
-
-  vars(3, 0,:,0:ncol_p-1) = fall->WL_pBF(:,:)
-  vars(3, 1,:,0:ncol_p-1) = fall->WL_pBP(:,:)
-  vars(3, 2,:,0:ncol_p-1) = fall->WL_pAP(:,:)
-  vars(3, 3,:,0:ncol_p-1) = fall->WL_pAM(:,:)
-
-  vars(3, 4,:,0:ncol_d-1) = fall->WL_dED(:,:)
-  vars(3, 5,:,0:ncol_d-1) = fall->WL_dAF(:,:)
-  vars(3, 6,:,0:ncol_d-1) = fall->WL_dAF(:,:) ;used to be dBM xxxxx
-  vars(3, 7,:,0:ncol_d-1) = fall->WL_dBD(:,:)
-  vars(3, 8,:,0:ncol_d-1) = fall->WL_dAD(:,:)
-  vars(3, 9,:,0:ncol_d-1) = fall->WL_dAR(:,:)
-  vars(3,10,:,0:ncol_d-1) = fall->WL_dBF(:,:)
-  vars(3,11,:,0:ncol_d-1) = fall->WL_dBH(:,:)
-  vars(3,12,:,0:ncol_d-1) = fall->WL_dCH(:,:)
-  vars(3,13,:,0:ncol_d-1) = fall->WL_dAH(:,:)
-
-
-
-  vars(4, 0,:,0:ncol_p-1) = fall->WI_pBF(:,:)
-  vars(4, 1,:,0:ncol_p-1) = fall->WI_pBP(:,:)
-  vars(4, 2,:,0:ncol_p-1) = fall->WI_pAP(:,:)
-  vars(4, 3,:,0:ncol_p-1) = fall->WI_pAM(:,:)
-
-  vars(4, 4,:,0:ncol_d-1) = fall->WI_dED(:,:)
-  vars(4, 5,:,0:ncol_d-1) = fall->WI_dAF(:,:)
-  vars(4, 6,:,0:ncol_d-1) = fall->WI_dAF(:,:) ;used to be dBM xxxxx
-  vars(4, 7,:,0:ncol_d-1) = fall->WI_dBD(:,:)
-  vars(4, 8,:,0:ncol_d-1) = fall->WI_dAD(:,:)
-  vars(4, 9,:,0:ncol_d-1) = fall->WI_dAR(:,:)
-  vars(4,10,:,0:ncol_d-1) = fall->WI_dBF(:,:)
-  vars(4,11,:,0:ncol_d-1) = fall->WI_dBH(:,:)
-  vars(4,12,:,0:ncol_d-1) = fall->WI_dCH(:,:)
-  vars(4,13,:,0:ncol_d-1) = fall->WI_dAH(:,:)
-
-
-
-  if (TT_vars_present) then
-    vars(5, 0,:,0:ncol_p-1) = fall->TT_pBF(:,:)
-    vars(5, 1,:,0:ncol_p-1) = fall->TT_pBP(:,:)
-    vars(5, 2,:,0:ncol_p-1) = fall->TT_pAP(:,:)
-    vars(5, 3,:,0:ncol_p-1) = fall->TT_pAM(:,:)
-
-    vars(5, 4,:,0:ncol_d-1) = fall->TT_dED(:,:)
-    vars(5, 5,:,0:ncol_d-1) = fall->TT_dAF(:,:)
-    vars(5, 6,:,0:ncol_d-1) = fall->TT_dAF(:,:) ;used to be dBM xxxxx
-    vars(5, 7,:,0:ncol_d-1) = fall->TT_dBD(:,:)
-    vars(5, 8,:,0:ncol_d-1) = fall->TT_dAD(:,:)
-    vars(5, 9,:,0:ncol_d-1) = fall->TT_dAR(:,:)
-    vars(5,10,:,0:ncol_d-1) = fall->TT_dBF(:,:)
-    vars(5,11,:,0:ncol_d-1) = fall->TT_dBH(:,:)
-    vars(5,12,:,0:ncol_d-1) = fall->TT_dCH(:,:)
-    vars(5,13,:,0:ncol_d-1) = fall->TT_dAH(:,:)
-  end if
-;  qflx  = fall->QFLX(:,:) ; surface water flux
-;  precc = fall->PRECC(:,:)
-;  precl = fall->PRECL(:,:)
-
+  int_vars  = new((/nvars,nstage,nt/)     ,typeof(tmp(0,0)))
+  int_vars  = 0.0D0
   ;
-  ; compute average values
+  ; check that variables are on file and read them
   ;
-  area_sphere = sum(area_p(0:ncol_p-1))
-  print("Area of sphere in dataset is : "+area_sphere)
-  inv_area_sphere = 1.0D0/area_sphere
-
-;  rho_h2o = 
-  do t=0,nt-1
-    do variable = 0,5
-      do stages=0,3
-        print("var="+variable+"  stage="+stages)
-        int_vars(variable,stages,t) = sum(area_p(0:ncol_p-1)*vars(variable,stages,t,0:ncol_p-1))*inv_area_sphere
-      end do
-      do stages=4,13
-        int_vars(variable,stages,t) = sum(area_d(0:ncol_d-1)*vars(variable,stages,t,0:ncol_d-1))*inv_area_sphere
-      end do
-    end do
-;    int_water_chg_due_to_parameterizations(t) = sum(area_d(0:ncol_d-1)*(\
-;    					      qflx(t,0:ncol_d-1)-rho_h2O*(precc(t,0:ncol_d-1)+precl(t,0:ncol_d-1))))
-    print("done "+t)
-  end do
-  if (pdc_vars_present) then
-    do t=0,nt-1
-      do variable = 0,3
-        int_vars_pdc(variable,t) = sum(area_d(0:ncol_d-1)*vars_pdc(variable,t,0:ncol_d-1))*inv_area_sphere
-      end do
-    end do
-  end if
-  ;
-  ;
-  ;
-  do t=0,nt-1 ;nt-1
-    do variable=0,5
-      print("TOTAL STAGES at t="+t)
-      print("=========================")
-      print(" ")
-      do stages=0,13
-        print(str_vars(variable)+" at "+str_stage(stages)+": "+sprintf("%17.11e",int_vars(variable,stages,t)))
-        print(str_vars(variable)+" in hPa "+str_stage(stages)+": "+sprintf("%17.11e",int_vars(variable,stages,t)*g*0.01))
-      end do
-      if (pdc_vars_present) then
-         if (variable.gt.1) then
-            print(str_vars_pdc(variable-2)+" : "+sprintf("%17.11e",int_vars_pdc(variable-2,t)))
-     	    d = int_vars(variable,5,t)-int_vars_pdc(variable-2,t)
-            print(sprintf("%17.11e",d))
-         end if
+  do k=0,nvars-1
+    do j=0,nstage-1
+      str = str_vars(k)+"_"+str_stage(j)
+      if (isfilevar(fall,str)) then
+        vars(k,j,:,0:ncol-1) = fall->$str$(:,:)
+      else
+        print("Variable "+str+" not found")
+        exit
       end if
     end do
-    print(" ")    
- end do
-  if (pdc_vars_present) then
-    do t=0,nt-1 ;nt-1
-      do variable=0,3
-        print("PDC vars at t="+t)
-        print("=========================")
-        print(" ")
-        print(str_vars_pdc(variable)+" : "+int_vars_pdc(variable,t))
+  end do
+  ;
+  ; compute global integrals
+  ;
+  area_sphere = sum(area(0:ncol-1))
+  print("Area of sphere in dataset is : "+area_sphere)
+  inv_area_sphere = 1.0D0/area_sphere
+  do t=0,nt-1
+    do variable = 0,nvars-1
+      do stages=0,nstage-1
+        int_vars(variable,stages,t) = sum(area(0:ncol-1)*vars(variable,stages,t,0:ncol-1));*inv_area_sphere
       end do
     end do
+  end do
+
+  ;
+  ; For code clarity define indices corresponding to the different stages
+  ;
+  ipBF = str_match_ind(str_stage,"pBF")
+  ipBP = str_match_ind(str_stage,"pBP")
+  ipAP = str_match_ind(str_stage,"pAP")
+  ipAM = str_match_ind(str_stage,"pAM")
+  idED = str_match_ind(str_stage,"dED")
+  idAF = str_match_ind(str_stage,"dAF")
+  idBD = str_match_ind(str_stage,"dBD")
+  idAD = str_match_ind(str_stage,"dAD")
+  idAR = str_match_ind(str_stage,"dAR")
+  idBF = str_match_ind(str_stage,"dBF")
+  idBH = str_match_ind(str_stage,"dBH")
+  idCH = str_match_ind(str_stage,"dCH")
+  idAH = str_match_ind(str_stage,"dAH")
+
+  if (ismissing(ipBF).or.ismissing(ipBF).or.ismissing(ipAM).or.ismissing(ipAP)) then
+    PhysDiags = False
+    print("Physics diagnostics are not all on file")
+  else
+    PhysDiags = True
+    print("Physics diagnostics are on file")
   end if
- ;
 
- ;
- do t=0,nt-1 ;nt-1
-  do variable=0,4
-     print("========================================================================")
-     print(" ")
-     print(" STARTING VARIABLE "+str_vars(variable)+" at time "+t)
-     print(" ")
+  do t=0,nt-1
+    print("t="+t)
+    do j=0,nstage-1
+      tot_energy(j)  = subcycle(j)*(int_vars(0,j,t)+int_vars(1,j,t))
+;      tot_energy(j)  = (int_vars(0,j,t)+int_vars(1,j,t))
+;      tot_energy(j)  = subcycle(j)*int_vars(0,j,t)
+;      tot_energy(j)  = subcycle(j)*int_vars(1,j,t)
+      if (wet) then
+        idx = str_match_ind(str_vars,"WV")
+        tracer_mass(0,j) = subcycle(j)*(int_vars(idx,j,t))
+        idx = str_match_ind(str_vars,"WL")
+        tracer_mass(1,j) = subcycle(j)*(int_vars(idx,j,t))
+        idx = str_match_ind(str_vars,"WI")
+        tracer_mass(2,j) = subcycle(j)*(int_vars(idx,j,t))
+      end if
+    end do
 
-     if (variable.gt.1) then
-       error = (int_vars(variable,3,t)-int_vars(variable,0,t))
-       print("physics change absolute: "+error)
-       error = ((nsplit*(int_vars(variable,7,t)-int_vars(variable,5,t))))
-       print("dynamics change absolute: "+error)
-       if (pdc_vars_present) then
-          error = -nsplit*int_vars_pdc(variable-2,t)
-          print("pdc lost absolute  : "+error)
-          error = -nsplit*int_vars_pdc(variable-2,t)/int_vars(variable,0,t)
-          print("pdc lost normalized: "+error)
-       end if
-     end if 
-     error = (int_vars(variable,3,t)-int_vars(variable,0,t)-(nsplit*(int_vars(variable,7,t)-int_vars(variable,5,t))))
-     if (variable.gt.1) then
-       error=error-nsplit*int_vars_pdc(variable-2,t)
-     end if
-     error = error/int_vars(variable,0,t)
-
-     print("Total tendency error physics versus dynamics (pAM-pBF-nsplit*(dBD-dAF)) = "+error)	
-     pass(error,eps)
-     print(" ")    
-
-
-     error = (int_vars(variable,2,t)-int_vars(variable,0,t)-(nsplit*(int_vars(variable,6,t)-int_vars(variable,5,t))))
-     if (variable.gt.1) then
-       error=error-nsplit*int_vars_pdc(variable-2,t)
-     end if
-     error = error/int_vars(variable,0,t)
-
-     print("Total tendency error without dry mass adjustment  (pAP-pBF-nsplit*(dBM-dAF)) - should be zero  : "+error)
-     pass(error,eps)
-     print(" ")    
-     if (variable.gt.1) then
-        print("PDC "+str_vars_pdc(variable-2)+" : "+nsplit*int_vars_pdc(variable-2,t))
-        error = nsplit*int_vars_pdc(variable-2,t)/int_vars(variable,0,t)
-        print("PDC "+str_vars_pdc(variable-2)+" : "+error)
-     end if
-
- ;    physics_change_due_to_dry_mass_adj   = (int_vars(variable,3,t)-int_vars(variable,2,t));/int_vars(variable,3,t)
- ;    dynamics_change_due_to_dry_mass_adj  = nsplit*(int_vars(variable,7,t)-int_vars(variable,6,t));/int_vars(variable,7,t)
-  ;   error = physics_change_due_to_dry_mass_adj-dynamics_change_due_to_dry_mass_adj
-     error = (int_vars(variable,3,t)-int_vars(variable,2,t)-(nsplit*(int_vars(variable,7,t)-int_vars(variable,6,t))))
-     error = error/int_vars(variable,0,t)
     
-     print("Total tendency error due to dry mass adjustment  (pAM-pAP-nsplit*(dBD-dBM)) - should be zero  : "+error)
-     pass(error,eps)
-     print(" ")
-   end do
- end do
-
- do t=0,nt-1 ;nt-1
-;
-; dED is stage 4
-;
-    stage          = 0
-    tot_energy_pBF = (int_vars(0,stage,t)+int_vars(1,stage,t))
-    stage          = 1
-    tot_energy_pBP = (int_vars(0,stage,t)+int_vars(1,stage,t))
-    stage          = 2
-    tot_energy_pAP = (int_vars(0,stage,t)+int_vars(1,stage,t))
-    stage          = 3
-    tot_energy_pAM = (int_vars(0,stage,t)+int_vars(1,stage,t))
-    stage          = 4
-    tot_energy_dED = (int_vars(0,stage,t)+int_vars(1,stage,t))
-    stage          = 5
-    tot_energy_dAF = nsplit*(int_vars(0,stage,t)+int_vars(1,stage,t))
-    stage          = 6
-    tot_energy_dBM = nsplit*(int_vars(0,stage,t)+int_vars(1,stage,t))
-    stage          = 7
-    tot_energy_dBD = nsplit*(int_vars(0,stage,t)+int_vars(1,stage,t))
-    stage          = 8
-    tot_energy_dAD = nsplit*(int_vars(0,stage,t)+int_vars(1,stage,t))
-    stage          = 9
-    tot_energy_dAR = nsplit*(int_vars(0,stage,t)+int_vars(1,stage,t))
-    stage          = 10
-    tot_energy_dBF = (int_vars(0,stage,t)+int_vars(1,stage,t))
-    stage          = 11
-    tot_energy_dBH = nsplit*rsplit*hypervis_subcycle*(int_vars(0,stage,t)+int_vars(1,stage,t))
-    stage          = 12
-    tot_energy_dCH = nsplit*rsplit*hypervis_subcycle*(int_vars(0,stage,t)+int_vars(1,stage,t))
-    stage          = 13
-    tot_energy_dAH = nsplit*rsplit*hypervis_subcycle*(int_vars(0,stage,t)+int_vars(1,stage,t))
-    
-
-    rate_of_change_physicsB = (tot_energy_pBP-tot_energy_pBF)/dtime
-    print("Rate of energy change in physics energy fixer          (total: pBP-pBF) "+rate_of_change_physicsB+" W/M^2")
-
-    rate_of_change_physicsC = (tot_energy_pAP-tot_energy_pBP)/dtime
-    print("Rate of energy change in physics parameterizations     (total: pAP-pBP) "+rate_of_change_physicsC+" W/M^2")
-
-    rate_of_dry_mass_adjustment = (tot_energy_pAM-tot_energy_pAP)/dtime
-    print("Rate of energy change dry mass adj.                    (total: pAM-pAP) "+rate_of_dry_mass_adjustment+" W/M^2")
-
-    rate_of_change_physicsD = (tot_energy_pAM-tot_energy_pBF)/dtime
-    print("Rate of energy change in physics TOTAL                 (total: pAM-pBF) "+rate_of_change_physicsD+" W/M^2")
-
-    rate_of_change_physicsA = (tot_energy_pAP-tot_energy_pBF)/dtime
-    print("Rate of energy change in physics physics+energy fixer  (total: pAP-pBF) "+rate_of_change_physicsA+" W/M^2")
-
-    print("   ")
-
-    error = rate_of_change_physicsB+rate_of_dry_mass_adjustment
-    print("Rate of energy lost in dynamics estimated from physics                  "+error+" W/M^2")
-
-    print ("  ")
-    print ("-------------------------------------------------------------------")
-    print ("  ")
-
-    rate_of_change_dynamicsA = (tot_energy_dBD-tot_energy_dAF)/dtime
-    print("Rate of energy change in dynamics adding param+dry mass adj. (total: dBD-dAF) "+rate_of_change_dynamicsA+" W/M^2")
-    error = rate_of_change_dynamicsA-rate_of_change_physicsD
-    print("Consistent with physics?                           (total: dBD-dAF-(pAM-pBF)) "+error+" W/M^2")
-    rate_of_change_dynamicsE = (tot_energy_dBM-tot_energy_dAF)/dtime
-    print("Breakdown: param.                                            (total: dBM-dAF) "+rate_of_change_dynamicsE+" W/M^2")
-    rate_of_change_dynamicsD = (tot_energy_dBD-tot_energy_dBM)/dtime
-    print("Breakdown: dry-mass adj.                           (total: dBD-dBM) "+rate_of_change_dynamicsD+" W/M^2")
-    print("    ")
-
-
-    rate_of_change_heating_term_put_back_in = (tot_energy_dAH-tot_energy_dCH)/dtime
-    rate_of_change_hypervis_total = (tot_energy_dAH-tot_energy_dBH)/dtime
-    print("Rate of energy change in hypervis                            (total: dAH-dBH) "+rate_of_change_hypervis_total+" W/M^2")
-
-    rate_of_change_dynamicsB = (tot_energy_dAD-tot_energy_dBD)/dtime
-    print("Rate of energy change in horizontal dynamics - incl. hypervis (total: dAD-dBD) "+rate_of_change_dynamicsB+" W/M^2")
-
-    rate_of_change_vertical_remapping = (tot_energy_dAR-tot_energy_dAD)/dtime
-    print("Rate of energy change due to vertical remapping               (total: dAR-dAD) "+rate_of_change_vertical_remapping+" W/M^2")
-
-    error = rate_of_change_dynamicsB+rate_of_change_vertical_remapping
-    print("Total: horizontal dynamics+vertical remaping+hypervis                          "+error)
-    error = rate_of_change_dynamicsB+rate_of_change_vertical_remapping+(rate_of_change_physicsB+rate_of_dry_mass_adjustment)
-    print("Consistent with physics estimate?                                              "+error)
-
+    print("  ")
+    print("  ")
+    print("  ")
+    print("ANALYSIS_START_ANALYSIS_START_ANALYSIS_START_ANALYSIS_START_ANALYSIS_START_ANALYSIS_START")
+    print("  ")
+    print("  ")
     print("  ")
 
-    rate_of_change_dynamics = (tot_energy_dBF-tot_energy_dED)/dtime
-    print("Rate of energy change in dynamics everything                  (total: dBF-dED) "+rate_of_change_dynamics+" W/M^2")
-    
-    error = rate_of_change_dynamicsA+rate_of_change_dynamicsB+rate_of_change_vertical_remapping
-    print("Consistency check (should match above): param+dry adj.+horiz dyn.+remap        "+error+" W/M^2")
 
-    print("    ")
-
-    error= rate_of_change_dynamics-rate_of_change_physicsD
-
-    print("  "+error)
-
-    rate_of_change_energy_fixer = (tot_energy_pBP-tot_energy_pBF)/dtime
-    print("Rate of energy change in energy fixer (total: pBP-pBF) "+rate_of_change_energy_fixer+" W/M^2")
-    
-    rate_of_change_dynamics_tendencies = (tot_energy_dBD-tot_energy_dAF)/dtime
-    print("Rate of energy change in total tendencies dynamics (total: dAD-dAF) "+rate_of_change_dynamics_tendencies+" W/M^2")
-
-
-
-    rate_of_change_horizontal_dynamics = (tot_energy_dAD-tot_energy_dBD)/dtime
-    print("Rate of energy change in horizontal dynamics (total: dAD-dBD) "+rate_of_change_horizontal_dynamics+" W/M^2")
-
-
-
-;    error = rate_of_change_physics-rate_of_change_dynamics_tendencies
-;
-    if (ftype.eq.1) then
-;       print("For ftype=1 pBF-pAM-(dAD-dAF) should be zero "+error)
+    if (qsize_condensate_loading.eq."1") then
+       print("Since qsize_condensate_loading=1 the same less accurate formula for energy is used")
+       print("in dynamics and physics (cp=cp_dry in internal energy).")
     else
-;      print("For ftype=0 pBF-pAM-(dAD-dAF) is error due to dribbling tendencies (zero for ftype=1) "+error+" W/M^2")
+       print("WARNING: Since qsize_condensate_loading>1 different formulas for dynamics and physics are used")
+       print("in dynamics (cp and dp includes all water variables) and physics (cp=cp_dry in internal energy).")
     end if
-    print ("Rate of energy change in heating term (put back in) "+rate_of_change_heating_term_put_back_in+" W/M^2")
-    print("xxx"+tot_energy_dBH+"  "+tot_energy_dAH)
-    print("Rate of energy change hypervis total "+rate_of_change_hypervis_total+" W/M^2")
 
-    print("  ")
-    print("  ")
-    print("  ")
-    print("newnewnewnewnewnewnewnewnewnewnewnewnewnewnewnewnewnewnewnewnewnewnewnewnewnewnewnewnewnewnewnewnewnewnewnew")
-    print("  ")
-    print("  ")
-    print("  ")
+   if (PhysDiags) then
+      pEFIX    = (tot_energy(ipBP)-tot_energy(ipBF))/dtime
+      pDMEA = (tot_energy(ipAM)-tot_energy(ipAP))/dtime
+      param           = (tot_energy(ipAP)-tot_energy(ipBP))/dtime
+      phys_total      = (tot_energy(ipAM)-tot_energy(ipBF))/dtime
+    end if
+    dyn_total       = (tot_energy(idBF)-tot_energy(idED))/dtime
 
-    energy_fixer    = (tot_energy_pBP-tot_energy_pBF)/dtime
-    phys_dme_adjust = (tot_energy_pAM-tot_energy_pAP)/dtime
-    param           = (tot_energy_pAP-tot_energy_pBP)/dtime
-    dyn_total       = (tot_energy_dBF-tot_energy_dED)/dtime
-    dyn_dme_adjust  = (tot_energy_dBD-tot_energy_dBM)/dtime
-    dyn_forcing_no_dme = (tot_energy_dBM-tot_energy_dAF)/dtime    
+    if (PhysDiags) then
+    print(" ")
+    print("=================================================================================")
+    print("|                                                                               |")
+    print("| ANALYSIS OF ENERGY DIAGNOSTICS IN PHYSCS                                      |")
+    print("|                                                                               |")
+    print("=================================================================================")
+    print(" ")
+    print("dE/dt energy fixer                      (pBP-pBF) "+sprintf("%6.4g",pEFIX)+" W/M^2")
+    print("dE/dt parameterizations                 (pAP-pBP) "+sprintf("%6.4g",param)+" W/M^2")
+    print("dE/dt dry mass adjustment               (pAM-pAP) "+sprintf("%6.4g",pDMEA)+" W/M^2")
+    print(" ")
+    value = pEFIX+pDMEA
+    print("=> dE/dt dynamical core (estimated from physics)  ")
+    print("   dE/dt energy fixer + dE/dt dry mass adjustment "+sprintf("%6.4g",value)+" W/M^2")
+    
+    print("=> dE/dt physics total                   (pAM-pBF)"+sprintf("%6.4g",phys_total)+" W/M^2")
+    end if
 
-    dyn_total    = (tot_energy_dBF-tot_energy_dED)/dtime
-
-
-    print("Dynamics dry mass adj.       (dBD-dBF) "+dyn_dme_adjust+" W/M^2")
-    error = dyn_dme_adjust-phys_dme_adjust
-    print("Consistent with physics? )             "+error+" W/M^2")
+    print(" ")
+    print("=================================================================================")
+    print("|                                                                               |")
+    print("| ANALYSIS OF ENERGY DIAGNOSTICS IN DYNAMICS                                    |")
+    print("|                                                                               |")
+    print("=================================================================================")
     print(" ")
 
-    print("dE/dt dynamics physics forcing (no dme_adjust) "+dyn_forcing_no_dme+" W/M^2")
-    error = (tot_energy_dBM-tot_energy_dAF)/dtime -((tot_energy_pBP-tot_energy_pBF)/dtime+(tot_energy_pAP-tot_energy_pBP)/dtime)
-    print("dE/dt dynamics physics forcing - (energy_fixer+parameterizations) "+error+" W/M^2")
+    rate_of_change_2D_dyn = (tot_energy(idAD)-tot_energy(idBD))/dtime
+    rate_of_change_vertical_remapping = (tot_energy(idAR)-tot_energy(idAD))/dtime
+    dADIA = rate_of_change_2D_dyn+rate_of_change_vertical_remapping
+    print("dE/dt total adiabatic dynamics                    "+sprintf("%6.4g",dADIA)+" W/M^2")    
+    print("dE/dt 2D dynamics                       (dAD-dBD) "+sprintf("%6.4g",rate_of_change_2D_dyn)+" W/M^2")
+    print("dE/dt vertical remapping                (dAR-dAD) "+sprintf("%6.4g",rate_of_change_vertical_remapping)+" W/M^2")
 
-;    print("Consistent with physics? )"+error+" W/M^2")
-
-
-    print("dE/dt dynamics total "+dyn_total+" W/M^2")
-    error=dyn_total-param
-    print("This should equal dE/dt due to parameterizations "+error)
-
-
-    error        = energy_fixer+phys_dme_adjust;-param
-    print("dE/dt adiabatic dynamics predicted from physics: dE/dt energy fixer+dE/dt dme_adjust "+ error)
-    print("xxxxx")
-    print("    ")
-    print("    ")
-    print("    ")
-    print("    ")
-;===
-
-    rate_of_change_2D_dyn = (tot_energy_dAD-tot_energy_dBD)/dtime
-    print("Rate of energy change in horizontal dynamics - incl. hypervis (total: dAD-dBD) "+rate_of_change_2D_dyn+" W/M^2")
     print(" ")
     print("Breakdown of 2D dynamics:")
     print(" ")
-    rate_of_change_heating_term_put_back_in = (tot_energy_dAH-tot_energy_dCH)/dtime
-    rate_of_change_hypervis_total = (tot_energy_dAH-tot_energy_dBH)/dtime
-    print("      Rate of energy change in hypervis                      (total: dAH-dBH) "+rate_of_change_hypervis_total+" W/M^2")
-    print("      Rate of energy change from frictional heating rate from momentum        ")
-    print("      diffusion which is added to the temperature                             "+rate_of_change_heating_term_put_back_in+" W/M^2")
+    rate_of_change_heating_term_put_back_in = (tot_energy(idAH)-tot_energy(idCH))/dtime
+    rate_of_change_hypervis_total           = (tot_energy(idAH)-tot_energy(idBH))/dtime
+    print("      dE/dt hypervis                    (dAH-dBH) "+sprintf("%6.4g",rate_of_change_hypervis_total)+" W/M^2")
+    print("      dE/dt frictional heating          (dAH-dCH) "+sprintf("%6.4g",rate_of_change_heating_term_put_back_in)+" W/M^2")
     error = rate_of_change_2D_dyn-rate_of_change_hypervis_total
-    print("      Residual of rate of energy change (time truncation errors)              "+error+" W/M^2")
-
-    print(" ")
-    rate_of_change_vertical_remapping = (tot_energy_dAR-tot_energy_dAD)/dtime
-    print("Rate of energy change due to vertical remapping               (total: dAR-dAD) "+rate_of_change_vertical_remapping+" W/M^2")
+    print("      dE/dt residual (time truncation errors)     "+sprintf("%6.4g",error)+" W/M^2")
 
     print(" ")
 
-    print("Summary:")
     print(" ")
 
-    rate_of_change_adiabatic_dyn = rate_of_change_2D_dyn+rate_of_change_vertical_remapping
-    print("Adiabatic rate of energy change                (2D dynamics+vertical remaping) "+rate_of_change_adiabatic_dyn+" W/M^2")
+    if (PhysDiags) then
+      rate_of_change_physics = (tot_energy(idBD)-tot_energy(idAF))/dtime
+      print("dE/dt physics tendency in dynamics      (dBD-dAF) "+sprintf("%6.4g",rate_of_change_physics)+" W/M^2")
+      value = phys_total-rate_of_change_physics
+      if (ftype .eq. "1") then
+        print(" ")
+        print("      Consistency check:")
+        print(" ")
+       print("      dE/dt physics tendency in dynamics (dBD-dAF) should exactly match dE/dt physics total (pAM-pBF):"+sprintf("%6.4g",value))
+        print(" ")
+      else
+        print("Dribbling errors (pAM-pBF-(dBD-dAF))"+sprintf("%6.4g",value))
+      end if
+      print("Energy fixer fixes dme_adjust (pDMEA), lack of energy conservation in adiabatic")
+      print("dynamical core (dADIA) and energy lost/gained in physics-dynamics coupling")
+      if (qsize_condensate_loading.eq."1") then
+        print("(dPDC):")
+        str="dPDC"
+      else
+        print("(dPDC) and the difference between the energy definition in dynamics and physics (EDIFF):")
+        str="dPDC+EDIFF"
+      end if
+      print(" ")
+      print("		-pEFIX = pDMEA+dADIA+"+str)
+      print("            ")
+      dPDC = -pEFIX-pDMEA-dADIA
+      print("          => "+str+" = -pEFIX-pDMEA-dADIA = "+sprintf("%6.4g",dPDC))
+    end if
 
-    print(" ")
+    if (qsize.gt.0) then
+      print("    ")
+      print("    ")
+      print(" ")
+      print("=================================================================================")
+      print("|                                                                               |")
+      print("| ANALYSIS OF WATER VAPOR, CLOUD LIQUID AND CLOUD ICE BUDGETS                   |")
+      print("|                                                                               |")
+      print("=================================================================================")
+      print(" ")
+      print(" ")
+    end if
+    do m_cnst=0,qsize-1
+      if (m_cnst.eq.0) then 
+        print("Water vapor")
+        print("-----------")
+      end if
+      if (m_cnst.eq.1) then
+        print("Cloud liquid")
+        print("------------")
+      end if
+      if (m_cnst.eq.2) then 
+        print("Cloud ice")
+        print("---------")
+      end if
+      print(" ")
 
-    rate_of_change_forcing_in_dyn = (tot_energy_dBM-tot_energy_dAF)/dtime
-    print("Rate of energy change due to physics forcing in dynamics      (total: dBM-dAF) "+rate_of_change_forcing_in_dyn+" W/M^2")
+      pEFIX    = (tracer_mass(m_cnst,ipBP)-tracer_mass(m_cnst,ipBF))/dtime
+      pDMEA = (tracer_mass(m_cnst,ipAM)-tracer_mass(m_cnst,ipAP))/dtime
+      param           = (tracer_mass(m_cnst,ipAP)-tracer_mass(m_cnst,ipBP))/dtime
+      dyn_total       = (tracer_mass(m_cnst,idBF)-tracer_mass(m_cnst,idED))/dtime
+      phys_total      = (tracer_mass(m_cnst,ipAM)-tracer_mass(m_cnst,ipBF))/dtime    
 
-    rate_of_change_dynamics = (tot_energy_dBF-tot_energy_dED)/dtime
-    error = rate_of_change_dynamics-(rate_of_change_forcing_in_dyn+rate_of_change_2D_dyn+rate_of_change_vertical_remapping)
+      print("dMASS/dt energy fixer                      (pBP-pBF) "+sprintf("%6.4g",pEFIX)+" Pa")
+      print("dMASS/dt parameterizations                 (pAP-pBP) "+sprintf("%6.4g",param)+" Pa")
+      print("dMASS/dt dry mass adjustment               (pAM-pAP) "+sprintf("%6.4g",pDMEA)+" Pa")
+      print(" ")
+      value = pEFIX+pDMEA
+      print("=> dMASS/dt dynamical core (estimated from physics)  ")
+      print("   dMASS/dt energy fixer + dMASS/dt dry mass adjustment "+sprintf("%6.4g",value)+" Pa")
+ 
+      print("=> dMASS/dt physics total                   (pAM-pBF)"+sprintf("%6.4g",phys_total)+" Pa")
 
-    print("Consistency check: total change dynamics - (adiabatic change+forcing change)   "+error+" W/M^2")
 
-    print(" ")
+      print("  ")
+      print("  ")
+      print("  ")
 
-    error = (tot_energy_pAM-tot_energy_pBF)/dtime-rate_of_change_forcing_in_dyn
+      rate_of_change_2D_dyn = (tracer_mass(m_cnst,idAD)-tracer_mass(m_cnst,idBD))/dtime
+      rate_of_change_vertical_remapping = (tracer_mass(m_cnst,idAR)-tracer_mass(m_cnst,idAD))/dtime
+      dADIA = rate_of_change_2D_dyn+rate_of_change_vertical_remapping
+      print("dE/dt total adiabatic dynamics                    "+sprintf("%6.4g",dADIA)+" Pa")    
+      print("dE/dt 2D dynamics                       (dAD-dBD) "+sprintf("%6.4g",rate_of_change_2D_dyn)+" Pa")
+      print("dE/dt vertical remapping                (dAR-dAD) "+sprintf("%6.4g",rate_of_change_vertical_remapping)+" Pa")
 
-    print("pAM-pBF-(dAD-dAF) is error due to dribbling tendencies      (zero for ftype=1) "+error+" W/M^2")
+      print(" ")
+      print("Breakdown of 2D dynamics:")
+      print(" ")
+      rate_of_change_heating_term_put_back_in = (tracer_mass(m_cnst,idAH)-tracer_mass(m_cnst,idCH))/dtime
+      rate_of_change_hypervis_total           = (tracer_mass(m_cnst,idAH)-tracer_mass(m_cnst,idBH))/dtime
+      print("      dE/dt hypervis                    (dAH-dBH) "+sprintf("%6.4g",rate_of_change_hypervis_total)+" Pa")
+      print("      dE/dt frictional heating          (dAH-dCH) "+sprintf("%6.4g",rate_of_change_heating_term_put_back_in)+" Pa")
+      error = rate_of_change_2D_dyn-rate_of_change_hypervis_total
+      print("      dE/dt residual (time truncation errors)     "+sprintf("%6.4g",error)+" Pa")
 
-    print("  ")
+      print(" ")
+
+      print(" ")
+
+      rate_of_change_physics = (tracer_mass(m_cnst,idBD)-tracer_mass(m_cnst,idAF))/dtime
+      print("dE/dt physics tendency in dynamics      (dBD-dAF) "+sprintf("%6.4g",rate_of_change_physics)+" Pa")
+      value = phys_total-rate_of_change_physics
+      if (ftype .eq. "1") then
+        print(" ")
+        print("      Consistency check:")
+        print(" ")
+        print("      dE/dt physics tendency in dynamics (dBD-dAF) should exactly match dE/dt physics total (pAM-pBF):"+sprintf("%6.4g",value))
+        print(" ")
+      else
+        print("Dribbling errors (pAM-pBF-(dBD-dAF))"+sprintf("%6.4g",value))
+      end if
+
+      print(" ")
+      print("---------------------------------------------------------------------------------------------------")
+      print(" ")
+     end do
+
  end do
-
-; do t=0,nt-1 ;nt-1
-;    do variable = 2,5
-;       print("Variable = "+str_vars(variable)+" at time "+t)
-;       error = (int_vars(variable,4,t)-int_vars(variable,0,t))/int_vars(variable,0,t)
-;       print("Mass loss in state mapped to physics grid (pBF-dED): "+error)
-;       error = (nsplit*int_vars(variable,6,t)-int_vars(variable,2,t))/int_vars(variable,2,t)
-;       print("Mass loss in updating state (pBF-dBM): "+error)
-;       print("sss "+int_vars(variable,6,t)+" "+int_vars(variable,2,t))
-;    end do   
-; end do
-
 end
 
