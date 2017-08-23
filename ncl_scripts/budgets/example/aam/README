@@ -1,0 +1,26 @@
+Axial Angular Momentum (AAM) Diagnostics
+========================================
+
+To plot a time-series of AAM 
+
+1. go to your run directory
+2. assuming that your history files are in *.h2.*.nc execute
+
+	source ~/git-scripts/ncl_scripts/budgets/aam_budgets.sh case_name.h2 i
+
+  This will produce a file "dmdt.nc" with the AAM time-series on them
+
+3. Produce plot
+
+   ncl < ~/git-scripts/ncl_scripts/budgets/aam_plot.ncl
+
+   The plot file is named aam_plot.pdf
+
+The fincl for AAM diagnostics is:
+
+fincl3         = 'MR_dED', 'MO_dED', 'MR_dAF', 'MO_dAF', 'MR_dBD', 'MO_dBD', 'MR_dAD', 'MO_dAD', 'MR_dAR', 'MO_dAR', 'MR_dBF',
+                 'MO_dBF', 'MR_dBH', 'MO_dBH', 'MR_dCH', 'MO_dCH', 'MR_dAH', 'MO_dAH'
+nhtfrq         = -24
+ndens          = 1
+
+
