@@ -100,5 +100,30 @@ begin
 ; resP@gsnPanelYWhiteSpacePercent = 5
 ; resP@gsnPanelXWhiteSpacePercent = 5
    resP@txString         = "Dynamical core Axial Angular Momentum (AAM) diagnostics for CAM-SE" 
+
+; ---------- create tiny meta data in ndc coordinates ---------------------;
+; ----The following section could be replaced by the "infoTimeStamp"-------;
+; --------------function which resides in "shea_util.ncl"------------------;
+;  infoTimeStamp (wks, 0.010,"NCAR data source; fspj01s & fspj02 ('97)") 
+; This long way is included to illustrate how to use "gsn_text_ndc"--------;
+
+   txres               = True         ; additional info
+   txres@txFontHeightF = 0.010        ; size of meta data
+   txres@txJust        = "CenterLeft"
+   txres@txAngleF = 90.0
+   TimeStamp           = systemfunc( "date" )
+   gsn_text_ndc  (wks,"Plot produced by Peter Hjort Lauritzen (pel@ucar.edu), National Center for Atmospheric Research (NCAR), on "+TimeStamp \
+                     ,0.99 , 0.02, txres)
+                                       ; note when plotted
+
+   txres@txJust        = "CenterRight"
+
+   gsn_text_ndc  (wks,"Created: "+TimeStamp,0.01,0.3, txres)
+
+
+
+
    gsn_panel(wks,plot(:),(/3,3/),resP)
+
+
 end
