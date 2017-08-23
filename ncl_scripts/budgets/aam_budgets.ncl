@@ -44,16 +44,10 @@ begin
   print("tempo ="+tempo)
   print("done input summary")
   print(" ")
-
-
-
-
-
-
   ;
   ; initialization
   ;
-  g = 9.80665D0
+  g         = 9.80665D0
   nc        = -1
   eps       = 1.0D-13
   area      = fall[0]->area(:)
@@ -155,7 +149,6 @@ begin
       end do
     end do
   end do
-
   ;
   ; For code clarity define indices corresponding to the different stages
   ;
@@ -227,32 +220,29 @@ begin
     print("      dM/dt physics     "+sprintf("%6.4g",rate_of_change_phys)+" kg*m^2/s^2")
     print(" ")
     end if
- end do
- ;
- ; write integrals to file
- ;
- dmdt_dyn!0 = "time"
- dmdt_dyn&time = time
- dmrdt_dyn!0 = "time"
- dmrdt_dyn&time = time
- dmodt_dyn!0 = "time"
- dmodt_dyn&time = time
- dmdt_phys!0 = "time"
- dmdt_phys&time = time
- dmodt_phys!0 = "time"
- dmodt_phys&time = time
- dmrdt_phys!0 = "time"
- dmrdt_phys&time = time
- mo!0 = "time"
- mo&time = time
- mr!0 = "time"
- mr&time = time
+  end do
+  ;
+  ; write integrals to file
+  ;
+  dmdt_dyn!0 = "time"
+  dmdt_dyn&time = time
+  dmrdt_dyn!0 = "time"
+  dmrdt_dyn&time = time
+  dmodt_dyn!0 = "time"
+  dmodt_dyn&time = time
+  dmdt_phys!0 = "time"
+  dmdt_phys&time = time
+  dmodt_phys!0 = "time"
+  dmodt_phys&time = time
+  dmrdt_phys!0 = "time"
+  dmrdt_phys&time = time
+  mo!0 = "time"
+  mo&time = time
+  mr!0 = "time"
+  mr&time = time
 
- fname_out    = "dmdt.nc"
- ncdf     = addfile(fname_out ,"c")  ; open output netCDF file
-
-  ; make time and UNLIMITED dimension      ; recommended  for most applications
-;  filedimdef(ncdf,"time",-1,True) 
+  fname_out    = "dmdt.nc"
+  ncdf     = addfile(fname_out ,"c")  ; open output netCDF file
   ;
   ncdf->dmdt_dyn   = dmdt_dyn
   ncdf->dmrdt_dyn  = dmrdt_dyn

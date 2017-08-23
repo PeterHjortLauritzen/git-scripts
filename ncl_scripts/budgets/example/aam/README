@@ -8,7 +8,9 @@ To plot a time-series of AAM
 
 	source ~/git-scripts/ncl_scripts/budgets/aam_budgets.sh case_name.h2 i
 
-  This will produce a file "dmdt.nc" with the AAM time-series on them
+  This will produce a file "dmdt.nc" with the AAM time-series on them.
+  Please note that this script needs atm_in and drv_in files from the run directory so
+  that the different time-steps used in the dynamical core can be computed
 
 3. Produce plot
 
