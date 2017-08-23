@@ -82,7 +82,7 @@ begin
 
   res@tiXAxisString  = " "
   res@tiMainString     = "Total AAM"
-  res@tiYAxisString    = "~F1~(M~B~~F8~W~N~~F1~) [10~S~25~N~ kg m ~S~2~N~ s~S~-2~N~]"
+  res@tiYAxisString    = "~F1~(M~B~~F8~W~N~~F1~) [10~S~25~N~ kg m ~S~2~N~ s~S~-1~N~]"
   res@trYMinF  =  tofloat(min(mo+mr)/1.0D25)-1.0
   res@trYMaxF  =  tofloat(max(mo+mr)/1.0D25)+1.0
   plot(0)  = gsn_csm_xy (wks,time,(mo+mr)/1.0E25,res) ; create plot
