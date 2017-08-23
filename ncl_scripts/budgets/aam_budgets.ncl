@@ -22,21 +22,44 @@ begin
   print("ftype                    ="+ftype)
   print("qsize_condensate_loading ="+qsize_condensate_loading)
   print("dtime            ="+dtime)
-  fname =  systemfunc("ls "+fname)
-  print("File used for axial angular momentum diagnostics "+fname)
+
+  tempo_false = True
+  if (tempo.eq."a") then
+    fnames =  (/fname/) ;systemfunc("ls "+fname)
+    print("File used for axial angular momentum diagnostics "+fnames)
+    fall = addfiles(fnames,"r")       ; Open netCDF files.	
+    tempo_false = False
+  end if
+  if (tempo.eq."i") then
+    fnames =  systemfunc("ls "+fname+"*.nc")
+    print("Files used for axial angular momentum diagnostics "+fnames)
+    fall = addfiles(fnames,"r")       ; Open netCDF files.	
+    tempo_false = False
+  end if 
+  if (tempo_false) then
+    print("Not a valid value for tempo "+tempo)
+    print("Valid options are i and a")
+    exit()
+  end if
+  print("tempo ="+tempo)
   print("done input summary")
   print(" ")
-  fall = addfile(fname,"r")       ; Open netCDF files.	
+
+
+
+
+
+
   ;
   ; initialization
   ;
   g = 9.80665D0
   nc        = -1
   eps       = 1.0D-13
-  area      = fall->area   (:)
-  tmp       = fall->MO_dED(:,:)
-  time      = fall->time
-  nt        = dimsizes(tmp(:,0))
+  area      = fall[0]->area(:)
+  time      = fall[:]->time
+  nt        = dimsizes(time)
+  tmp       = fall[0]->MO_dED(:,:)
   ncol      = dimsizes(tmp(0,:))
 
   wet = False
@@ -111,8 +134,8 @@ begin
   do k=0,nvars-1
     do j=0,nstage-1
       str = str_vars(k)+"_"+str_stage(j)
-      if (isfilevar(fall,str)) then
-        vars(k,j,:,0:ncol-1) = fall->$str$(:,:)
+      if (isfilevar(fall[0],str)) then
+        vars(k,j,:,0:ncol-1) = fall[:]->$str$(:,:)
       else
         print("Variable "+str+" not found")
         exit
@@ -225,8 +248,8 @@ begin
  mr!0 = "time"
  mr&time = time
 
- fname    = "dmdt.nc"
- ncdf     = addfile(fname ,"c")  ; open output netCDF file
+ fname_out    = "dmdt.nc"
+ ncdf     = addfile(fname_out ,"c")  ; open output netCDF file
 
   ; make time and UNLIMITED dimension      ; recommended  for most applications
 ;  filedimdef(ncdf,"time",-1,True) 

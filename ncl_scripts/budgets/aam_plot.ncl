@@ -49,13 +49,15 @@ begin
      res2 = True
      res2@gsnFrame  = False
      res2@gsnDraw   = False        ; do not draw picture
-     res2@vpXF      = 0.159
-     res2@vpYF      = 0.63;46 ;6 phl 
+     res2@vpXF      = 0.18
+     res2@vpYF      = 0.46;46 ;6 phl 
      res2@vpWidthF  = 0.15
      res2@vpHeightF = 0.1
      res2@xyLineColors = (/"blue","red","green","blue","red","green"/)  ; 3 different colors 
      res2@xyDashPatterns = (/0,0,0,2,2,2/)
      res2@tiYAxisString    = "[10~S~17~N~ kg m ~S~2~N~ s~S~-2~N~]"
+     res2@tiXAxisString = ""
+     res2@tmXBLabelsOn = False
      plotOverlay = gsn_csm_xy(wks,time,dmdt_dyn/1.0E17,res2)
      draw(plotOverlay)
 
@@ -90,6 +92,7 @@ begin
      res@tiYAxisString    = "~F1~(dM~B~~F8~W~N~~F1~/dt)~B~phys~N~~F1~ [10~S~19~N~ kg m ~S~2~N~ s~S~-2~N~]"
      plot(8)  = gsn_csm_xy (wks,time,dmodt_phys/1.0E19,res) ; create plot
 
+     res@tiXAxisString  = " "
      res@tiMainString     = "Total AAM"
      res@tiYAxisString    = "~F1~(M~B~~F8~W~N~~F1~) [10~S~25~N~ kg m ~S~2~N~ s~S~-2~N~]"
      res@trYMinF  =  tofloat(min(mo+mr)/1.0D25)-1.0

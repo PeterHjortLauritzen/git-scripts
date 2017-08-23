@@ -1,11 +1,14 @@
 #!/bin/tcsh
-if ( "$#argv" != 1) then
+if ( "$#argv" != 2) then
   echo "Wrong number of arguments specified:"
   echo "  -arg 1 file with axial angular momentum diagnostics (averaged)"
+  echo "  -arg 2 i for instantaneous and a for a file containing average"
   exit
 endif
 set n = 1
 set file = "$argv[$n]" 
+set n = 2
+set tempo = "$argv[$n]" 
 if (`hostname` == "hobart.cgd.ucar.edu") then
   set data_dir = "/scratch/cluster/pel/"
   set ncl_dir = "/home/pel/git-scripts/ncl_scripts/budgets"
@@ -59,4 +62,4 @@ echo "rsplit="$rsplit
 echo "nsplit="$nsplit
 echo "hypervis_subcycle="$hyper
 echo "dtime ="$dtime
-ncl 'dir="'$PWD'"' 'fname="'$file'"' 'rsplit='$rsplit'' 'nsplit='$nsplit'' 'hypervis_subcycle='$hyper'' 'ftype='$ftype'' 'qsize_condensate_loading='$qsize_condensate_loading'' 'dtime='$dtime'' $ncl_dir/aam_budgets.ncl
+ncl 'dir="'$PWD'"' 'fname="'$file'"' 'rsplit='$rsplit'' 'nsplit='$nsplit'' 'hypervis_subcycle='$hyper'' 'ftype='$ftype'' 'qsize_condensate_loading='$qsize_condensate_loading'' 'dtime='$dtime'' 'tempo="'$tempo'"' $ncl_dir/aam_budgets.ncl
