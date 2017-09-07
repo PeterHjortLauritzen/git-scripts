@@ -1,1 +1,4 @@
+git fetch
 git pull --rebase
+
+svn revert = git checkout -f 
