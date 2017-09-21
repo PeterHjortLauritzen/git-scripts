@@ -6,7 +6,7 @@ if ( "$#argv" <5) then
   echo " "
   echo "Script usage: source create_commonly_used_scripts.sh case res debug energy_diags old_visco"
   echo " "
-  echo "Supported resolutions: ne30_ne30, ne30pg3_ne30pg3_mg17"
+  echo "Supported resolutions: ne30pg3_ne30pg3_mg17, ne16_ne16_mg37"
   echo " "
   echo "CASE (numeric value) options are:"
   echo "---------------------------------"
