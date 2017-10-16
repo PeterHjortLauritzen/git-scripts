@@ -14,7 +14,7 @@ endif
 echo "$NCAR_HOST"
 if ("$NCAR_HOST" == "cheyenne") then
   echo "Known computer"
-  set ncl_dir = "/glade/u/home/pel/git-scripts/ncl_scripts/tke/"
+  set ncl_dir = "/glade/u/home/$USER/git-scripts/ncl_scripts/tke/"
 endif
 
 set n = 1

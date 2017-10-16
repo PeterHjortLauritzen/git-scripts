@@ -10,9 +10,9 @@ set case = "$argv[$n]"
 set n = 2
 set hn = "$argv[$n]" 
 if (`hostname` == "hobart.cgd.ucar.edu") then
-  set data_dir = "/scratch/cluster/pel/"
+  set data_dir = "/scratch/cluster/$USER/"
 else
-  set data_dir = "/glade/scratch/pel/"
+  set data_dir = "/glade/scratch/$USER/"
 endif
 set files = `ls $data_dir/$case/run/$case.cam.$hn.*`
 echo $files
