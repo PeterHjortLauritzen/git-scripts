@@ -108,6 +108,7 @@ begin
      delete(nlat)
      delete(power)
      delete(k)
+     delete(var_in)
   end do
   circumference = 40074.275;
 

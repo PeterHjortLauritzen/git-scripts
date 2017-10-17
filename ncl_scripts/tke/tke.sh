@@ -11,10 +11,10 @@ endif
 #
 # use if (`hostname` == "hobart.cgd.ucar.edu") then instead
 #
-echo "$NCAR_HOST"
-if ("$NCAR_HOST" == "cheyenne") then
-  echo "Known computer"
-  set ncl_dir = "/glade/u/home/$USER/git-scripts/ncl_scripts/tke/"
+if (`hostname` == "hobart.cgd.ucar.edu") then
+  setenv ncl_dir  "/home/$USER/git-scripts/ncl_scripts/tke"
+else
+  setenv ncl_dir  "/glade/u/home/$USER/git-scripts/ncl_scripts/tke"
 endif
 
 set n = 1

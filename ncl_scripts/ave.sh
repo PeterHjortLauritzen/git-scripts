@@ -14,6 +14,8 @@ if (`hostname` == "hobart.cgd.ucar.edu") then
 else
   set data_dir = "/glade/scratch/$USER/"
 endif
+echo "scratch directory is $data_dir"
+echo "ls $data_dir/$case/run/$case.cam.$hn.*"
 set files = `ls $data_dir/$case/run/$case.cam.$hn.*`
 echo $files
 ncra $files {$case}.ave.$hn.nc
