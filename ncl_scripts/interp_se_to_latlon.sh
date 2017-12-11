@@ -22,8 +22,8 @@ set interp_dir =  "$PWD" #"$work_dir/interp-data"
 
 
 
-set nlon  = 720
-set nlat  = 360
+set nlon  = 360
+set nlat  = 180
 set interp_method = "bilinear" #patch
 #set interp_method = "patch" #patch
 echo ""

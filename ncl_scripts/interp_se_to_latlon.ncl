@@ -182,7 +182,7 @@ begin
       ; just copy the variable
       ;-------------------------------------------------------
       if(remapvar) then             
-        print("xxxxx "+vname(ii))
+        print("Interpolating "+vname(ii))
         ; read variable to memory and regrid values
         ;--------------------------------------------
         print("1")
@@ -202,14 +202,16 @@ begin
         ; Copy attributes and adjust dimensions
         ;--------------------------------------
         copy_VarAtts (Vold,Vnew)
+        print("copy attributes")
         do jj=0,newlatdim-1
           Vnew!jj          =Vold!jj
-          Vnew&$dNames(jj)$=Vold&$dNames(jj)$
+;xxx          Vnew&$dNames(jj)$=Vold&$dNames(jj)$
         end do
         Vnew!newlatdim="lat"
         Vnew!newlondim="lon"
         Vnew&lat      =dstlat(:,0)    ; This is a rectilinear grid, so
         Vnew&lon      =dstlon(0,:)    ; we only need a 1D sub-selection.
+        print("nrank")
         do jj=newlondim+1,nrank
           Vnew!jj   = Vold!jj-1
           Vnew&$dNames(jj-1)$ = Vold&$dNames(jj-1)$

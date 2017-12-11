@@ -119,7 +119,8 @@ end do
   res@xyDashPattern = 0
 
   res@trXMinF = 1       
-  res@trXMaxF = 500       
+;  res@trXMaxF = 500       
+  res@trXMaxF = 1000
 ;  res@trXMaxF = 2500       
   if (lcompensated) then
     res@trYMinF = 1e1      
@@ -186,6 +187,54 @@ end do
   else
     gsn_text_ndc(wks,titletxt,.5,.805,polytext); add text
   end if
+
+;
+;==============================================================
+;
+   ymin = 1e-6
+   ymax = 1e7       
+
+  circumference = 40074.275;
+
+  four_dx = 4*28.0;
+  four_dx_k = circumference/four_dx
+  xxx = (/four_dx_k,four_dx_k/)
+  yyy = (/ymin,ymax/)
+  polyres@gsLineThicknessF = 4
+  polyres@gsLineColor = "gray75" ;res@xyLineColors(0)
+  gsn_polyline(wks,plot,xxx,yyy,polyres)              ; add polyline
+;
+  txres               = True                            
+  txres@txFontHeightF = 0.017
+  xcoord = four_dx_k
+  ycoord = ymax - 1e6
+  text = gsn_add_text(wks,plot,"4dx",xcoord,ycoord ,txres)
+
+  six_dx = 6*28.0;
+  six_dx_k = circumference/six_dx
+  xxx = (/six_dx_k,six_dx_k/)
+  yyy = (/ymin,ymax/)
+  polyres@gsLineThicknessF = 4
+  polyres@gsLineColor = "gray75" ;res@xyLineColors(0)
+  gsn_polyline(wks,plot,xxx,yyy,polyres)              ; add polyline
+
+
+;
+;  eighthundred_km_wavenumber = circumference/(800.0)
+;  xx = (/eighthundred_km_wavenumber,eighthundred_km_wavenumber/)
+;  yy = (/ymin,ymax/)
+;  polyres@gsLineThicknessF = 4
+;  polyres@gsLineColor = "gray75" ;res@xyLineColors(0)
+;  gsn_polyline(wks,plot,xx,yy,polyres)              ; add polyline
+;
+;  txres               = True                            
+;  txres@txFontHeightF = 0.017
+;  xcoord = eighthundred_km_wavenumber + 27.0
+;  ycoord = ymax - 2980000.0
+;  text = gsn_add_text(wks,plot,"800km",xcoord,ycoord ,txres)
+
+
+
 
   frame(wks)                                     ; now advance
 
