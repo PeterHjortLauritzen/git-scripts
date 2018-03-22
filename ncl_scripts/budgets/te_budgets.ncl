@@ -1,5 +1,6 @@
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
+;;;ARH - 03/2018 - Modified to work for CAM-SE-CSLAM physics grid w/ pgx flag
 
 begin
   print("Summary of input to ncl script:")
@@ -17,15 +18,32 @@ begin
   print(" ")
   fall = addfile(fname,"r")       ; Open netCDF files.	
   ;
+  ; check if physics-dynamics variables are present
+  ;
+  if (isfilevardim(fall,"SE_dED","ncol_d")) then
+    print("File appears to have separate grids for physics and dynamics - setting pgx=True")
+    pgx = True
+  else
+    print("File appears to be have the same grid for physics and dynamics - setting pgx=False")
+    pgx = False
+  end if
+  ;
   ; initialization
   ;
   g = 9.80665D0
   nc        = -1
   eps       = 1.0D-13
-  area      = fall->area   (:  )
   tmp       = fall->SE_dED(:,:)
   nt        = dimsizes(tmp(:,0))
   ncol      = dimsizes(tmp(0,:))
+  if (pgx) then
+    tmp_p     = fall->SE_pAM(:,:)
+    ncol_p    = dimsizes(tmp_p(0,:))
+    area_p    = fall->area   (:  )
+    area      = fall->area_d (:  )
+  else
+    area      = fall->area   (:  )
+  end if
   ;
   ; check if physics-dynamics variables are present
   ;
@@ -36,13 +54,14 @@ begin
     print("File appears to be from a dry run (no WL and no WI) - setting wet=False")
     wet = False
   end if
-
-  if (isfilevar(fall,"WV_PDC")) then
+  
+  if (isfilevar(fall,"WV_PDC") .and. (.not.pgx)) then
+    ;;; this is not consistent with pgx=True
     vars_pdc  = new((/4,nt,ncol/),typeof(tmp(0,0)))
     int_vars_pdc  = new((/4,nt/) ,typeof(tmp(0,0)))
     pdc_vars_present = True
     print("PDC vars are present on file")
-  else
+  else 
     print("No PDC vars present on file")
     pdc_vars_present = False
   end if
@@ -102,9 +121,17 @@ begin
   end if
 
   nvars       = dimsizes(str_vars)
-  nstage      = dimsizes(str_stage)
-  vars        = new((/nvars,nstage,nt,ncol/),typeof(tmp(0,0)))
-  subcycle    = new((/nstage/),typeof(tmp(0,0))) 
+  if (.not.pgx) then
+    nstage      = dimsizes(str_stage)
+    vars        = new((/nvars,nstage,nt,ncol/),typeof(tmp(0,0)))
+    nstage_p    = 0
+  else
+    nstage      = 9 ;;; to do - use strongtochar, search for 'd' suffix
+    vars        = new((/nvars,nstage,nt,ncol/),typeof(tmp(0,0)))
+    nstage_p    = 4 ;;; to do - use strongtochar, search for 'p' suffix
+    vars_p      = new((/nvars,nstage_p,nt,ncol_p/),typeof(tmp(0,0)))
+  end if
+  subcycle    = new((/nstage+nstage_p/),typeof(tmp(0,0)))
 
   if (wet) then
     subcycle    = (/1D0,1D0,1D0,1D0,1.0D0,nsplit,nsplit,nsplit,nsplit,1.0D0,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle/)
@@ -112,17 +139,17 @@ begin
     subcycle    = (/1.0D0,nsplit,nsplit,nsplit,nsplit,1.0D0,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle/)
   end if
 
-  tot_energy  = new((/nstage/),typeof(tmp(0,0)))
-  tracer_mass = new((/3,nstage/),typeof(tmp(0,0)))
+  tot_energy  = new((/nstage+nstage_p/),typeof(tmp(0,0)))
+  tracer_mass = new((/3,nstage+nstage_p/),typeof(tmp(0,0)))
 
-  int_vars  = new((/nvars,nstage,nt/)     ,typeof(tmp(0,0)))
+  int_vars  = new((/nvars,nstage+nstage_p,nt/)     ,typeof(tmp(0,0)))
   int_vars  = 0.0D0
   ;
   ; check that variables are on file and read them
   ;
   do k=0,nvars-1
     do j=0,nstage-1
-      str = str_vars(k)+"_"+str_stage(j)
+      str = str_vars(k)+"_"+str_stage(nstage_p+j)
       if (isfilevar(fall,str)) then
         vars(k,j,:,0:ncol-1) = fall->$str$(:,:)
       else
@@ -140,11 +167,42 @@ begin
   do t=0,nt-1
     do variable = 0,nvars-1
       do stages=0,nstage-1
-        int_vars(variable,stages,t) = sum(area(0:ncol-1)*vars(variable,stages,t,0:ncol-1))*inv_area_sphere
+        int_vars(variable,stages+nstage_p,t) = sum(area(0:ncol-1)*vars(variable,stages,t,0:ncol-1))*inv_area_sphere
       end do
     end do
   end do
 
+  if (pgx) then
+    ;
+    ; check that variables are on file and read them
+    ;
+    do k=0,nvars-1
+      do j=0,nstage_p-1
+        str = str_vars(k)+"_"+str_stage(j)
+        if (isfilevar(fall,str)) then
+          vars_p(k,j,:,0:ncol_p-1) = fall->$str$(:,:)
+        else
+          print("Variable "+str+" not found")
+          exit
+        end if
+      end do
+    end do
+    ;
+    ; compute global integrals
+    ; 
+    area_sphere_p = sum(area_p(0:ncol_p-1))
+    print("Area of sphere in dataset is : "+area_sphere_p)
+    inv_area_sphere_p = 1.0D0/area_sphere_p 
+    do t=0,nt-1
+      do variable = 0,nvars-1
+        do stages=0,nstage_p-1
+          int_vars(variable,stages,t) = sum(area_p(0:ncol_p-1)*vars(variable,stages,t,0:ncol_p-1))*inv_area_sphere_p
+        end do
+      end do
+    end do
+    ;redefine nstage to its appropriate meeaning
+    nstage = dimsizes(str_stage)
+  end if
   ;
   ; For code clarity define indices corresponding to the different stages
   ;
