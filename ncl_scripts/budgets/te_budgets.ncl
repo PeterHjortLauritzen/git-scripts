@@ -1,6 +1,9 @@
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 ;;;ARH - 03/2018 - Modified to work for CAM-SE-CSLAM physics grid w/ pgx flag
+;;;ARH - 03/2018 - Changed rate_of_change_hypervis_total=dAH-dBH to rate_of_change_hypervis=dCH-dBH
+;;;ARH - 03/2018 - Added in mapping errors
+;;;ARH - 04/2018 - Add in mapping errors for new var 'p2d', for ftype=1 runs
 
 begin
   print("Summary of input to ncl script:")
@@ -89,6 +92,13 @@ begin
   end if
   print(" ")
   print("suffix (dynamics)")
+  if (ftype.eq.1) then
+    print(" ")
+    print("-- ftype = 1, compute mapping errors -----------------------------")
+    print("p2d: state on dynamics after applying physics forcing, for ftype=1")
+    print(" ")
+  end if
+  print(" ")
   print("dED: state from end of previous dynamics (= pBF + time sampling)")
   print("   loop over vertical remapping and physics dribbling -------- (nsplit) -------")
   print("            (dribbling and remapping always done together)                    |")
@@ -121,23 +131,50 @@ begin
   end if
 
   nvars       = dimsizes(str_vars)
-  if (.not.pgx) then
-    nstage      = dimsizes(str_stage)
-    vars        = new((/nvars,nstage,nt,ncol/),typeof(tmp(0,0)))
-    nstage_p    = 0
-  else
-    nstage      = 9 ;;; to do - use strongtochar, search for 'd' suffix
-    vars        = new((/nvars,nstage,nt,ncol/),typeof(tmp(0,0)))
-    nstage_p    = 4 ;;; to do - use strongtochar, search for 'p' suffix
-    vars_p      = new((/nvars,nstage_p,nt,ncol_p/),typeof(tmp(0,0)))
+  nstage      = dimsizes(str_stage)
+  subcycle    = new((/nstage/),typeof(tmp(0,0)))
+  if (ftype.eq.1) then
+    tmp_stage = str_stage
+    delete(str_stage)
+    str_stage = new( (/nstage+1/) , "string" )
+    str_stage(0:nstage-1) = tmp_stage
+    str_stage(nstage) = "p2d"
+    delete([/tmp_stage/])
   end if
-  subcycle    = new((/nstage+nstage_p/),typeof(tmp(0,0)))
+
+  nstage_p    = 0
+  if (pgx)
+    nstage_d = 0
+    do i =0,nstage-1    
+	chars = stringtochar(str_stage(i))
+        if (chars(0).eq."d") then
+	  nstage_d = nstage_d + 1	
+	else if (chars(0).eq."p") then
+	  nstage_p = nstage_p + 1
+	end if
+	end if
+	delete(chars)
+    end do
+    nstage = nstage_d
+    vars_p = new((/nvars,nstage_p,nt,ncol_p/),typeof(tmp(0,0)))
+  end if
 
   if (wet) then
     subcycle    = (/1D0,1D0,1D0,1D0,1.0D0,nsplit,nsplit,nsplit,nsplit,1.0D0,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle/)
   else
     subcycle    = (/1.0D0,nsplit,nsplit,nsplit,nsplit,1.0D0,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle/)
   end if
+
+  if (ftype.eq.1) then
+    nstage = nstage + 1
+    tmpcycle = subcycle
+    delete(subcycle)
+    subcycle = new( (/nstage+nstage_p/) , "double" )
+    subcycle(0:nstage+nstage_p-2) = tmpcycle
+    subcycle(nstage+nstage_p-1) = 1.0D0 ;;;<--nsplits for p2d
+    delete(tmpcycle)
+  end if
+  vars        = new((/nvars,nstage,nt,ncol/),typeof(tmp(0,0)))
 
   tot_energy  = new((/nstage+nstage_p/),typeof(tmp(0,0)))
   tracer_mass = new((/3,nstage+nstage_p/),typeof(tmp(0,0)))
@@ -219,6 +256,10 @@ begin
   idBH = str_match_ind(str_stage,"dBH")
   idCH = str_match_ind(str_stage,"dCH")
   idAH = str_match_ind(str_stage,"dAH")
+
+  if (ftype.eq.1) then
+    ip2d = str_match_ind(str_stage,"p2d")
+  end if
 
   if (ismissing(ipBF).or.ismissing(ipBF).or.ismissing(ipAM).or.ismissing(ipAP)) then
     PhysDiags = False
@@ -307,10 +348,10 @@ begin
     print("Breakdown of 2D dynamics:")
     print(" ")
     rate_of_change_heating_term_put_back_in = (tot_energy(idAH)-tot_energy(idCH))/dtime
-    rate_of_change_hypervis_total           = (tot_energy(idAH)-tot_energy(idBH))/dtime
-    print("      dE/dt hypervis                    (dAH-dBH) "+sprintf("%6.4g",rate_of_change_hypervis_total)+" W/M^2")
+    rate_of_change_hypervis                 = (tot_energy(idCH)-tot_energy(idBH))/dtime
+    print("      dE/dt hypervis                    (dCH-dBH) "+sprintf("%6.4g",rate_of_change_hypervis)+" W/M^2")
     print("      dE/dt frictional heating          (dAH-dCH) "+sprintf("%6.4g",rate_of_change_heating_term_put_back_in)+" W/M^2")
-    error = rate_of_change_2D_dyn-rate_of_change_hypervis_total
+    error = rate_of_change_2D_dyn-(rate_of_change_hypervis+rate_of_change_heating_term_put_back_in)
     print("      dE/dt residual (time truncation errors)     "+sprintf("%6.4g",error)+" W/M^2")
 
     print(" ")
@@ -344,6 +385,14 @@ begin
       print("            ")
       dPDC = -pEFIX-pDMEA-dADIA
       print("          => "+str+" = -pEFIX-pDMEA-dADIA = "+sprintf("%6.4g",dPDC))
+
+      print(" ")
+      print("Mapping errors (should be zero for vanilla-se):")
+      print(" ")
+      rate_of_change_gll2phys = (tot_energy(ipBF)-tot_energy(idED))/dtime
+      rate_of_change_phys2gll = (tot_energy(ip2d)-tot_energy(ipAM))/dtime
+      print("      gll-to-phys mapping errors (pBF-dED): "+sprintf("%6.4g",rate_of_change_gll2phys)+" W/M^2")
+      print("      phys-to-gll mapping errors (p2d-pAM): "+sprintf("%6.4g",rate_of_change_phys2gll)+" W/M^2")
     end if
 
     if (qsize.gt.0) then
@@ -379,6 +428,9 @@ begin
       dyn_total       = (tracer_mass(m_cnst,idBF)-tracer_mass(m_cnst,idED))/dtime
       phys_total      = (tracer_mass(m_cnst,ipAM)-tracer_mass(m_cnst,ipBF))/dtime    
 
+      print("dyn_total "+sprintf("%6.4g",dyn_total)+" Pa")
+      print("tracer mass dBF "+sprintf("%6.4g",tracer_mass(m_cnst,idBF))+" Pa")
+
       print("dMASS/dt energy fixer                      (pBP-pBF) "+sprintf("%6.4g",pEFIX)+" Pa")
       print("dMASS/dt parameterizations                 (pAP-pBP) "+sprintf("%6.4g",param)+" Pa")
       print("dMASS/dt dry mass adjustment               (pAM-pAP) "+sprintf("%6.4g",pDMEA)+" Pa")
@@ -405,10 +457,10 @@ begin
       print("Breakdown of 2D dynamics:")
       print(" ")
       rate_of_change_heating_term_put_back_in = (tracer_mass(m_cnst,idAH)-tracer_mass(m_cnst,idCH))/dtime
-      rate_of_change_hypervis_total           = (tracer_mass(m_cnst,idAH)-tracer_mass(m_cnst,idBH))/dtime
-      print("      dE/dt hypervis                    (dAH-dBH) "+sprintf("%6.4g",rate_of_change_hypervis_total)+" Pa")
+      rate_of_change_hypervis                 = (tracer_mass(m_cnst,idCH)-tracer_mass(m_cnst,idBH))/dtime
+      print("      dE/dt hypervis                    (dCH-dBH) "+sprintf("%6.4g",rate_of_change_hypervis)+" Pa")
       print("      dE/dt frictional heating          (dAH-dCH) "+sprintf("%6.4g",rate_of_change_heating_term_put_back_in)+" Pa")
-      error = rate_of_change_2D_dyn-rate_of_change_hypervis_total
+      error = rate_of_change_2D_dyn-(rate_of_change_hypervis+rate_of_change_heating_term_put_back_in)
       print("      dE/dt residual (time truncation errors)     "+sprintf("%6.4g",error)+" Pa")
 
       print(" ")
@@ -427,6 +479,14 @@ begin
       else
         print("Dribbling errors (pAM-pBF-(dBD-dAF))"+sprintf("%6.4g",value))
       end if
+
+      print(" ")
+      print("Mapping errors (should be zero for vanilla-se):")
+      print(" ")
+      rate_of_change_gll2phys = (tracer_mass(m_cnst,ipBF)-tracer_mass(m_cnst,idED))/dtime
+      rate_of_change_phys2gll = (tracer_mass(m_cnst,ip2d)-tracer_mass(m_cnst,ipAM))/dtime
+      print("      gll-to-phys mapping errors (pBF-dED): "+sprintf("%6.4g",rate_of_change_gll2phys)+" Pa")
+      print("      phys-to-gll mapping errors (p2d-pAM): "+sprintf("%6.4g",rate_of_change_phys2gll)+" Pa")
 
       print(" ")
       print("---------------------------------------------------------------------------------------------------")
