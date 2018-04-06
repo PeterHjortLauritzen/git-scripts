@@ -92,13 +92,6 @@ begin
   end if
   print(" ")
   print("suffix (dynamics)")
-  if (ftype.eq.1) then
-    print(" ")
-    print("-- ftype = 1, compute mapping errors -----------------------------")
-    print("p2d: state on dynamics after applying physics forcing, for ftype=1")
-    print(" ")
-  end if
-  print(" ")
   print("dED: state from end of previous dynamics (= pBF + time sampling)")
   print("   loop over vertical remapping and physics dribbling -------- (nsplit) -------")
   print("            (dribbling and remapping always done together)                    |")
@@ -119,6 +112,12 @@ begin
   print(" ")
   print(" ")
   print(" ")
+  if (ftype.eq.1) then
+    print(" ")
+    print("compute mapping errors (ftype=1) -----------------------------------------------")
+    print("p2d: state on dynamics after applying physics forcing (=dBD of first nsplit loop)")
+    print(" ")
+  end if
 
   if (wet) then
     qsize = 3
@@ -205,6 +204,10 @@ begin
     do variable = 0,nvars-1
       do stages=0,nstage-1
         int_vars(variable,stages+nstage_p,t) = sum(area(0:ncol-1)*vars(variable,stages,t,0:ncol-1))*inv_area_sphere
+;;print("variable " + str_vars(variable))
+;;print("stages " + str_stage(stages))
+;;print("t " + t)
+;;print("int_vars " + int_vars(variable,stages,t))
       end do
     end do
   end do
@@ -233,7 +236,11 @@ begin
     do t=0,nt-1
       do variable = 0,nvars-1
         do stages=0,nstage_p-1
-          int_vars(variable,stages,t) = sum(area_p(0:ncol_p-1)*vars(variable,stages,t,0:ncol_p-1))*inv_area_sphere_p
+          int_vars(variable,stages,t) = sum(area_p(0:ncol_p-1)*vars_p(variable,stages,t,0:ncol_p-1))*inv_area_sphere_p
+;;print("variable" + str_vars(variable))
+;;print("stages " + str_stage(stages))
+;;print("t " + t)
+;;print("int_vars " + int_vars(variable,stages,t))
         end do
       end do
     end do
@@ -302,7 +309,7 @@ begin
        print("in dynamics (cp and dp includes all water variables) and physics (cp=cp_dry in internal energy).")
     end if
 
-   if (PhysDiags) then
+    if (PhysDiags) then
       pEFIX    = (tot_energy(ipBP)-tot_energy(ipBF))/dtime
       pDMEA = (tot_energy(ipAM)-tot_energy(ipAP))/dtime
       param           = (tot_energy(ipAP)-tot_energy(ipBP))/dtime
@@ -366,7 +373,7 @@ begin
         print(" ")
         print("      Consistency check:")
         print(" ")
-       print("      dE/dt physics tendency in dynamics (dBD-dAF) should exactly match dE/dt physics total (pAM-pBF):"+sprintf("%6.4g",value))
+        print("      dE/dt physics tendency in dynamics (dBD-dAF) should exactly match dE/dt physics total (pAM-pBF):"+sprintf("%6.4g",value))
         print(" ")
       else
         print("Dribbling errors (pAM-pBF-(dBD-dAF))"+sprintf("%6.4g",value))
@@ -386,13 +393,15 @@ begin
       dPDC = -pEFIX-pDMEA-dADIA
       print("          => "+str+" = -pEFIX-pDMEA-dADIA = "+sprintf("%6.4g",dPDC))
 
-      print(" ")
-      print("Mapping errors (should be zero for vanilla-se):")
-      print(" ")
-      rate_of_change_gll2phys = (tot_energy(ipBF)-tot_energy(idED))/dtime
-      rate_of_change_phys2gll = (tot_energy(ip2d)-tot_energy(ipAM))/dtime
-      print("      gll-to-phys mapping errors (pBF-dED): "+sprintf("%6.4g",rate_of_change_gll2phys)+" W/M^2")
-      print("      phys-to-gll mapping errors (p2d-pAM): "+sprintf("%6.4g",rate_of_change_phys2gll)+" W/M^2")
+      if (ftype.eq.1) then
+        print(" ")
+        print("Mapping errors (should only be non-zero for CSLAM runs):")
+        print(" ")
+        rate_of_change_gll2phys = (tot_energy(ipBF)-tot_energy(idED))/dtime
+        rate_of_change_phys2gll = (tot_energy(ip2d)-tot_energy(ipAM))/dtime
+        print("      gll-to-phys mapping errors (pBF-dED): "+sprintf("%6.4g",rate_of_change_gll2phys)+" W/M^2")
+        print("      phys-to-gll mapping errors (p2d-pAM): "+sprintf("%6.4g",rate_of_change_phys2gll)+" W/M^2")
+      end if
     end if
 
     if (qsize.gt.0) then
@@ -480,13 +489,15 @@ begin
         print("Dribbling errors (pAM-pBF-(dBD-dAF))"+sprintf("%6.4g",value))
       end if
 
-      print(" ")
-      print("Mapping errors (should be zero for vanilla-se):")
-      print(" ")
-      rate_of_change_gll2phys = (tracer_mass(m_cnst,ipBF)-tracer_mass(m_cnst,idED))/dtime
-      rate_of_change_phys2gll = (tracer_mass(m_cnst,ip2d)-tracer_mass(m_cnst,ipAM))/dtime
-      print("      gll-to-phys mapping errors (pBF-dED): "+sprintf("%6.4g",rate_of_change_gll2phys)+" Pa")
-      print("      phys-to-gll mapping errors (p2d-pAM): "+sprintf("%6.4g",rate_of_change_phys2gll)+" Pa")
+      if (ftype.eq.1) then
+        print(" ")
+        print("Mapping errors (should only be non-zero for CSLAM runs):")
+        print(" ")
+        rate_of_change_gll2phys = (tracer_mass(m_cnst,ipBF)-tracer_mass(m_cnst,idED))/dtime
+        rate_of_change_phys2gll = (tracer_mass(m_cnst,ip2d)-tracer_mass(m_cnst,ipAM))/dtime
+        print("      gll-to-phys mapping errors (pBF-dED): "+sprintf("%6.4g",rate_of_change_gll2phys)+" Pa")
+        print("      phys-to-gll mapping errors (p2d-pAM): "+sprintf("%6.4g",rate_of_change_phys2gll)+" Pa")
+      end if
 
       print(" ")
       print("---------------------------------------------------------------------------------------------------")

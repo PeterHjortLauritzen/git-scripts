@@ -7,11 +7,11 @@ endif
 set n = 1
 set file = "$argv[$n]" 
 if (`hostname` == "hobart.cgd.ucar.edu") then
-  set data_dir = "/scratch/cluster/aherring/"
-  set ncl_dir = "/home/aherring/git-scripts/ncl_scripts/budgets"
+  set data_dir = "/scratch/cluster/$USER/"
+  set ncl_dir = "/home/$USER/git-scripts/ncl_scripts/budgets"
 else
-  set data_dir = "/glade2/scratch2/pel/"
-  set ncl_dir = "/glade/u/home/pel/git-scripts/ncl_scripts/budgets"
+  set data_dir = "/glade2/$USER/pel/"
+  set ncl_dir = "/glade/u/home/$USER/git-scripts/ncl_scripts/budgets"
 endif
 echo $file
 if (! -e atm_in) then
