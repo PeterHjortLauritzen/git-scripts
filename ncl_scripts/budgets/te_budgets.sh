@@ -8,7 +8,7 @@ set n = 1
 set file = "$argv[$n]" 
 if (`hostname` == "hobart.cgd.ucar.edu") then
   set data_dir = "/scratch/cluster/$USER/"
-  set ncl_dir = "/home/$USER/git-scripts/ncl_scripts/budgets"
+  set ncl_dir = "/home/$USER/pel-git-scripts/ncl_scripts/budgets"
 else
   set data_dir = "/glade2/$USER/pel/"
   set ncl_dir = "/glade/u/home/$USER/git-scripts/ncl_scripts/budgets"
