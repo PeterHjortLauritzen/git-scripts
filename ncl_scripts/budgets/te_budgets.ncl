@@ -47,7 +47,7 @@ begin
     area      = fall->area_d (:  )
     tmp_c     = fall->WV_dED(:,:)
     ncol_c    = dimsizes(tmp_c(0,:))
-    area_c    = area  ;;;<--needs to be changed to correct var
+    area_c    = fall->area_fvm(:  ) 
   else
     area      = fall->area   (:  )
   end if
@@ -200,7 +200,7 @@ begin
     do j=0,nstage-1
       str = str_vars(k)+"_"+str_stage(nstage_p+j)
       if (isfilevar(fall,str)) then
-        print("Reading " + str)
+        ;;print("Reading " + str)
         vars(k,j,:,0:ncol-1) = fall->$str$(:,:)
       else
         print("Variable "+str+" not found")
@@ -208,7 +208,7 @@ begin
       end if
     end do
   end do
-  print("  ")
+  ;;print("  ")
   ;
   ; compute global integrals
   ;
@@ -219,12 +219,12 @@ begin
   do t=0,nt-1
     do variable = 0,nvars-1
       do stages=0,nstage-1
-        print("Integrating " + str_vars(variable) + "_" + str_stage(nstage_p+stages))
+        ;;print("Integrating " + str_vars(variable) + "_" + str_stage(nstage_p+stages))
         int_vars(variable,stages+nstage_p,t) = sum(area(0:ncol-1)*vars(variable,stages,t,0:ncol-1))*inv_area_sphere
       end do
     end do
   end do
-  print("  ")
+  ;;print("  ")
 
   if (pgx) then
     ; ----------- Do CSLAM tracers first -----------
@@ -235,7 +235,7 @@ begin
       do j=0,nstage-1
         str = str_vars(nvars+k)+"_"+str_stage(nstage_p+j)
         if (isfilevar(fall,str)) then
-          print("Reading " + str)
+          ;;print("Reading " + str)
           vars_c(k,j,:,0:ncol_c-1) = fall->$str$(:,:)
         else
           print("Variable "+str+" not found")
@@ -243,7 +243,7 @@ begin
         end if
       end do
     end do
-    print("  ")
+    ;;print("  ")
     ; 
     ; compute global integrals
     ;
@@ -254,14 +254,14 @@ begin
     do t=0,nt-1
       do variable=0,ntrac-1
         do stages=0,nstage-1
-          print("Integrating " + str_vars(nvars+variable) + "_" + str_stage(nstage_p+stages))
+          ;;print("Integrating " + str_vars(nvars+variable) + "_" + str_stage(nstage_p+stages))
           int_vars(nvars+variable,nstage_p+stages,t) = sum(area_c(0:ncol_c-1)*vars_c(variable,stages,t,0:ncol_c-1))*inv_area_sphere_c
         end do
       end do
     end do
     ;redefine nvars to its appropriate meaning
     nvars = nvars + ntrac
-    print("  ")
+    ;;print("  ")
     ;
     ; check that variables are on file and read them
     ;
@@ -269,7 +269,7 @@ begin
       do j=0,nstage_p-1
         str = str_vars(k)+"_"+str_stage(j)
         if (isfilevar(fall,str)) then
-          print("Reading " + str)
+          ;;print("Reading " + str)
           vars_p(k,j,:,0:ncol_p-1) = fall->$str$(:,:)
         else
           print("Variable "+str+" not found")
@@ -277,7 +277,7 @@ begin
         end if
       end do
     end do
-    print("  ")
+    ;;print("  ")
     ;
     ; compute global integrals
     ; 
@@ -288,7 +288,7 @@ begin
     do t=0,nt-1
       do variable = 0,nvars-1
         do stages=0,nstage_p-1
-          print("Integrating " + str_vars(variable) + "_" + str_stage(stages))
+          ;;print("Integrating " + str_vars(variable) + "_" + str_stage(stages))
           int_vars(variable,stages,t) = sum(area_p(0:ncol_p-1)*vars_p(variable,stages,t,0:ncol_p-1))*inv_area_sphere_p
         end do
       end do
@@ -296,7 +296,7 @@ begin
     ;redefine nstage to its appropriate meaning
     nstage = dimsizes(str_stage)
   end if
-  print("  ")
+  ;;print("  ")
   ;
   ; For code clarity define indices corresponding to the different stages
   ;
