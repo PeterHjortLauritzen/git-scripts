@@ -4,6 +4,7 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 ;;;ARH - 03/2018 - Changed rate_of_change_hypervis_total=dAH-dBH to rate_of_change_hypervis=dCH-dBH
 ;;;ARH - 03/2018 - Added in mapping errors
 ;;;ARH - 04/2018 - Add in mapping errors for new var 'p2d', for ftype=1 runs
+;;;ARH - 05/2018 - Modified script to evaluate tracers on CSLAM grid
 
 begin
   print("Summary of input to ncl script:")
@@ -44,6 +45,9 @@ begin
     ncol_p    = dimsizes(tmp_p(0,:))
     area_p    = fall->area   (:  )
     area      = fall->area_d (:  )
+    tmp_c     = fall->WV_dED(:,:)
+    ncol_c    = dimsizes(tmp_c(0,:))
+    area_c    = fall->area_fvm(:  ) 
   else
     area      = fall->area   (:  )
   end if
@@ -74,9 +78,11 @@ begin
   if (isfilevar(fall,"TT_pBF")) then
     TT_vars_present = True
     print("TT vars are present on file")
+    ntrac = 4
   else
     print("No TT vars present on file")
     TT_vars_present = False
+    ntrac = 3
   end if
 
   print(" ")
@@ -130,6 +136,10 @@ begin
   end if
 
   nvars       = dimsizes(str_vars)
+  if (pgx) then
+    nvars = nvars - ntrac
+  end if
+
   nstage      = dimsizes(str_stage)
   subcycle    = new((/nstage/),typeof(tmp(0,0)))
   if (ftype.eq.1) then
@@ -155,7 +165,10 @@ begin
 	delete(chars)
     end do
     nstage = nstage_d
-    vars_p = new((/nvars,nstage_p,nt,ncol_p/),typeof(tmp(0,0)))
+    vars_p = new((/nvars+ntrac,nstage_p,nt,ncol_p/),typeof(tmp(0,0)))
+    vars_c = new((/ntrac,nstage,nt,ncol_c/),typeof(tmp(0,0)))
+  else
+    ntrac = 0
   end if
 
   if (wet) then
@@ -178,7 +191,7 @@ begin
   tot_energy  = new((/nstage+nstage_p/),typeof(tmp(0,0)))
   tracer_mass = new((/3,nstage+nstage_p/),typeof(tmp(0,0)))
 
-  int_vars  = new((/nvars,nstage+nstage_p,nt/)     ,typeof(tmp(0,0)))
+  int_vars  = new((/nvars+ntrac,nstage+nstage_p,nt/)     ,typeof(tmp(0,0)))
   int_vars  = 0.0D0
   ;
   ; check that variables are on file and read them
@@ -187,6 +200,7 @@ begin
     do j=0,nstage-1
       str = str_vars(k)+"_"+str_stage(nstage_p+j)
       if (isfilevar(fall,str)) then
+        ;;print("Reading " + str)
         vars(k,j,:,0:ncol-1) = fall->$str$(:,:)
       else
         print("Variable "+str+" not found")
@@ -194,25 +208,60 @@ begin
       end if
     end do
   end do
+  ;;print("  ")
   ;
   ; compute global integrals
   ;
   area_sphere = sum(area(0:ncol-1))
-  print("Area of sphere in dataset is : "+area_sphere)
+  print("Area of GLL sphere in dataset is : "+area_sphere)
+  print("  ")
   inv_area_sphere = 1.0D0/area_sphere
   do t=0,nt-1
     do variable = 0,nvars-1
       do stages=0,nstage-1
+        ;;print("Integrating " + str_vars(variable) + "_" + str_stage(nstage_p+stages))
         int_vars(variable,stages+nstage_p,t) = sum(area(0:ncol-1)*vars(variable,stages,t,0:ncol-1))*inv_area_sphere
-;;print("variable " + str_vars(variable))
-;;print("stages " + str_stage(stages))
-;;print("t " + t)
-;;print("int_vars " + int_vars(variable,stages,t))
       end do
     end do
   end do
+  ;;print("  ")
 
   if (pgx) then
+    ; ----------- Do CSLAM tracers first -----------
+    ; 
+    ; check that variables are on file and read them
+    ;
+    do k=0,ntrac-1
+      do j=0,nstage-1
+        str = str_vars(nvars+k)+"_"+str_stage(nstage_p+j)
+        if (isfilevar(fall,str)) then
+          ;;print("Reading " + str)
+          vars_c(k,j,:,0:ncol_c-1) = fall->$str$(:,:)
+        else
+          print("Variable "+str+" not found")
+          exit
+        end if
+      end do
+    end do
+    ;;print("  ")
+    ; 
+    ; compute global integrals
+    ;
+    area_sphere_c = sum(area_c(0:ncol_c-1))
+    print("Area of CSLAM sphere in dataset is : "+area_sphere_c)
+    print("  ")
+    inv_area_sphere_c = 1.0D0/area_sphere_c
+    do t=0,nt-1
+      do variable=0,ntrac-1
+        do stages=0,nstage-1
+          ;;print("Integrating " + str_vars(nvars+variable) + "_" + str_stage(nstage_p+stages))
+          int_vars(nvars+variable,nstage_p+stages,t) = sum(area_c(0:ncol_c-1)*vars_c(variable,stages,t,0:ncol_c-1))*inv_area_sphere_c
+        end do
+      end do
+    end do
+    ;redefine nvars to its appropriate meaning
+    nvars = nvars + ntrac
+    ;;print("  ")
     ;
     ; check that variables are on file and read them
     ;
@@ -220,6 +269,7 @@ begin
       do j=0,nstage_p-1
         str = str_vars(k)+"_"+str_stage(j)
         if (isfilevar(fall,str)) then
+          ;;print("Reading " + str)
           vars_p(k,j,:,0:ncol_p-1) = fall->$str$(:,:)
         else
           print("Variable "+str+" not found")
@@ -227,26 +277,26 @@ begin
         end if
       end do
     end do
+    ;;print("  ")
     ;
     ; compute global integrals
     ; 
     area_sphere_p = sum(area_p(0:ncol_p-1))
-    print("Area of sphere in dataset is : "+area_sphere_p)
+    print("Area of pgX sphere in dataset is : "+area_sphere_p)
+    print("  ")
     inv_area_sphere_p = 1.0D0/area_sphere_p 
     do t=0,nt-1
       do variable = 0,nvars-1
         do stages=0,nstage_p-1
+          ;;print("Integrating " + str_vars(variable) + "_" + str_stage(stages))
           int_vars(variable,stages,t) = sum(area_p(0:ncol_p-1)*vars_p(variable,stages,t,0:ncol_p-1))*inv_area_sphere_p
-;;print("variable" + str_vars(variable))
-;;print("stages " + str_stage(stages))
-;;print("t " + t)
-;;print("int_vars " + int_vars(variable,stages,t))
         end do
       end do
     end do
-    ;redefine nstage to its appropriate meeaning
+    ;redefine nstage to its appropriate meaning
     nstage = dimsizes(str_stage)
   end if
+  ;;print("  ")
   ;
   ; For code clarity define indices corresponding to the different stages
   ;
