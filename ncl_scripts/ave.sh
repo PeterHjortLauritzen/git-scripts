@@ -12,7 +12,7 @@ set hn = "$argv[$n]"
 if (`hostname` == "hobart.cgd.ucar.edu") then
   set data_dir = "/scratch/cluster/$USER/"
 else
-  set data_dir = "/glade/scratch/$USER/"
+  set data_dir = "/gpfs/fs1/scratch/$USER/"
 endif
 echo "scratch directory is $data_dir"
 echo "ls $data_dir/$case/run/$case.cam.$hn.*"
