@@ -97,9 +97,11 @@ begin
 
 
    resP                 = True
-; resP@gsnPanelYWhiteSpacePercent = 5
-; resP@gsnPanelXWhiteSpacePercent = 5
-   resP@txString         = "Dynamical core Axial Angular Momentum (AAM) diagnostics for CAM-SE" 
+  resP@gsnPanelYWhiteSpacePercent = 2
+;  resP@gsnPanelXWhiteSpacePercent = 3
+  resP@txString         = "Dynamical core Axial Angular Momentum (AAM) diagnostics for CAM-SE"
+
+  resP@gsnMaximize        = True                   ; use full page
 
 ; ---------- create tiny meta data in ndc coordinates ---------------------;
 ; ----The following section could be replaced by the "infoTimeStamp"-------;
