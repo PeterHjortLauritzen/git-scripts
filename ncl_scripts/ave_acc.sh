@@ -24,7 +24,7 @@ mkdir data
 if (0<1) then
   set files = ("")
   @ year = 1
-  while ($year <= 2) 
+  while ($year <= 5) 
     @ month = 1
     @ continue = 1
     if ($year < 10) then

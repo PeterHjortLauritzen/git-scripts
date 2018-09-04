@@ -211,7 +211,7 @@ begin
       phys_total      = (tot_energy(ipAM)-tot_energy(ipBF))/dtime
     end if
     dyn_total       = (tot_energy(idBF)-tot_energy(idED))/dtime
-
+    dyn_phys_total       = (tot_energy(idAD)-tot_energy(idAF))/dtime
 
     str_data  = new( 1, "string")
     if (PhysDiags) then
@@ -255,25 +255,26 @@ begin
     rate_of_change_hypervis_total           = (tot_energy(idAH)-tot_energy(idBH))/dtime
     print("      dE/dt hypervis                    (dAH-dBH) "+sprintf("%6.4g",rate_of_change_hypervis_total)+" W/M^2")
     print("      dE/dt frictional heating          (dAH-dCH) "+sprintf("%6.4g",rate_of_change_heating_term_put_back_in)+" W/M^2")
-    error = rate_of_change_2D_dyn-rate_of_change_hypervis_total
-    print("      dE/dt residual (time truncation errors)     "+sprintf("%6.4g",error)+" W/M^2")
+    twoDresidual = rate_of_change_2D_dyn-rate_of_change_hypervis_total
+    print("      dE/dt residual (time truncation errors)     "+sprintf("%6.4g",twoDresidual)+" W/M^2")
 
     print(" ")
-
+    discr  = (tot_energy(idED)-tot_energy(ipBF))/dtime
+    print("      dE/dt energy formula discrepancy     "+sprintf("%6.4g",discr)+" W/M^2")
     print(" ")
 
     if (PhysDiags) then
       rate_of_change_physics = (tot_energy(idBD)-tot_energy(idAF))/dtime
       print("dE/dt physics tendency in dynamics      (dBD-dAF) "+sprintf("%6.4g",rate_of_change_physics)+" W/M^2")
-      value = phys_total-rate_of_change_physics
+      value_pdc = phys_total-rate_of_change_physics
       if (ftype .eq. "1") then
         print(" ")
         print("      Consistency check:")
         print(" ")
-       print("      dE/dt physics tendency in dynamics (dBD-dAF) should exactly match dE/dt physics total (pAM-pBF):"+sprintf("%6.4g",value))
+       print("      dE/dt physics tendency in dynamics (dBD-dAF) should exactly match dE/dt physics total (pAM-pBF):"+sprintf("%6.4g",value_pdc))
         print(" ")
       else
-        print("Dribbling errors (pAM-pBF-(dBD-dAF))"+sprintf("%6.4g",value))
+        print("Dribbling errors (pAM-pBF-(dBD-dAF))/dt"+sprintf("%6.4g",value_pdc))
       end if
       print("Energy fixer fixes dme_adjust (pDMEA), lack of energy conservation in adiabatic")
       print("dynamical core (dADIA) and energy lost/gained in physics-dynamics coupling")
@@ -289,23 +290,36 @@ begin
       print("            ")
       dPDC = -pEFIX-pDMEA-dADIA
       print("          => "+str+" = -pEFIX-pDMEA-dADIA = "+sprintf("%6.4g",dPDC))
+
+      qneg  = (tot_energy(ipBF)-tot_energy(idED))/dtime
+      print(" ")
+      print(" qneg: "+qneg)
+      print(" ")
+
       ;
       ; write diagnostics to file
       ;
-      str1 = tostring(pEFIX)
-      str1 = str1 + " "+tostring(param)
+      str1 = tostring(param)
       str1 = str1 + " "+tostring(pDMEA)
-      str1 = str1 + " "+tostring(dADIA)
+      str1 = str1 + " "+tostring(pEFIX)
+      str1 = str1 + " "+tostring(discr) 
       str1 = str1 + " "+tostring(rate_of_change_2D_dyn)
-      str1 = str1 + " "+tostring(rate_of_change_heating_term_put_back_in)
       str1 = str1 + " "+tostring(rate_of_change_hypervis_total)
+      str1 = str1 + " "+tostring(rate_of_change_heating_term_put_back_in)
+      str1 = str1 + " "+tostring(twoDresidual)
       str1 = str1 + " "+tostring(rate_of_change_vertical_remapping)
+      str1 = str1 + " "+tostring(dADIA)
+      tmp_pdc = phys_total-dyn_phys_total
+      tmxp = pDMEA+param-pEFIX
+      print("pDMEA+param-pEFIX ="+tmxp)
+      print("PDC: phys_total= "+phys_total+" dyn_phys_total "+dyn_phys_total)
+      str1 = str1 + " "+tostring(value_pdc)
       if (fileexists(diags_fname)) then
         c1 = (/str1/)
         alist   = [/c1/]
         write_table(diags_fname, "a", alist, "%s")
       else
-        c1 = (/"#EFIX     param    DMEA     DynTot    2Ddyn     fricH    elseH     1Drem",str1/)
+        c1 = (/"#param   pwork    efix     discr    2D        hvis      fheat    res      remap     adiab     PDC",str1/)
         alist   = [/c1/]
         write_table(diags_fname, "w", alist, "%s")
       end if
