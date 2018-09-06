@@ -51,6 +51,12 @@ touch tmp_file
 grep "se_qsize_condensate_loading[[:space:]]"            atm_in >> tmp_file
 set  qsize_condensate_loading = `sed -r 's/([^0-9]*([0-9]*)){1}.*/\2/' tmp_file`
 rm tmp_file
+rm tmp_file2
+touch tmp_file2
+grep "se_lcp_moist[[:space:]]"            atm_in >> tmp_file2
+sed 's/^.*= //' tmp_file2 >> tmp_file3
+set lcp_moist     = `sed -e 's/\.//g' tmp_file3`
+rm tmp_file*
 touch tmp_file
 grep "atm_cpl_dt[[:space:]]"            drv_in >> tmp_file
 set dtime = `sed -r 's/([^0-9]*([0-9]*)){1}.*/\2/' tmp_file`
@@ -58,5 +64,6 @@ set dtime = `sed -r 's/([^0-9]*([0-9]*)){1}.*/\2/' tmp_file`
 echo "rsplit="$rsplit
 echo "nsplit="$nsplit
 echo "hypervis_subcycle="$hyper
+echo "lcp_moist ="$lcp_moist
 echo "dtime ="$dtime
-ncl 'dir="'$PWD'"' 'fname="'$file'"' 'rsplit='$rsplit'' 'nsplit='$nsplit'' 'hypervis_subcycle='$hyper'' 'ftype='$ftype'' 'qsize_condensate_loading='$qsize_condensate_loading'' 'dtime='$dtime'' $ncl_dir/te_budgets.ncl
+ncl 'dir="'$PWD'"' 'fname="'$file'"' 'rsplit='$rsplit'' 'nsplit='$nsplit'' 'hypervis_subcycle='$hyper'' 'ftype='$ftype'' 'qsize_condensate_loading='$qsize_condensate_loading'' 'dtime='$dtime'' 'lcp_moist="'$lcp_moist'"' $ncl_dir/te_budgets.ncl
