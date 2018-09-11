@@ -198,7 +198,7 @@ begin
 
     te_consistent_version=False
     if (qsize_condensate_loading.eq."1") then
-       if (lcp_moist.eq."true") then
+       if (lcp_moist.eq."false") then
          print("Using total energy consistent version: qsize_condensate_loading=1 and cp=cpdry")
          te_consistent_version=True
        else
