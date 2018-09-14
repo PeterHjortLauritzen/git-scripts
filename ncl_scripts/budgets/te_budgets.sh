@@ -2,13 +2,13 @@
 if ( "$#argv" != 2) then
   echo "Wrong number of arguments specified:"
   echo "  -arg 1 file with energy diagnostics (averaged)"
-  echo "  -arg 2 Se,FV"
+  echo "  -arg 2 SE,FV"
   exit
 endif
 set n = 1
 set file = "$argv[$n]" 
 
-if (`hostname` == "cheyenne.ucar.edu") then
+if (`hostname` == "cheyenne6") then
   set data_dir = "/glade2/$USER/pel/"
   set ncl_dir = "/glade/u/home/$USER/git-scripts/ncl_scripts/budgets"
 else

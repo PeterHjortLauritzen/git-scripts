@@ -2,7 +2,6 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 
 begin
-    print("asdfasdf")
   diags_fname = "te_budgets.txt"
   fname =  systemfunc("ls "+fname)
   fall = addfile(fname,"r")       ; Open netCDF files.  
