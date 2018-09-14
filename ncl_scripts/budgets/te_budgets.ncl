@@ -2,32 +2,93 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 
 begin
+    print("asdfasdf")
   diags_fname = "te_budgets.txt"
+  fname =  systemfunc("ls "+fname)
+  fall = addfile(fname,"r")       ; Open netCDF files.  
+  print("File used for energy diagnostics "+fname)
+  print("done input summary")
+  print(" ")  
   print("Summary of input to ncl script:")
   print("===============================")
   print(" ")
-  print("nsplit                   ="+nsplit)
-  print("rsplit                   ="+rsplit)
-  print("hypervis_subcycle        ="+hypervis_subcycle)
-  print("ftype                    ="+ftype)
-  print("qsize_condensate_loading ="+qsize_condensate_loading)
-  print("lcp_moist                ="+lcp_moist)
+  if (dycore.eq."SE") then
+    print("Your data is for the SE dycore")
+    print(" ")
+    print("nsplit                   ="+nsplit)
+    print("rsplit                   ="+rsplit)
+    print("hypervis_subcycle        ="+hypervis_subcycle)
+    print("ftype                    ="+ftype)
+    print("qsize_condensate_loading ="+qsize_condensate_loading)
+    print("lcp_moist                ="+lcp_moist)
+    latlon = False
+    tmp       = fall->SE_dED(:,:)
+    nt        = dimsizes(tmp(:,0))
+    ncol      = dimsizes(tmp(0,:))
+  end if
+  if (dycore.eq."FV") then
+    print("Your data is for the FV dycore")  
+    latlon = True
+    lcp_moist = "false"
+    tmp       = fall->SE_pAP(:,:,:)
+    nt        = dimsizes(tmp(:,0,0))
+    ncol      = -1
+  end if
   print("dtime                    ="+dtime)
-  fname =  systemfunc("ls "+fname)
-  print("File used for energy diagnostics "+fname)
-  print("done input summary")
-  print(" ")
-  fall = addfile(fname,"r")       ; Open netCDF files.	
+
+;
+; check
+;
+  if (lcp_moist.ne."true".and.lcp_moist.ne."false") then
+    print("ERROR: lcp_moist should either be true or false; lcp_moist= "+lcp_moist)
+    exit()
+  end if
+
+
+
   ;
   ; initialization
   ;
   g = 9.80665D0
+  PI = get_pi("double")
+  deg2rad = PI/180.0
   nc        = -1
   eps       = 1.0D-13
-  area      = fall->area   (:  )
-  tmp       = fall->SE_dED(:,:)
-  nt        = dimsizes(tmp(:,0))
-  ncol      = dimsizes(tmp(0,:))
+  if (latlon) then
+    lat = fall->lat
+    lat = deg2rad*lat
+    lon = fall->lon
+    lon = deg2rad*lon
+    nlat=dimsizes(lat)
+    nlon=dimsizes(lon)
+    area  = new((/nlat,nlon/),typeof(tmp(0,0,0)))    
+    dlat  = lat(3)-lat(2)
+    dlat2 = 0.5*dlat    
+    dlon  = lon(2)-lon(1)
+    j=0
+    do i=0,nlon-1
+      area(j,i) = (sin(lat(j)+dlat2)-sin(lat(j)))*dlon
+    end do    
+    do j=1,nlat-2
+      dsinlat =  (sin(lat(j)+dlat2)-sin(lat(j)-dlat2))      
+      do i=0,nlon-1
+        area(j,i) = dsinlat*dlon
+      end do
+    end do
+    j=nlat-1
+    do i=0,nlon-1
+      area(j,i) = (sin(lat(j))-sin(lat(j)-dlat2))*dlon
+    end do
+    area_sphere = sum(area)
+  else
+    area      = fall->area   (:  )
+    area_sphere = sum(area(0:ncol-1))    
+  end if
+  print("Area of sphere in dataset is : "+area_sphere)
+  error = area_sphere-4.0*PI
+  print("Error spanning the sphere    : "+error)
+  
+
   ;
   ; check if physics-dynamics variables are present
   ;
@@ -70,6 +131,7 @@ begin
     print(" ")
     print("history files saved off here")
   end if
+
   print(" ")
   print("suffix (dynamics)")
   print("dED: state from end of previous dynamics (= pBF + time sampling)")
@@ -96,28 +158,52 @@ begin
   if (wet) then
     qsize = 3
     str_vars      = (/"SE","KE","WV","WL","WI"/);,"TT"/)
-    str_stage     = (/"pBF","pBP","pAP","pAM","dED","dAF","dBD","dAD","dAR","dBF","dBH","dCH","dAH"/)
+    if (isfilevar(fall,"SE_dED")) then
+      print("Dycore diagnostics seem to be on file")
+      str_stage     = (/"pBF","pBP","pAP","pAM","dED","dAF","dBD","dAD","dAR","dBF","dBH","dCH","dAH"/)
+      dycoreDiags = True
+    else
+      dycoreDiags = False    
+      print("No dycore diagnostics seem to be on file")
+      str_stage     = (/"pBF","pBP","pAP","pAM"/)
+    end if
   else
+    ;
+    ; dycore only diags
+    ;
     qsize = 0
     str_vars      = (/"SE","KE"/)
     str_stage     = (/"dED","dAF","dBD","dAD","dAR","dBF","dBH","dCH","dAH"/)
+    dycoreDiags = True
   end if
 
   nvars       = dimsizes(str_vars)
   nstage      = dimsizes(str_stage)
-  vars        = new((/nvars,nstage,nt,ncol/),typeof(tmp(0,0)))
-  subcycle    = new((/nstage/),typeof(tmp(0,0))) 
+  if (latlon) then
+    vars        = new((/nvars,nstage,nt,nlat,nlon/),typeof(tmp(0,0,0)))
+    subcycle    = new((/nstage/),typeof(tmp(0,0,0)))
+    tot_energy  = new((/nstage/),typeof(tmp(0,0,0)))
+    tracer_mass = new((/3,nstage/),typeof(tmp(0,0,0)))
+    int_vars  = new((/nvars,nstage,nt/)     ,typeof(tmp(0,0,0)))        
+  else
+    vars        = new((/nvars,nstage,nt,ncol/),typeof(tmp(0,0)))
+    subcycle    = new((/nstage/),typeof(tmp(0,0)))
+    tot_energy  = new((/nstage/),typeof(tmp(0,0)))
+    tracer_mass = new((/3,nstage/),typeof(tmp(0,0)))
+    int_vars  = new((/nvars,nstage,nt/)     ,typeof(tmp(0,0)))    
+  end if
+
 
   if (wet) then
-    subcycle    = (/1D0,1D0,1D0,1D0,1.0D0,nsplit,nsplit,nsplit,nsplit,1.0D0,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle/)
+    if (dycoreDiags) then
+      subcycle    = (/1D0,1D0,1D0,1D0,1.0D0,nsplit,nsplit,nsplit,nsplit,1.0D0,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle/)
+    else
+      subcycle    = (/1D0,1D0,1D0,1D0/)    
+    end if
   else
     subcycle    = (/1.0D0,nsplit,nsplit,nsplit,nsplit,1.0D0,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle/)
   end if
 
-  tot_energy  = new((/nstage/),typeof(tmp(0,0)))
-  tracer_mass = new((/3,nstage/),typeof(tmp(0,0)))
-
-  int_vars  = new((/nvars,nstage,nt/)     ,typeof(tmp(0,0)))
   int_vars  = 0.0D0
   ;
   ; check that variables are on file and read them
@@ -126,23 +212,30 @@ begin
     do j=0,nstage-1
       str = str_vars(k)+"_"+str_stage(j)
       if (isfilevar(fall,str)) then
-        vars(k,j,:,0:ncol-1) = fall->$str$(:,:)
+        if (latlon) then
+          vars(k,j,:,:,:) = fall->$str$(:,:,:)	
+	else
+          vars(k,j,:,0:ncol-1) = fall->$str$(:,:)
+	end if
       else
         print("Variable "+str+" not found")
         exit
       end if
     end do
   end do
+
   ;
   ; compute global integrals
   ;
-  area_sphere = sum(area(0:ncol-1))
-  print("Area of sphere in dataset is : "+area_sphere)
   inv_area_sphere = 1.0D0/area_sphere
   do t=0,nt-1
     do variable = 0,nvars-1
       do stages=0,nstage-1
-        int_vars(variable,stages,t) = sum(area(0:ncol-1)*vars(variable,stages,t,0:ncol-1))*inv_area_sphere
+        if (latlon) then
+          int_vars(variable,stages,t) = sum(area(:,:)*vars(variable,stages,t,:,:))*inv_area_sphere	
+	else
+          int_vars(variable,stages,t) = sum(area(0:ncol-1)*vars(variable,stages,t,0:ncol-1))*inv_area_sphere	
+	end if
       end do
     end do
   end do
@@ -218,8 +311,11 @@ begin
       phys_total      = (tot_energy(ipAM)-tot_energy(ipBF))/dtime
    end if
 
-    dyn_total       = (tot_energy(idBF)-tot_energy(idED))/dtime
-    dyn_phys_total       = (tot_energy(idAD)-tot_energy(idAF))/dtime
+    if (dycoreDiags) then
+      dyn_total       = (tot_energy(idBF)-tot_energy(idED))/dtime
+      dyn_phys_total       = (tot_energy(idAD)-tot_energy(idAF))/dtime
+    end if
+   
 
     str_data  = new( 1, "string")
     if (PhysDiags) then
@@ -243,36 +339,37 @@ begin
 ;    print("=> dE/dt physics total                   (pAM-pBF)"+sprintf("%6.3g",phys_total)+" W/M^2")
     end if
 
+    if (dycoreDiags) then
+      print(" ")
+      print("=================================================================================")
+      print("|                                                                               |")
+      print("| ANALYSIS OF ENERGY DIAGNOSTICS IN DYNAMICS                                    |")
+      print("|                                                                               |")
+      print("=================================================================================")
+      print(" ")
+
+      rate_of_change_2D_dyn = (tot_energy(idAD)-tot_energy(idBD))/dtime
+      rate_of_change_vertical_remapping = (tot_energy(idAR)-tot_energy(idAD))/dtime
+      dADIA = rate_of_change_2D_dyn+rate_of_change_vertical_remapping
+      print("dE/dt total adiabatic dynamics (adiab)            "+sprintf("%6.3g",dADIA)+" W/M^2")    
+      print("dE/dt 2D dynamics (2D)                  (dAD-dBD) "+sprintf("%6.3g",rate_of_change_2D_dyn)+" W/M^2")
+      print("dE/dt vertical remapping (remap)        (dAR-dAD) "+sprintf("%6.3g",rate_of_change_vertical_remapping)+" W/M^2")
+      rate_of_change_physics = (tot_energy(idBD)-tot_energy(idAF))/dtime
+      print("dE/dt physics tendency in dynamics      (dBD-dAF) "+sprintf("%6.3g",rate_of_change_physics)+" W/M^2")
+      print(" ")
+      print("Breakdown of 2D dynamics:")
+      print(" ")
+      rate_of_change_heating_term_put_back_in = (tot_energy(idAH)-tot_energy(idCH))/dtime
+      rate_of_change_hypervis_total           = (tot_energy(idAH)-tot_energy(idBH))/dtime
+      print("      dE/dt hypervis (hvis)             (dAH-dBH) "+sprintf("%6.3g",rate_of_change_hypervis_total)+" W/M^2")
+      print("      dE/dt frictional heating (fheat)  (dAH-dCH) "+sprintf("%6.3g",rate_of_change_heating_term_put_back_in)+" W/M^2")
+      twoDresidual = rate_of_change_2D_dyn-rate_of_change_hypervis_total
+      print("      dE/dt residual (res)                        "+sprintf("%6.3g",twoDresidual)+" W/M^2")
+    end if
     print(" ")
-    print("=================================================================================")
-    print("|                                                                               |")
-    print("| ANALYSIS OF ENERGY DIAGNOSTICS IN DYNAMICS                                    |")
-    print("|                                                                               |")
-    print("=================================================================================")
     print(" ")
 
-    rate_of_change_2D_dyn = (tot_energy(idAD)-tot_energy(idBD))/dtime
-    rate_of_change_vertical_remapping = (tot_energy(idAR)-tot_energy(idAD))/dtime
-    dADIA = rate_of_change_2D_dyn+rate_of_change_vertical_remapping
-    print("dE/dt total adiabatic dynamics (adiab)            "+sprintf("%6.3g",dADIA)+" W/M^2")    
-    print("dE/dt 2D dynamics (2D)                  (dAD-dBD) "+sprintf("%6.3g",rate_of_change_2D_dyn)+" W/M^2")
-    print("dE/dt vertical remapping (remap)        (dAR-dAD) "+sprintf("%6.3g",rate_of_change_vertical_remapping)+" W/M^2")
-    rate_of_change_physics = (tot_energy(idBD)-tot_energy(idAF))/dtime
-    print("dE/dt physics tendency in dynamics      (dBD-dAF) "+sprintf("%6.3g",rate_of_change_physics)+" W/M^2")
-    print(" ")
-    print("Breakdown of 2D dynamics:")
-    print(" ")
-    rate_of_change_heating_term_put_back_in = (tot_energy(idAH)-tot_energy(idCH))/dtime
-    rate_of_change_hypervis_total           = (tot_energy(idAH)-tot_energy(idBH))/dtime
-    print("      dE/dt hypervis (hvis)             (dAH-dBH) "+sprintf("%6.3g",rate_of_change_hypervis_total)+" W/M^2")
-    print("      dE/dt frictional heating (fheat)  (dAH-dCH) "+sprintf("%6.3g",rate_of_change_heating_term_put_back_in)+" W/M^2")
-    twoDresidual = rate_of_change_2D_dyn-rate_of_change_hypervis_total
-    print("      dE/dt residual (res)                        "+sprintf("%6.3g",twoDresidual)+" W/M^2")
-
-    print(" ")
-    print(" ")
-
-    if (PhysDiags) then
+    if (PhysDiags.and.dycoreDiags) then
       print(" ")
       print("=================================================================================")
       print("|                                                                               |")
@@ -335,18 +432,18 @@ begin
       str1 = qsize_condensate_loading+"                       &"
       str1 = str1 + " "+lcp_moist+"   &"      
       str1 = str1 + " "+ftype+"   &"      
-      str1 = str1 + " "+sprintf("%6.3g",10*param)+"&"
-      str1 = str1 + " "+sprintf("%6.3g",10*pDMEA)+"&"
-      str1 = str1 + " "+sprintf("%6.3g",10*pEFIX)+"&"
+      str1 = str1 + " "+sprintf("%6.3g",param)+"&"
+      str1 = str1 + " "+sprintf("%6.3g",pDMEA)+"&"
+      str1 = str1 + " "+sprintf("%6.3g",pEFIX)+"&"
       str1 = str1 + " "+discr+"&"
-      str1 = str1 + " "+sprintf("%6.3g",10*rate_of_change_2D_dyn)+"&"
-      str1 = str1 + " "+sprintf("%6.3g",10*rate_of_change_hypervis_total)+"&"
-      str1 = str1 + " "+sprintf("%6.3g",10*rate_of_change_heating_term_put_back_in)+"&"
-;      str1 = str1 + " "+sprintf("%6.3g",10*twoDresidual)+"&"
-      str1 = str1 + " "+sprintf("%6.3g",10*twoDresidual)+"&"
-      str1 = str1 + " "+sprintf("%6.3g",10*rate_of_change_vertical_remapping)+"&"
-      str1 = str1 + " "+sprintf("%6.3g",10*dADIA)+"&"
-;      str1 = str1 + " "+sprintf("%6.3g",10*value_pdc)
+      str1 = str1 + " "+sprintf("%6.3g",rate_of_change_2D_dyn)+"&"
+      str1 = str1 + " "+sprintf("%6.3g",rate_of_change_hypervis_total)+"&"
+      str1 = str1 + " "+sprintf("%6.3g",rate_of_change_heating_term_put_back_in)+"&"
+;      str1 = str1 + " "+sprintf("%6.3g",twoDresidual)+"&"
+      str1 = str1 + " "+sprintf("%6.3g",twoDresidual)+"&"
+      str1 = str1 + " "+sprintf("%6.3g",rate_of_change_vertical_remapping)+"&"
+      str1 = str1 + " "+sprintf("%6.3g",dADIA)+"&"
+;      str1 = str1 + " "+sprintf("%6.3g",value_pdc)
       str1 = str1 + " "+str_pdc
 
       if (fileexists(diags_fname)) then
