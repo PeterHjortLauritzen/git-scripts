@@ -21,6 +21,18 @@ begin
     print("qsize_condensate_loading ="+qsize_condensate_loading)
     print("lcp_moist                ="+lcp_moist)
     latlon = False
+
+    ;
+    ; check if physics-dynamics variables are present
+    ;
+    if (isfilevardim(fall,"SE_dED","ncol_d")) then
+      print("File appears to have separate grids for physics and dynamics - setting pgx=True")
+      pgx = True
+    else
+      print("File appears to be have the same grid for physics and dynamics - setting pgx=False")
+      pgx = False
+    end if
+
     tmp       = fall->SE_dED(:,:)
     nt        = dimsizes(tmp(:,0))
     ncol      = dimsizes(tmp(0,:))
@@ -48,11 +60,12 @@ begin
   ;
   ; initialization
   ;
-  g = 9.80665D0
-  PI = get_pi("double")
-  deg2rad = PI/180.0
-  nc        = -1
+  g         = 9.80665D0
+  PI        = get_pi("double")
+  deg2rad   = PI/180.0
+  ncol_p    = 1
   eps       = 1.0D-13
+  area_sphere_p = eps
   if (latlon) then
     lat = fall->lat
     lat = deg2rad*lat
@@ -80,12 +93,26 @@ begin
     end do
     area_sphere = sum(area)
   else
-    area      = fall->area   (:  )
-    area_sphere = sum(area(0:ncol-1))    
+    if (pgx) then
+      tmp_p         = fall->SE_pAM(:,:)
+      ncol_p        = dimsizes(tmp_p(0,:))
+      area_p        = fall->area_fvm(:  )
+      area_sphere_p = sum(area_p(0:ncol_p-1))          
+      area          = fall->area_d (:  )
+      area_sphere = sum(area(0:ncol-1))                
+      print("Area of sphere (GLL)         : "+area_sphere)
+      error = area_sphere-4.0*PI
+      print("Error spanning the sphere    : "+error)
+      print("Area of sphere (physgrid)    : "+area_sphere_p)
+      error = area_sphere_p-4.0*PI
+      print("Error spanning the sphere    : "+error)
+      print("ncol_p="+ncol_p)
+    else
+      area      = fall->area   (:  )
+      area_sphere = sum(area(0:ncol-1))          
+    end if  
   end if
-  print("Area of sphere in dataset is : "+area_sphere)
-  error = area_sphere-4.0*PI
-  print("Error spanning the sphere    : "+error)
+
   
 
   ;
@@ -185,11 +212,12 @@ begin
     tracer_mass = new((/3,nstage/),typeof(tmp(0,0,0)))
     int_vars  = new((/nvars,nstage,nt/)     ,typeof(tmp(0,0,0)))        
   else
-    vars        = new((/nvars,nstage,nt,ncol/),typeof(tmp(0,0)))
+    vars        = new((/ncol/),typeof(tmp(0,0)))
+    vars_p      = new((/ncol_p/),typeof(tmp(0,0)))
     subcycle    = new((/nstage/),typeof(tmp(0,0)))
     tot_energy  = new((/nstage/),typeof(tmp(0,0)))
     tracer_mass = new((/3,nstage/),typeof(tmp(0,0)))
-    int_vars  = new((/nvars,nstage,nt/)     ,typeof(tmp(0,0)))    
+    int_vars    = new((/nvars,nstage,nt/)     ,typeof(tmp(0,0)))    
   end if
 
 
@@ -205,17 +233,33 @@ begin
 
   int_vars  = 0.0D0
   ;
-  ; check that variables are on file and read them
+  ; check that variables are on file and read them and compute global integrals
   ;
-  do k=0,nvars-1
-    do j=0,nstage-1
-      str = str_vars(k)+"_"+str_stage(j)
+  inv_area_sphere   = 1.0D0/area_sphere
+  inv_area_sphere_p = 1.0D0/area_sphere_p
+  do variable=0,nvars-1
+    do stage=0,nstage-1
+      str = str_vars(variable)+"_"+str_stage(stage)
       if (isfilevar(fall,str)) then
         if (latlon) then
-          vars(k,j,:,:,:) = fall->$str$(:,:,:)	
+          vars(variable,stage,:,:,:) = fall->$str$(:,:,:)
+          do t=0,nt-1
+            int_vars(variable,stage,t) = sum(area(:,:)*vars(variable,stage,t,:,:))*inv_area_sphere		  
+	  end do
 	else
-          vars(k,j,:,0:ncol-1) = fall->$str$(:,:)
-	end if
+          fld = fall->$str$(:,:)
+	  if (dimsizes(fld(0,:)).eq.ncol_p) then
+            do t=0,nt-1	      
+              int_vars(variable,stage,t) = sum(area_p(0:ncol_p-1)*fld(t,0:ncol_p-1))*inv_area_sphere_p
+	    end do
+          else
+            do t=0,nt-1	      	  
+              int_vars(variable,stage,t) = sum(area(0:ncol-1)*fld(t,0:ncol-1))*inv_area_sphere
+	    end do
+	  end if
+	  delete(fld)
+   	end if
+	
       else
         print("Variable "+str+" not found")
         exit
@@ -226,18 +270,18 @@ begin
   ;
   ; compute global integrals
   ;
-  inv_area_sphere = 1.0D0/area_sphere
-  do t=0,nt-1
-    do variable = 0,nvars-1
-      do stages=0,nstage-1
-        if (latlon) then
-          int_vars(variable,stages,t) = sum(area(:,:)*vars(variable,stages,t,:,:))*inv_area_sphere	
-	else
-          int_vars(variable,stages,t) = sum(area(0:ncol-1)*vars(variable,stages,t,0:ncol-1))*inv_area_sphere	
-	end if
-      end do
-    end do
-  end do
+
+;  do t=0,nt-1
+;    do variable = 0,nvars-1
+;      do stages=0,nstage-1
+;        if (latlon) then
+;          int_vars(variable,stages,t) = sum(area(:,:)*vars(variable,stages,t,:,:))*inv_area_sphere	
+;	else
+;          int_vars(variable,stages,t) = sum(area(0:ncol-1)*vars(variable,stages,t,0:ncol-1))*inv_area_sphere	
+;	end if
+;      end do
+;    end do
+;  end do
 
   ;
   ; For code clarity define indices corresponding to the different stages
@@ -329,6 +373,16 @@ begin
     print("dE/dt dry mass adjustment (pwork)       (pAM-pAP) "+sprintf("%6.3g",pDMEA)     +" W/M^2")
     print("dE/dt energy fixer (efix)               (pBP-pBF) "+sprintf("%6.3g",pEFIX)     +" W/M^2")
     print("dE/dt physics total (phys)              (pAM-pBF) "+sprintf("%6.3g",phys_total)+" W/M^2")
+
+
+    if (dycore.eq."FV") then
+      print(" ")    
+      fv_dycore = -pEFIX-pDMEA
+      print("Dycore TE dissipation estimated from physics TE terms (assuming ftype=1 and no energy discretization errors is")
+      print(sprintf("%6.3g",fv_dycore)     +" W/M^2")
+      print(" ")      
+    end if
+
 
 ;    print(" ")
 ;    value = pEFIX+pDMEA
