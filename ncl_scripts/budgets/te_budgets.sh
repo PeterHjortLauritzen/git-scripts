@@ -2,19 +2,19 @@
 if ( "$#argv" != 2) then
   echo "Wrong number of arguments specified:"
   echo "  -arg 1 file with energy diagnostics (averaged)"
-  echo "  -arg 2 SE,FV"
+  echo "  -arg 2 SE,FV,FV3"
   exit
 endif
 set n = 1
 set file = "$argv[$n]" 
 
-#if (`hostname` == "cheyenne6") then
+if (`hostname` == "cheyenne6") then
   set data_dir = "/glade/$USER/pel/"
   set ncl_dir = "/glade/u/home/$USER/git-scripts/ncl_scripts/budgets"
-#else
-#  set data_dir = "/scratch/cluster/$USER/"
-#  set ncl_dir = "/home/$USER/git-scripts/ncl_scripts/budgets"
-#endif
+else
+  set data_dir = "/scratch/cluster/$USER/"
+  set ncl_dir = "/home/$USER/git-scripts/ncl_scripts/budgets"
+endif
 echo $file
 if (! -e atm_in) then
   echo "This script expect the atm_in file for get rsplit, nsplit, .... values"
@@ -81,12 +81,28 @@ if ($argv[$n] == "FV") then
   set hyper=0
   set ftype = 1
   set qsize_condensate_loading = "1"
-  set lcp_moist = ".false."
+  set lcp_moist = "false"
+endif
+if ($argv[$n] == "FV3") then
+  set supportedDycore=True
+  set rsplit=0
+  touch tmp_file
+  grep "k_split[[:space:]]"            atm_in >> tmp_file      #find line and parse to tmp_file
+  set nsplit = `sed -r 's/([^0-9]*([0-9]*)){1}.*/\2/' tmp_file`  #extract number (don't use grep -o "[0-9}"
+  #set nsplit = `grep -o "[0-9]" tmp_file`
+  rm tmp_file
+  set hyper=0
+  set ftype = 1
+  touch tmp_file
+  grep "fv3_qsize_condensate_loading[[:space:]]"            atm_in >> tmp_file
+  set  qsize_condensate_loading = `sed -r 's/([^0-9]*([0-9]*)){1}.*/\2/' tmp_file`
+  rm tmp_file
+  set lcp_moist = "true"
 endif
 
 if ($supportedDycore == "False") then
   echo "The dycore you specified is not supported"
-  echo "Supported options are FV and SE"  
+  echo "Supported options are FV, SE and FV3"  
 endif
 echo "rsplit="$rsplit
 echo "nsplit="$nsplit
