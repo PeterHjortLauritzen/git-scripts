@@ -1,0 +1,15 @@
+ nhtfrq = 0
+ ndens = 1
+ avgflag_pertape(1) = 'A'
+ fincl1 =  'WV_pBF','WL_pBF','WI_pBF','SE_pBF','KE_pBF',
+           'WV_pBP','WL_pBP','WI_pBP','SE_pBP','KE_pBP',
+           'WV_pAP','WL_pAP','WI_pAP','SE_pAP','KE_pAP',
+           'WV_pAM','WL_pAM','WI_pAM','SE_pAM','KE_pAM',
+           'WV_dED','WL_dED','WI_dED','SE_dED','KE_dED',
+           'WV_dAP','WL_dAP','WI_dAP','SE_dAP','KE_dAP',
+           'WV_dAT','WL_dAT','WI_dAT','SE_dAT','KE_dAT',	   	   
+           'WV_dBD','WL_dBD','WI_dBD','SE_dBD','KE_dBD',
+           'WV_dAF','WL_dAF','WI_dAF','SE_dAF','KE_dAF',
+           'WV_dAD','WL_dAD','WI_dAD','SE_dAD','KE_dAD',
+           'WV_dAR','WL_dAR','WI_dAR','SE_dAR','KE_dAR',
+           'WV_dBF','WL_dBF','WI_dBF','SE_dBF','KE_dBF'
