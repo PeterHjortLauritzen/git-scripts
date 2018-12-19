@@ -294,6 +294,7 @@ begin
   ;
   inv_area_sphere   = 1.0D0/area_sphere
   inv_area_sphere_p = 1.0D0/area_sphere_p
+  print("nvars="+nvars)
   do variable=0,nvars-1
     do stage=0,nstage-1
       str = str_vars(variable)+"_"+str_stage(stage)
@@ -442,8 +443,10 @@ begin
         tracer_mass(t,0,j) = subcycle(j)*(int_vars(idx,j,t))
         idx = str_match_ind(str_vars,"WL")
         tracer_mass(t,1,j) = subcycle(j)*(int_vars(idx,j,t))
+		print("iii "+j+" "+tracer_mass(t,2,j)+" "+int_vars(idx,j,t))		
         idx = str_match_ind(str_vars,"WI")
         tracer_mass(t,2,j) = subcycle(j)*(int_vars(idx,j,t))
+	print("qqq "+str_stage(j)+" "+tracer_mass(t,2,j)+" "+int_vars(idx,j,t))
       end if
     end do
   end do
@@ -809,10 +812,14 @@ begin
         print("Checking physics dynamics coupling")
         mass_change_phys = (tracer_mass(t,m_cnst,ipAM)-tracer_mass(t,m_cnst,ipBF))
         print("Mass change in physics:               "+mass_change_phys)
-        mass_change_dyn  = (tracer_mass(t,m_cnst,idBD)-tracer_mass(t,m_cnst,idED))
+        mass_change_p_d_coupling  = (tracer_mass(t,m_cnst,idBD)-tracer_mass(t,m_cnst,idED))
+        print("Mass change in d_p_coupling: "+mass_change_p_d_coupling)
+	error = mass_change_p_d_coupling-mass_change_phys
+	print("Error  "+error)
+        mass_change_dyn  = (tracer_mass(t,m_cnst,idBF)-tracer_mass(t,m_cnst,idED))
         print("Mass change in dynamics from physics: "+mass_change_dyn)
 
-        mass_error_in_coupling = (tracer_mass(t,m_cnst,ipAM)-tracer_mass(t,m_cnst,idBD))
+        mass_error_in_coupling = (tracer_mass(t,m_cnst,ipAM)-tracer_mass(t,m_cnst,idBF))
         print("Mass error in coulpling "+mass_error_in_coupling)
        end if
        print(" ")
@@ -897,6 +904,19 @@ begin
       diff = pEFIX+dDycore+pDMEA
       print("t="+t+": Is budget equation fullfilled? "+diff)
       print(" ")       
+    end do
+    print(" ")
+    print("**************************************************")
+    print("QNEG mass change")
+    print("**************************************************")
+    print(" ")
+    do t=1,nt-1
+      do m_cnst=0,2
+        print("m_cnst "+m_cnst)
+        mass_change_qneg = (tracer_mass(t,m_cnst,ipBF)-tracer_mass(t-1,m_cnst,idBF))
+	print("xxx "+tracer_mass(t,m_cnst,ipBF)+" "+tracer_mass(t-1,m_cnst,idBF))
+        print("QNEG mass change "+mass_change_qneg)
+      end do
     end do
   end if
 end
