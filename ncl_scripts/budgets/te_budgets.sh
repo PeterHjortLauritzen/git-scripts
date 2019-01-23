@@ -15,10 +15,6 @@ else
   set data_dir = "/scratch/cluster/$USER/"
   set ncl_dir = "/home/$USER/git-scripts/ncl_scripts/budgets"
 endif
-  set data_dir = "/glade/u/home/$USER"
-  set ncl_dir = "/glade/u/home/$USER/git-scripts/ncl_scripts/budgets"
-
-/gpfs/u/home/pe
 
 echo $file
 if (! -e atm_in) then

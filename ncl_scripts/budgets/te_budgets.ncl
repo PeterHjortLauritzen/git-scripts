@@ -35,6 +35,7 @@ begin
 
     tmp       = fall->SE_dED(:,:)
     nt        = dimsizes(tmp(:,0))
+    print("Number of time-levels = "+nt)
     ncol      = dimsizes(tmp(0,:))
     lat1d_gll     = fall->lat          ; Pull off lat/lon variable and
     lon1d_gll     = fall->lon          ; convert both to 1D.
@@ -78,39 +79,6 @@ begin
     print("ERROR: lcp_moist should either be true or false; lcp_moist= "+lcp_moist)
     exit()
   end if
-  ;
-  ; plotting stuff
-  ;
-;  gsn_define_colormap(wks,"BlAqGrYeOrReVi200")   ; choose colormap
-
-
-  res                     = True         ; plot modifications desired
-  res@gsnMaximize         = True         ; Maximize size of plot in frame
-  res@gsnSpreadColors     = True         ; Use full colormap, but start
-  res@gsnDraw             = False           ; don't draw
-  res@gsnFrame            = False           ; don't advance frame
-  res@cnFillOn            = True         ; Turn on contour fill
-;  res@cnFillMode          = "AreaFill"   ; Style of fill. You can also
-                                         ; use "CellFill" and "RasterFill"
-  res@cnLinesOn           = False        ; Turn off contour lines
-  res@cnLineLabelsOn      = False        ; Turn off contour line labels
-  res@lbLabelAutoStride   = True         ; Clean up labelbar labels.
-  res@cnFillMode="RasterFill"
-
-
-  res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
-  res@cnMinLevelValF  = -30.0                        ; set the minimum contour level
-  res@cnMaxLevelValF  = 30.0                   ; set the maximum contour level
-  res@cnLevelSpacingF = 1.0                  ; set the interval between contours
-
-;  res@mpMinLatF = -30.                   ; set the minimum latitude = -70.
-;  res@mpMaxLatF = 30.                    ; set the maximum latitude = 70.
-
-; res@mpMinLonF = -40.                    ; set the minimum latitude = -70.
-;  res@mpMaxLonF = 40.
-
-
-
   ;
   ; initialization
   ;
@@ -269,7 +237,7 @@ begin
   nvars       = dimsizes(str_vars)
   nstage      = dimsizes(str_stage)
   if (latlon) then
-    vars        = new((/nt,nvars,nstage,nt,nlat,nlon/),typeof(tmp(0,0,0)))
+    vars        = new((/nvars,nstage,nt,nlat,nlon/),typeof(tmp(0,0,0)))
     tot_energy  = new((/nstage/),typeof(tmp(0,0,0)))
     tracer_mass = new((/nt,3,nstage/),typeof(tmp(0,0,0)))
     int_vars  = new((/nvars,nstage,nt/)     ,typeof(tmp(0,0,0)))        
@@ -279,10 +247,7 @@ begin
     vars_p      = new((/ncol_p/),typeof(tmp(0,0)))
     tot_energy  = new((/nt,nstage/),typeof(tmp(0,0)))
     tot_energy_t  = new((/nt,nstage/),typeof(tmp(0,0)))
-    tot_energy_2d = new((/nstage,ncol/),typeof(tmp(0,0)))
-    output_format = "pdf"
-    wks = gsn_open_wks(output_format,"te")
-    plot = new(4,graphic) 
+    tot_energy_2d = new((/nt,nstage,ncol/),typeof(tmp(0,0)))
 
     tracer_mass = new((/nt,3,nstage/),typeof(tmp(0,0)))
     int_vars    = new((/nvars,nstage,nt/)     ,typeof(tmp(0,0)))    
@@ -306,6 +271,7 @@ begin
 	  end do
 	else
           fld = fall->$str$(:,:)
+          vars(variable,stage,:,:) = fall->$str$(:,:)	  
 	  if (dimsizes(fld(0,:)).eq.ncol_p) then
             do t=0,nt-1	      
               int_vars(variable,stage,t) = sum(area_p(0:ncol_p-1)*fld(t,0:ncol_p-1))*inv_area_sphere_p
@@ -436,8 +402,8 @@ begin
 ;     tot_energy(t,j)  = subcycle(j)*int_vars(1,j,t); K energy only	       
 ;      print("t="+t": "+str_stage(j)+"   "+tot_energy(t,j))
 
-
-      tot_energy_2d(j,:) = subcycle(j)*(vars(0,j,t,0:ncol-1)+vars(1,j,t,0:ncol-1))
+;      tot_energy_2d(t,j,:) = subcycle(j)*(vars(0,j,t,0:ncol-1)); themal energy only
+     tot_energy_2d(t,j,:) = subcycle(j)*(vars(0,j,t,0:ncol-1)+vars(1,j,t,0:ncol-1))
       if (wet) then
         idx = str_match_ind(str_vars,"WV")
         tracer_mass(t,0,j) = subcycle(j)*(int_vars(idx,j,t))
@@ -482,26 +448,8 @@ begin
       pEFIX    = (tot_energy(t,ipBP)-tot_energy(t,ipBF))/dtime
       pDMEA = (tot_energy(t,ipAM)-tot_energy(t,ipAP))/dtime
 
-      res@tiMainString        = "Pressure work tendency, 1 year average, W/m^2"
-      res@sfXArray            = lon1d_gll
-      res@sfYArray            = lat1d_gll
+      param   = (tot_energy(t,ipAP)-tot_energy(t,ipBP))/dtime
 
-      res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
-      res@cnMinLevelValF  =-30.0                        ; set the minimum contour level
-      res@cnMaxLevelValF  = 30.0                   ; set the maximum contour level
-      res@cnLevelSpacingF = 1.0                  ; set the interval between contours
-
-      plot(0) = gsn_csm_contour_map_ce(wks,(tot_energy_2d(ipAM,:)-tot_energy_2d(ipAP,:))/dtime,res)
-
-      param           = (tot_energy(t,ipAP)-tot_energy(t,ipBP))/dtime
-
-      res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
-      res@cnMinLevelValF  =-100.0                        ; set the minimum contour level
-      res@cnMaxLevelValF  = 100.0                   ; set the maximum contour level
-      res@cnLevelSpacingF = 2.0                  ; set the interval between contours
-
-      res@tiMainString        = "Physics tendency, 1 year average, W/m^2"
-      plot(1) = gsn_csm_contour_map_ce(wks,(tot_energy_2d(ipAP,:)-tot_energy_2d(ipBP,:))/dtime,res)
 
       phys_total      = (tot_energy(t,ipAM)-tot_energy(t,ipBF))/dtime
     end if
@@ -589,15 +537,9 @@ begin
       print("|                                                                               |")
       print("=================================================================================")
       print(" ")
+
+
       rate_of_change_2D_dyn = (tot_energy(t,idAD)-tot_energy(t,idBD))/dtime
-
-      res@tiMainString        = "2D dyn tendency, 1 year average, W/m^2"
-      res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
-      res@cnMinLevelValF  = -100.0                        ; set the minimum contour level
-      res@cnMaxLevelValF  = 100.0                   ; set the maximum contour level
-      res@cnLevelSpacingF = 1.0                  ; set the interval between contours 
-
-      plot(2) = gsn_csm_contour_map_ce(wks,(tot_energy_2d(idAD,:)-tot_energy_2d(idBD,:))/dtime,res)
 
       rate_of_change_vertical_remapping = (tot_energy(t,idAR)-tot_energy(t,idAD))/dtime
 
@@ -615,17 +557,12 @@ begin
       print(" ")
       rate_of_change_heating_term_put_back_in = (tot_energy(t,idAH)-tot_energy(t,idCH))/dtime
 
-      res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
-      res@cnMinLevelValF  = -20.0                        ; set the minimum contour level
-      res@cnMaxLevelValF  = 20.0                   ; set the maximum contour level
-      res@cnLevelSpacingF = 1.0                  ; set the interval between contours
-      res@tiMainString        = "Frictional heating, 1 year average, W/m^2"
-      plot(3) = gsn_csm_contour_map_ce(wks,(tot_energy_2d(idAH,:)-tot_energy_2d(idCH,:))/dtime,res)
-
 
 
       rate_of_change_hypervis_total           = (tot_energy(t,idAH)-tot_energy(t,idBH))/dtime
       print("      dE/dt hypervis (hvis)             (dAH-dBH) "+sprintf("%6.3g",rate_of_change_hypervis_total)+" W/M^2")
+
+
       print("      dE/dt frictional heating (fheat)  (dAH-dCH) "+sprintf("%6.3g",rate_of_change_heating_term_put_back_in)+" W/M^2")
       twoDresidual = rate_of_change_2D_dyn-rate_of_change_hypervis_total
       print("      dE/dt residual (res)                        "+sprintf("%6.3g",twoDresidual)+" W/M^2")
@@ -826,47 +763,195 @@ begin
        print("---------------------------------------------------------------------------------------------------")
        print(" ")
      end do
+  ;
+  ;----------------------------------------------------------------------------------------------------------------
+  ;
+  ; plotting stuff
+  ;
+  ;----------------------------------------------------------------------------------------------------------------
+  ;
+  output_format = "eps"
+  wks = gsn_open_wks(output_format,"te")
+  gsn_define_colormap(wks,"NCV_jaisnd");3gauss")      
+; gsn_define_colormap(wks,"BlAqGrYeOrReVi200")   ; choose colormap
+; gsn_define_colormap(wks,"GMT_polar")
+    
 
-     resP                  = True                   ; modify the panel plot
-     resP@gsnFrame         = False                  ; don't advance panel plot
+
+
+  res                     = True         ; plot modifications desired
+  res@gsnMaximize         = False         ; Maximize size of plot in frame
+  res@gsnSpreadColors     = True         ; Use full colormap, but start
+  res@gsnDraw             = False           ; don't draw
+  res@gsnFrame            = False           ; don't advance frame
+  res@cnFillOn            = True         ; Turn on contour fill
+;  res@cnFillMode          = "AreaFill"   ; Style of fill. You can also
+                                         ; use "CellFill" and "RasterFill"
+  res@cnLinesOn           = False        ; Turn off contour lines
+  res@cnLineLabelsOn      = False        ; Turn off contour line labels
+  res@lbLabelAutoStride   = True         ; Clean up labelbar labels.
+  res@cnFillMode="RasterFill"
+
+
+;  res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
+;  res@cnMinLevelValF  = -30.0                        ; set the minimum contour level
+;  res@cnMaxLevelValF  = 30.0                   ; set the maximum contour level
+;  res@cnLevelSpacingF = 1.0                  ; set the interval between contours
+
+;  res@mpMinLatF = -30.                   ; set the minimum latitude = -70.
+;  res@mpMaxLatF = 30.                    ; set the maximum latitude = 70.
+
+; res@mpMinLonF = -40.                    ; set the minimum latitude = -70.
+;  res@mpMaxLonF = 40.
+
+  res@gsnStringFontHeightF = 0.02
+  res@tiMainFontHeightF = 0.025
+  res@lbLabelFontHeightF = 0.02
+  res@tmXBLabelFontHeightF = 0.015
+  res@tmYLLabelFontHeightF = 0.015
+  res@pmLabelBarOrthogonalPosF = 0.2
+
+  res@lbBoxLinesOn = False
+
+
+  plot = new(6,graphic) 
+
+  res@sfXArray            = lon1d_gll
+  res@sfYArray            = lat1d_gll
+
+  res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
+  fmin = -150.
+      fmax = 150.
+  res@cnMinLevelValF  = fmin                        ; set the minimum contour level
+  res@cnMaxLevelValF  = fmax                   ; set the maximum contour level
+  res@cnLevelSpacingF = (fmax-fmin)/50.0                  ; set the interval between contours
+  res@gsnLeftString        = "Total physics TE tendency"      
+
+;  res@tiMainString        = " [W/m^2]"
+      printMinMax((tot_energy_2d(t,ipAP,:)-tot_energy_2d(t,ipBP,:))/dtime,False)
+      ;-148.2925226269828   max=1770.210548306306
+  min_f = min((tot_energy_2d(t,ipAP,:)-tot_energy_2d(t,ipBP,:))/dtime)
+  max_f = max((tot_energy_2d(t,ipAP,:)-tot_energy_2d(t,ipBP,:))/dtime)
+  res@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
+  plot(0) = gsn_csm_contour_map_ce(wks,(tot_energy_2d(t,ipAP,:)-tot_energy_2d(t,ipBP,:))/dtime,res)
+
+  res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
+  res@cnMinLevelValF  =-20.                        ; set the minimum contour level
+  res@cnMaxLevelValF  = 20.                   ; set the maximum contour level
+  res@cnLevelSpacingF = 0.50                  ; set the interval between contours
+  res@gsnRightString       = "W/m~S~2~N"
+  res@gsnLeftString        = "Pressure work error TE tendency (pwork)"
+;  res@tiMainString        = "Pressure work error (pwork) [W/m^2]"
+
+
+  min_f = min((tot_energy_2d(t,ipAM,:)-tot_energy_2d(t,ipAP,:))/dtime)
+  max_f = max((tot_energy_2d(t,ipAM,:)-tot_energy_2d(t,ipAP,:))/dtime)
+  res@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
+  plot(1) = gsn_csm_contour_map_ce(wks,(tot_energy_2d(t,ipAM,:)-tot_energy_2d(t,ipAP,:))/dtime,res)
+
+  res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
+  fmin   = -150.
+      fmax = 150.
+  res@cnMinLevelValF  = fmin                        ; set the minimum contour level
+  res@cnMaxLevelValF  = fmax                   ; set the maximum contour level
+  res@cnLevelSpacingF = (fmax-fmin)/50.0                  ; set the interval between contours
+
+  res@gsnLeftString        = "Adiabatic dycore TE tendency"      
+  min_f = min((tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idBD,:))/dtime)
+  max_f = max((tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idBD,:))/dtime)
+  res@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
+  plot(2) = gsn_csm_contour_map_ce(wks,(tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idBD,:))/dtime,res)
+      printMinMax((tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idBD,:))/dtime,False)
+      ;min=-1489.836497456233   max=122.200959737036
+
+  res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
+  res@cnMinLevelValF  = -600.0                        ; set the minimum contour level
+  res@cnMaxLevelValF  = 600.0                  ; set the maximum contour level
+  res@cnLevelSpacingF = 10.0                  ; set the interval between contours
+  res@gsnLeftString        = "Hyperviscosity TE tendency (hvis)"        
+
+
+
+  min_f = min((tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idBH,:))/dtime)
+  max_f = max((tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idBH,:))/dtime)
+  res@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
+
+  plot(3) = gsn_csm_contour_map_ce(wks,(tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idBH,:))/dtime,res)	
+;  plot(3) = gsn_csm_contour_map_ce(wks,(tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idBH,:)-(tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idBH,:)))/dtime,res)
+
+      average_hvis = sum(area(:)*(tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idBH,:))/dtime)/(4.0*PI)
+      print("ave_hvis = "+average_hvis)
+
+  res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
+  res@cnMinLevelValF  = -0.1                        ; set the minimum contour level
+  res@cnMaxLevelValF  = 0.1                   ; set the maximum contour level
+  res@cnLevelSpacingF = 0.005                  ; set the interval between contours 
+  res@gsnLeftString        = "Vertical remapping TE tendency (remap)"      
+
+  min_f = min((tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idAD,:))/dtime)
+  max_f = max((tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idAD,:))/dtime)
+  res@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
+
+  plot(4) = gsn_csm_contour_map_ce(wks,(tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idAD,:))/dtime,res)
+
+  res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
+  res@cnMinLevelValF  = -10.0                        ; set the minimum contour level
+  res@cnMaxLevelValF  = 10.0                   ; set the maximum contour level
+  res@cnLevelSpacingF = 0.5                  ; set the interval between contours
+  res@gsnLeftString        = "Frictional heating TE tendency (fheat)"  
+
+  min_f = min((tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idCH,:))/dtime)
+  max_f = max((tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idCH,:))/dtime)
+  res@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
+
+  plot(5) = gsn_csm_contour_map_ce(wks,(tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idCH,:))/dtime,res)
+
+  resP                  = True                   ; modify the panel plot
+  resP@gsnFrame         = False                  ; don't advance panel plot
+  resP@gsnPanelFigureStrings = (/"a","b","c","d","e","f"/)
+  resP@gsnPanelYWhiteSpacePercent = 4.0
+  resP@gsnPanelXWhiteSpacePercent = 4.0
+
 ;  resP@gsnPanelLabelBar = True                   ; add common colorbar
 ;  resP@gsnPanelBottom   = 0.05
-;  resP@txString   = "A common title"
-     gsn_panel(wks,plot,(/2,2/),resP)               ; now draw as one plot
+     resP@txString   = "TE tendencies for the default CAM-SE configuration (AMIP)"
+     gsn_panel(wks,plot,(/3,2/),resP)               ; now draw as one plot
 
 
-     txres               = True
+
+   txres               = True
 ;  txres@txFontHeightF = 0.015
 ;  gsn_text_ndc(wks,"Figure 1: A nifty panel plot",0.5,0.02,txres)
-     frame(wks)
+   frame(wks)
 
   end do
-  print("**************************************************")
-  print("d_p_coupling check (requires instantaneous output)")
-  print("**************************************************")
-  print(" ")
-  print("Check if state passed to physics (pBF) is the same at the state at the end of the dycore (dBF)")
-  print("Note: if not working with instantaneous data there will be a sampling error!")
-  print("Sampling error will be very small if working with long averages ...")
-  print(" ")
-  do t=0,nt-2
-    yyy = (tot_energy(t,idBF)-tot_energy(t+1,ipBF))/dtime ;tot_energy(t,idBF) xxxx
-    print("t="+t+": normalized difference between states (should be zero) = "+yyy)      
-  end do
-  print(" ")
-  print("**************************************************")
-  print("p_d_coupling check 1")
-  print("**************************************************")
-  print(" ")
-  print("Check if state at the end of physics (pAM) is the same at the state at the beginning of the dycore (dAP)")
-  print("before any tendencies have been added to the dynamics state")
-  print(" ")
-  do t=0,nt-1   
-     diff1 = (tot_energy(t,ipAM)-tot_energy(t,idAP))/dtime ;tot_energy(t,ipAM) xxx
-     print("t="+t+": normalized difference between states (should be zero) = "+diff1)
-  end do
-  print(" ")
-  if (dycore.eq."FV3") then
+  if (dycore.eq."FV3") then    
+    print("**************************************************")
+    print("d_p_coupling check (requires instantaneous output)")
+    print("**************************************************")
+    print(" ")
+    print("Check if state passed to physics (pBF) is the same at the state at the end of the dycore (dBF)")
+    print("Note: if not working with instantaneous data there will be a sampling error!")
+    print("Sampling error will be very small if working with long averages ...")
+    print(" ")
+    do t=0,nt-2
+      yyy = (tot_energy(t,idBF)-tot_energy(t+1,ipBF))/dtime ;tot_energy(t,idBF) xxxx
+      print("t="+t+": normalized difference between states (should be zero) = "+yyy)      
+    end do
+ 
+    print(" ")
+    print("**************************************************")
+    print("p_d_coupling check 1")
+    print("**************************************************")
+    print(" ")
+    print("Check if state at the end of physics (pAM) is the same at the state at the beginning of the dycore (dAP)")
+    print("before any tendencies have been added to the dynamics state")
+    print(" ")
+    do t=0,nt-1
+      print("t="+t+" "+ipAM+" "+idAP)
+      diff1 = (tot_energy(t,ipAM)-tot_energy(t,idAP))/dtime ;tot_energy(t,ipAM) xxx
+      print("t="+t+": normalized difference between states (should be zero) = "+diff1)
+    end do
     print(" ")
     print("**************************************************")
     print("p_d_coupling check 2")
