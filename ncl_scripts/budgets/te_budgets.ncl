@@ -770,7 +770,7 @@ begin
   ;
   ;----------------------------------------------------------------------------------------------------------------
   ;
-  output_format = "eps"
+  output_format = "pdf"
   wks = gsn_open_wks(output_format,"te")
   gsn_define_colormap(wks,"NCV_jaisnd");3gauss")      
 ; gsn_define_colormap(wks,"BlAqGrYeOrReVi200")   ; choose colormap
@@ -856,7 +856,7 @@ begin
   res@cnMaxLevelValF  = fmax                   ; set the maximum contour level
   res@cnLevelSpacingF = (fmax-fmin)/50.0                  ; set the interval between contours
 
-  res@gsnLeftString        = "Adiabatic dycore TE tendency"      
+  res@gsnLeftString        = "Adiabatic dycore TE tendency (adiab)"      
   min_f = min((tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idBD,:))/dtime)
   max_f = max((tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idBD,:))/dtime)
   res@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
