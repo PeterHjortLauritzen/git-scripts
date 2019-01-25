@@ -9,24 +9,26 @@ setenv PBS_ACCOUNT "P03010039"
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-set src="trunk"
+#set src="trunk"
+set src="cam_cesm2_1_rel_07"
 #
 # run with CSLAM or without
 #
 set res="ne30pg3_ne30pg3_mg17" #cslam
 #set res="ne30_ne30_mg17"      #no cslam
+#set res="f09_f09_mg17"     
 
 #set climateRun="True"
 set climateRun="False"
 #set energyConsistency="True"
 set energyConsistency="False"
-set test_tracers="False"
+set test_tracers="True"
 set defaultIO="True"
 #
 # DO NOT MODIFY BELOW THIS LINE
 #
-set cset="FW2000climo"
-#set cset="F2000climo"
+#set cset="FW2000climo"
+set cset="F2000climo"
 #set cset="FHS94"
 #
 # mapping files (not in cime yet)
@@ -72,7 +74,7 @@ cd /glade/scratch/$USER/$caze
 #./xmlchange RUNDIR=/glade/scratch/$USER/$caze/run
 
 if ($test_tracers == "True") then
-    ./xmlchange --append CAM_CONFIG_OPTS="-cppdefs -Dwaccm_debug -nadv_tt=5"
+    ./xmlchange --append CAM_CONFIG_OPTS="-cppdefs -Dwaccm_debug -nadv_tt=10"
 else
    if ($res == "ne30pg3_ne30pg3_mg17") then
       ./xmlchange --append CAM_CONFIG_OPTS="-cppdefs -Dwaccm_debug"
@@ -217,7 +219,7 @@ endif
 else
   echo "interpolate_output = .true.,.true.,.true.,.true.,.true.,.true.,.true.,.true." >> user_nl_cam
 endif
-if ($cset == "FW2000") then
+#if ($cset == "FW2000") then
 #  echo "se_nsplit = 4" >> user_nl_cam
 #  echo "se_fvm_supercycling     = 7" >> user_nl_cam
 #  echo "se_fvm_supercycling_jet = 7" >> user_nl_cam
@@ -226,7 +228,7 @@ if ($cset == "FW2000") then
   else
     echo "ncdata = '$inic/20180516waccm_se_spinup_pe720_10days.cam.i.1974-01-02-00000.nc'"   >> user_nl_cam
   endif
-endif
+#endif
 if ($cset == "FKESSLER") then
   echo "ncdata = '$inic/trunk-F2000climo-30yrs-C60topo.cam.i.0023-02-01-00000.nc'"   >> user_nl_cam
 endif
@@ -248,5 +250,5 @@ endif
 #echo "se_nu_p   =  0.1E17" >> user_nl_cam
 #echo "se_hypervis_subcycle = 3" >> user_nl_cam
 
-qcmd -- ./case.build
-./case.submit
+#qcmd -- ./case.build
+#./case.submit

@@ -1,0 +1,3 @@
+Command:
+
+source ../../../te_budgets.sh CESM2.F2000climo.FV3.ave.nc FV3

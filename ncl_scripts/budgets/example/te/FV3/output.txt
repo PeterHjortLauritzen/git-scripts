@@ -1,0 +1,374 @@
+CESM2.F2000climo.FV3.ave.nc
+Found atm_in file
+Found drv_in file
+Dycore=FV3
+dtime =1800
+rsplit=0
+nsplit=2
+hypervis_subcycle=0
+lcp_moist =true
+ Copyright (C) 1995-2018 - All Rights Reserved
+ University Corporation for Atmospheric Research
+ NCAR Command Language Version 6.5.0
+ The use of this software is governed by a License Agreement.
+ See http://www.ncl.ucar.edu/ for more details.
+(0)	File used for energy diagnostics CESM2.F2000climo.FV3.ave.nc
+(0)	done input summary
+(0)	 
+(0)	Summary of input to ncl script:
+(0)	===============================
+(0)	 
+(0)	Your data is for the FV3 dycore
+(0)	 
+(0)	nsplit                   =2
+(0)	rsplit                   =0
+(0)	hypervis_subcycle        =0
+(0)	ftype                    =1
+(0)	qsize_condensate_loading =3
+(0)	lcp_moist                =true
+(0)	dtime                    =1800
+(0)	File appears to contain variables from a non-dry run - setting wet=True
+(0)	No PDC vars present on file
+(0)	No TT vars present on file
+(0)	 
+(0)	 
+(0)	suffix (parameterization side)
+(0)	pBF: state passed to parameterizations, before energy fixer
+(0)	pBP: after energy fixer, before parameterizations
+(0)	pAP: after last phys_update in parameterizations and state saved for energy fixer
+(0)	pAM: after dry mass correction calculate but not used in SE
+(0)	 
+(0)	history files saved off here
+(0)	 
+(0)	suffix (dynamics)
+(0)	dED: state from end of previous dynamics (= pBF + time sampling)
+(0)	   loop over vertical remapping and physics dribbling -------- (nsplit) -------
+(0)	            (dribbling and remapping always done together)                    |
+(0)	          dAF: state from previous remapping                                  |
+(0)	          dBD: state after physics dribble, before dynamics                   |
+(0)	          loop over vertical Lagrangian dynamics --------rsplit-------------  |
+(0)	              dynamics here                                                |  |
+(0)	              loop over hyperviscosity ----------hypervis_sub------------  |  |
+(0)	                 dBH   state before hyperviscosity                      |  |  |
+(0)	                 dCH   state after hyperviscosity                       |  |  |
+(0)	                 dAH   state after hyperviscosity momentum heating      |  |  |
+(0)	              end hyperviscosity loop -----------------------------------  |  |
+(0)	          end of vertical Lagrangian dynamics loop -------------------------  |
+(0)	      dAD  state after dynamics, before vertical remapping                    |
+(0)	      dAR     state after vertical remapping                                  |
+(0)	   end of remapping loop ------------------------------------------------------
+(0)	dBF  state passed to parameterizations = state after last remapping            
+(0)	 
+(0)	 
+(0)	 
+(0)	Dycore diagnostics seem to be on file
+(0)	nvars=5
+(0)	xxx SE_pBF
+(0)	xxx SE_pBP
+(0)	xxx SE_pAP
+(0)	xxx SE_pAM
+(0)	xxx SE_dED
+warning:VarVarWrite: Dimension names for dimension number (3) don't match, assigning name of rhs dimension to lhs, use "(/../)" if this change is not desired
+warning:["Execute.c":8637]:Execute: Error occurred at or near line 275 in file /glade/u/home/pel/git-scripts/ncl_scripts/budgets/te_budgets.ncl
+
+(0)	xxx SE_dAP
+(0)	xxx SE_dBD
+(0)	xxx SE_dAT
+(0)	xxx SE_dAF
+(0)	xxx SE_dAD
+(0)	xxx SE_dAR
+(0)	xxx SE_dBF
+(0)	xxx KE_pBF
+warning:VarVarWrite: Dimension names for dimension number (3) don't match, assigning name of rhs dimension to lhs, use "(/../)" if this change is not desired
+warning:["Execute.c":8637]:Execute: Error occurred at or near line 275 in file /glade/u/home/pel/git-scripts/ncl_scripts/budgets/te_budgets.ncl
+
+(0)	xxx KE_pBP
+(0)	xxx KE_pAP
+(0)	xxx KE_pAM
+(0)	xxx KE_dED
+warning:VarVarWrite: Dimension names for dimension number (3) don't match, assigning name of rhs dimension to lhs, use "(/../)" if this change is not desired
+warning:["Execute.c":8637]:Execute: Error occurred at or near line 275 in file /glade/u/home/pel/git-scripts/ncl_scripts/budgets/te_budgets.ncl
+
+(0)	xxx KE_dAP
+(0)	xxx KE_dBD
+(0)	xxx KE_dAT
+(0)	xxx KE_dAF
+(0)	xxx KE_dAD
+(0)	xxx KE_dAR
+(0)	xxx KE_dBF
+(0)	xxx WV_pBF
+warning:VarVarWrite: Dimension names for dimension number (3) don't match, assigning name of rhs dimension to lhs, use "(/../)" if this change is not desired
+warning:["Execute.c":8637]:Execute: Error occurred at or near line 275 in file /glade/u/home/pel/git-scripts/ncl_scripts/budgets/te_budgets.ncl
+
+(0)	xxx WV_pBP
+(0)	xxx WV_pAP
+(0)	xxx WV_pAM
+(0)	xxx WV_dED
+warning:VarVarWrite: Dimension names for dimension number (3) don't match, assigning name of rhs dimension to lhs, use "(/../)" if this change is not desired
+warning:["Execute.c":8637]:Execute: Error occurred at or near line 275 in file /glade/u/home/pel/git-scripts/ncl_scripts/budgets/te_budgets.ncl
+
+(0)	xxx WV_dAP
+(0)	xxx WV_dBD
+(0)	xxx WV_dAT
+(0)	xxx WV_dAF
+(0)	xxx WV_dAD
+(0)	xxx WV_dAR
+(0)	xxx WV_dBF
+(0)	xxx WL_pBF
+warning:VarVarWrite: Dimension names for dimension number (3) don't match, assigning name of rhs dimension to lhs, use "(/../)" if this change is not desired
+warning:["Execute.c":8637]:Execute: Error occurred at or near line 275 in file /glade/u/home/pel/git-scripts/ncl_scripts/budgets/te_budgets.ncl
+
+(0)	xxx WL_pBP
+(0)	xxx WL_pAP
+(0)	xxx WL_pAM
+(0)	xxx WL_dED
+warning:VarVarWrite: Dimension names for dimension number (3) don't match, assigning name of rhs dimension to lhs, use "(/../)" if this change is not desired
+warning:["Execute.c":8637]:Execute: Error occurred at or near line 275 in file /glade/u/home/pel/git-scripts/ncl_scripts/budgets/te_budgets.ncl
+
+(0)	xxx WL_dAP
+(0)	xxx WL_dBD
+(0)	xxx WL_dAT
+(0)	xxx WL_dAF
+(0)	xxx WL_dAD
+(0)	xxx WL_dAR
+(0)	xxx WL_dBF
+(0)	xxx WI_pBF
+warning:VarVarWrite: Dimension names for dimension number (3) don't match, assigning name of rhs dimension to lhs, use "(/../)" if this change is not desired
+warning:["Execute.c":8637]:Execute: Error occurred at or near line 275 in file /glade/u/home/pel/git-scripts/ncl_scripts/budgets/te_budgets.ncl
+
+(0)	xxx WI_pBP
+(0)	xxx WI_pAP
+(0)	xxx WI_pAM
+(0)	xxx WI_dED
+warning:VarVarWrite: Dimension names for dimension number (3) don't match, assigning name of rhs dimension to lhs, use "(/../)" if this change is not desired
+warning:["Execute.c":8637]:Execute: Error occurred at or near line 275 in file /glade/u/home/pel/git-scripts/ncl_scripts/budgets/te_budgets.ncl
+
+(0)	xxx WI_dAP
+(0)	xxx WI_dBD
+(0)	xxx WI_dAT
+(0)	xxx WI_dAF
+(0)	xxx WI_dAD
+(0)	xxx WI_dAR
+(0)	xxx WI_dBF
+(0)	Done integrals
+(0)	Physics diagnostics are on file
+(0)	iii 0 9.969209968386869e+36 0.0539071863845766
+(0)	qqq pBF 0.009375111732741104 0.009375111732741104
+(0)	iii 1 9.969209968386869e+36 0.0539071863845766
+(0)	qqq pBP 0.009375111732741104 0.009375111732741104
+(0)	iii 2 9.969209968386869e+36 0.05390734199478971
+(0)	qqq pAP 0.00937501597109198 0.00937501597109198
+(0)	iii 3 9.969209968386869e+36 0.05390734199478971
+(0)	qqq pAM 0.009375015971091976 0.009375015971091976
+(0)	iii 4 9.969209968386869e+36 0.05390718638457052
+(0)	qqq dED 0.009375111732740854 0.009375111732740854
+(0)	iii 5 9.969209968386869e+36 0.05390734199478971
+(0)	qqq dAP 0.00937501597109198 0.00937501597109198
+(0)	iii 6 9.969209968386869e+36 0.05390734199478971
+(0)	qqq dBD 0.00937501597109198 0.00937501597109198
+(0)	iii 7 9.969209968386869e+36 0.05390734199478971
+(0)	qqq dAT 0.00937501597109198 0.00937501597109198
+(0)	iii 8 9.969209968386869e+36 0.05390734199478944
+(0)	qqq dAF 0.01875003194218389 0.009375015971091947
+(0)	iii 9 9.969209968386869e+36 0.05382460710279872
+(0)	qqq dAD 0.01853825871693267 0.009269129358466337
+(0)	iii 10 9.969209968386869e+36 0.05390734199478961
+(0)	qqq dAR 0.01875003194218396 0.00937501597109198
+(0)	iii 11 9.969209968386869e+36 0.05390734199478943
+(0)	qqq dBF 0.009375015971091924 0.009375015971091924
+(0)	  
+(0)	  
+(0)	  
+(0)	ANALYSIS_START_ANALYSIS_START_ANALYSIS_START_ANALYSIS_START_ANALYSIS_START_ANALYSIS_START
+(0)	  
+(0)	  
+(0)	  
+(0)	WARNING: Total energy formulaes for dynamics and physics are different
+(0)	in dynamics (cp and dp includes all water variables) and physics (cp=cp_dry in internal energy).
+(0)	 
+(0)	=================================================================================
+(0)	|                                                                               |
+(0)	| ANALYSIS OF ENERGY DIAGNOSTICS IN PHYSCS                                      |
+(0)	|                                                                               |
+(0)	=================================================================================
+(0)	 
+(0)	dE/dt parameterizations (param)         (pAP-pBP) 0.0585 W/M^2
+(0)	dE/dt dry mass adjustment (pwork)       (pAM-pAP)  0.316 W/M^2
+(0)	dE/dt energy fixer (efix)               (pBP-pBF)  0.735 W/M^2
+(0)	dE/dt physics total (phys)              (pAM-pBF)   1.11 W/M^2
+(0)	 
+(0)	Dycore TE dissipation estimated from physics TE terms (assuming ftype=1 and no energy discretization errors is
+(0)	 -1.05 W/M^2
+(0)	 
+(0)	 
+(0)	=================================================================================
+(0)	|                                                                               |
+(0)	| ANALYSIS OF ENERGY DIAGNOSTICS IN DYNAMICS - specific for FV3 dycore          |
+(0)	|                                                                               |
+(0)	=================================================================================
+(0)	 
+(0)	dE/dt parameterizations (param) in dyn on A-grid (dAP-dED)   1.11 W/M^2
+(0)	dE/dt parameterizations (param) in dyn on D-grid (dBD-dED)   1.12 W/M^2
+(0)	dE/dt mapping wind tendencies from A to D grid (and back to A-grid for TE computations (dBD-dAP) 0.0145 W/M^2
+(0)	 Physics-dynamics coupling error (should be zero) : 2.649096497719938e-10
+(0)	 (dE/dt physics increment minus dE/dt physics increment in dynamics)
+(0)	 
+(0)	 dE/dt dynamical core total (dBF-dBD) = -1.064659033881293
+(0)	 
+(0)	 Breakdown of dycore dE/dt:
+(0)	 
+(0)	 dE/dt Rayleigh friction (dAT-dBD) = 0.006795619328816732
+(0)	 dE/dt 2D dynamical core (dAD-dAF) = -2.131259614626567
+(0)	 dE/dt vertical remapping(dAR-dAD) = 1.059804979960124
+(0)	 
+(0)	Check that dE/dt 2D dynamics + vertical remapping + Rayleigh friction - dE/dt dynamical core total (should be zero)=-1.854366726838919e-08
+(0)	 
+(0)	 
+(0)	    
+(0)	    
+(0)	 
+(0)	=================================================================================
+(0)	|                                                                               |
+(0)	| ANALYSIS OF WATER VAPOR, CLOUD LIQUID AND CLOUD ICE BUDGETS                   |
+(0)	|                                                                               |
+(0)	=================================================================================
+(0)	 
+(0)	 
+(0)	Water vapor
+(0)	-----------
+(0)	 
+(0)	dMASS/dt energy fixer                      (pBP-pBF)      0 Pa
+(0)	dMASS/dt parameterizations                 (pAP-pBP) -2.36e-05 Pa
+(0)	dMASS/dt dry mass adjustment               (pAM-pAP) 3.55e-15 Pa
+(0)	 
+(0)	=> dMASS/dt dynamical core (estimated from physics)  
+(0)	   dMASS/dt energy fixer + dMASS/dt dry mass adjustment 3.55e-15 Pa
+(0)	=> dMASS/dt physics total                   (pAM-pBF)-2.36e-05 Pa
+(0)	  
+(0)	  
+(0)	  
+(0)	dE/dt vertical remapping                (dAR-dAD) -0.0117 Pa
+(0)	 
+(0)	 
+(0)	dE/dt physics tendency in dynamics      (dBD-dAF)  -24.7 Pa
+(0)	 
+(0)	      Consistency check:
+(0)	 
+(0)	      dE/dt physics tendency in dynamics (dBD-dAF) should exactly match dE/dt physics total (pAM-pBF):  24.7
+(0)	 
+(0)	Checking physics dynamics coupling
+(0)	Mass change in physics:               -2.361645772097631e-05
+(0)	Mass change in d_p_coupling: -2.361645772452903e-05
+(0)	Error  -3.552713678800501e-15
+(0)	Mass change in dynamics from physics: -2.361645804427326e-05
+(0)	Mass error in coulpling 3.232969447708456e-13
+(0)	 
+(0)	---------------------------------------------------------------------------------------------------
+(0)	 
+(0)	Cloud liquid
+(0)	------------
+(0)	 
+(0)	dMASS/dt energy fixer                      (pBP-pBF)      0 Pa
+(0)	dMASS/dt parameterizations                 (pAP-pBP) 1.56e-07 Pa
+(0)	dMASS/dt dry mass adjustment               (pAM-pAP) 6.94e-18 Pa
+(0)	 
+(0)	=> dMASS/dt dynamical core (estimated from physics)  
+(0)	   dMASS/dt energy fixer + dMASS/dt dry mass adjustment 6.94e-18 Pa
+(0)	=> dMASS/dt physics total                   (pAM-pBF)1.56e-07 Pa
+(0)	  
+(0)	  
+(0)	  
+(0)	dE/dt vertical remapping                (dAR-dAD) 0.000165 Pa
+(0)	 
+(0)	 
+(0)	dE/dt physics tendency in dynamics      (dBD-dAF) -0.0539 Pa
+(0)	 
+(0)	      Consistency check:
+(0)	 
+(0)	      dE/dt physics tendency in dynamics (dBD-dAF) should exactly match dE/dt physics total (pAM-pBF):0.0539
+(0)	 
+(0)	Checking physics dynamics coupling
+(0)	Mass change in physics:               1.556102131108905e-07
+(0)	Mass change in d_p_coupling: 1.556102191893616e-07
+(0)	Error  6.078471059822732e-15
+(0)	Mass change in dynamics from physics: 1.556102189118058e-07
+(0)	Mass error in coulpling 2.844946500601964e-16
+(0)	 
+(0)	---------------------------------------------------------------------------------------------------
+(0)	 
+(0)	Cloud ice
+(0)	---------
+(0)	 
+(0)	dMASS/dt energy fixer                      (pBP-pBF)      0 Pa
+(0)	dMASS/dt parameterizations                 (pAP-pBP) -9.58e-08 Pa
+(0)	dMASS/dt dry mass adjustment               (pAM-pAP) -3.47e-18 Pa
+(0)	 
+(0)	=> dMASS/dt dynamical core (estimated from physics)  
+(0)	   dMASS/dt energy fixer + dMASS/dt dry mass adjustment -3.47e-18 Pa
+(0)	=> dMASS/dt physics total                   (pAM-pBF)-9.58e-08 Pa
+(0)	  
+(0)	  
+(0)	  
+(0)	dE/dt vertical remapping                (dAR-dAD) 0.000212 Pa
+(0)	 
+(0)	 
+(0)	dE/dt physics tendency in dynamics      (dBD-dAF) -0.00938 Pa
+(0)	 
+(0)	      Consistency check:
+(0)	 
+(0)	      dE/dt physics tendency in dynamics (dBD-dAF) should exactly match dE/dt physics total (pAM-pBF):0.00937
+(0)	 
+(0)	Checking physics dynamics coupling
+(0)	Mass change in physics:               -9.576164912775131e-08
+(0)	Mass change in d_p_coupling: -9.576164887448169e-08
+(0)	Error  2.532696274926138e-16
+(0)	Mass change in dynamics from physics: -9.576164892999284e-08
+(0)	Mass error in coulpling 5.204170427930421e-17
+(0)	 
+(0)	---------------------------------------------------------------------------------------------------
+(0)	 
+(0)	min=827125.4934720042   max=1484192.231869709
+warning:ContourPlotInitialize: scalar field is constant; no contour lines will appear; use cnConstFEnableFill to enable fill
+warning:ContourPlotInitialize: scalar field is constant; no contour lines will appear; use cnConstFEnableFill to enable fill
+(0)	**************************************************
+(0)	d_p_coupling check (requires instantaneous output)
+(0)	**************************************************
+(0)	 
+(0)	Check if state passed to physics (pBF) is the same at the state at the end of the dycore (dBF)
+(0)	Note: if not working with instantaneous data there will be a sampling error!
+(0)	Sampling error will be very small if working with long averages ...
+(0)	 
+(0)	 
+(0)	**************************************************
+(0)	p_d_coupling check 1
+(0)	**************************************************
+(0)	 
+(0)	Check if state at the end of physics (pAM) is the same at the state at the beginning of the dycore (dAP)
+(0)	before any tendencies have been added to the dynamics state
+(0)	 
+(0)	t=0 3 5
+(0)	t=0: normalized difference between states (should be zero) = -2.649095323350694e-10
+(0)	 
+(0)	**************************************************
+(0)	p_d_coupling check 2
+(0)	**************************************************
+(0)	 
+(0)	Check if physics increment in physics is the same as in dynamics
+(0)	 
+(0)	Physics increment is             1.108719748920864
+(0)	Physics increment in dynamics is 1.108719749185774
+(0)	Difference is (should be zero)  =2.649096497719938e-10
+(0)	 
+(0)	 
+(0)	**************************************************
+(0)	Budget check: pEFIX = dDycore+pDMEA
+(0)	**************************************************
+(0)	 
+(0)	Note: if not working with instantaneous data there will be a sampling error!
+(0)	Sampling error will be very small if working with long averages ...
+(0)	 
+(0)	 
+(0)	**************************************************
+(0)	QNEG mass change
+(0)	**************************************************
+(0)	 

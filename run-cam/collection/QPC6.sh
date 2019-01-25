@@ -10,9 +10,9 @@ set NTHRDS="1"
 # run with CSLAM or without
 #
 #set res="ne30pg2_ne30pg2_mg17" #cslam
-#set res="ne30pg3_ne30pg3_mg17" #cslam
+set res="ne30pg3_ne30pg3_mg17" #cslam
 #set res="ne30_ne30_mg17"        #no cslam
-set res="ne5_ne5_mg37"        #no cslam
+#set res="ne5_ne5_mg37"        #no cslam
 
 #set stopoption="nsteps"
 #set steps="3"
@@ -45,7 +45,7 @@ else
   #
   # 900, 1800, 2700, 5400 (pecount should divide 6*30*30 evenly)
   #
-  set pecount="180"
+  set pecount="450"
   set compiler="intel"
 endif
 
@@ -64,7 +64,7 @@ cd $scratch/$USER/$caze
 ## timing detail
 ./xmlchange TIMER_LEVEL=10
 ##
-./xmlchange --append CAM_CONFIG_OPTS="-nadv_tt=5" #there are already 6 tracers in FKESSLER
+./xmlchange --append CAM_CONFIG_OPTS="-nadv_tt=10" #there are already 6 tracers in FKESSLER
 #./xmlchange CAM_CONFIG_OPTS="-phys kessler -chem terminator -analytic_ic  -nlev $nlev"
 ##
 ./xmlquery CAM_CONFIG_OPTS
@@ -87,7 +87,7 @@ echo "se_statediag_numtrac = 99" >> user_nl_cam
 if(`hostname` == 'hobart.cgd.ucar.edu') then
   ./case.build
 else
-qcmd -- ./case.build
+#qcmd -- ./case.build
 endif
-./case.submit
+#./case.submit
 
