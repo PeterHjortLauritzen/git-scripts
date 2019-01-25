@@ -8,7 +8,7 @@ endif
 set n = 1
 set file = "$argv[$n]" 
 
-if (`hostname` == "cheyenne6") then
+if (`hostname` == "cheyenne2") then
   set data_dir = "/glade/$USER/pel/"
   set ncl_dir = "/glade/u/home/$USER/git-scripts/ncl_scripts/budgets"
 else

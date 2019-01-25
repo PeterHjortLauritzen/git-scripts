@@ -263,6 +263,7 @@ begin
   do variable=0,nvars-1
     do stage=0,nstage-1
       str = str_vars(variable)+"_"+str_stage(stage)
+      print("xxx "+str)
       if (isfilevar(fall,str)) then
         if (latlon) then
           vars(variable,stage,:,:,:) = fall->$str$(:,:,:)
@@ -447,9 +448,10 @@ begin
     if (PhysDiags) then
       pEFIX    = (tot_energy(t,ipBP)-tot_energy(t,ipBF))/dtime
       pDMEA = (tot_energy(t,ipAM)-tot_energy(t,ipAP))/dtime
+      pwork = (tot_energy_2d(t,ipAM,:)-tot_energy_2d(t,ipAP,:))/dtime
 
       param   = (tot_energy(t,ipAP)-tot_energy(t,ipBP))/dtime
-
+      dparam = (tot_energy_2d(t,ipAP,:)-tot_energy_2d(t,ipBP,:))/dtime  
 
       phys_total      = (tot_energy(t,ipAM)-tot_energy(t,ipBF))/dtime
     end if
@@ -509,6 +511,8 @@ begin
 
 
       dDycore = (tot_energy(t,idBF)-tot_energy(t,idBD))/dtime      
+      dadiab  = (tot_energy_2d(t,idBF,:)-tot_energy_2d(t,idBD,:))/dtime      
+
       print(" dE/dt dynamical core total (dBF-dBD) = "+dDycore)
       print(" ")
       print(" Breakdown of dycore dE/dt:")
@@ -522,10 +526,17 @@ begin
       print(" dE/dt 2D dynamical core (dAD-dAF) = "+dDycore2d)      
 
       dRemap = (tot_energy(t,idAR)-tot_energy(t,idAD))/dtime
+      remap  = (tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idAD,:))/dtime
       print(" dE/dt vertical remapping(dAR-dAD) = "+dRemap)      
       print(" ")
       diff = dDycore-(dDycore2d+dRemap+Rayleigh)
       print("Check that dE/dt 2D dynamics + vertical remapping + Rayleigh friction - dE/dt dynamical core total (should be zero)="+diff)
+
+      hvis = remap
+      hvis = 0.0
+
+      fheat = remap
+      fheat = 0.0
       
     end if
 
@@ -543,8 +554,11 @@ begin
 
       rate_of_change_vertical_remapping = (tot_energy(t,idAR)-tot_energy(t,idAD))/dtime
 
+      remap = (tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idAD,:))/dtime
+
       dADIA = rate_of_change_2D_dyn+rate_of_change_vertical_remapping
 
+      dadiab = (tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idBD,:))/dtime
 
 
       print("dE/dt total adiabatic dynamics (adiab)            "+sprintf("%6.3g",dADIA)+" W/M^2")    
@@ -556,8 +570,9 @@ begin
       print("Breakdown of 2D dynamics:")
       print(" ")
       rate_of_change_heating_term_put_back_in = (tot_energy(t,idAH)-tot_energy(t,idCH))/dtime
+      fheat = (tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idCH,:))/dtime
 
-
+      hvis = (tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idBH,:))/dtime
 
       rate_of_change_hypervis_total           = (tot_energy(t,idAH)-tot_energy(t,idBH))/dtime
       print("      dE/dt hypervis (hvis)             (dAH-dBH) "+sprintf("%6.3g",rate_of_change_hypervis_total)+" W/M^2")
@@ -813,7 +828,6 @@ begin
 
   res@lbBoxLinesOn = False
 
-
   plot = new(6,graphic) 
 
   res@sfXArray            = lon1d_gll
@@ -828,12 +842,13 @@ begin
   res@gsnLeftString        = "Total physics TE tendency"      
 
 ;  res@tiMainString        = " [W/m^2]"
-      printMinMax((tot_energy_2d(t,ipAP,:)-tot_energy_2d(t,ipBP,:))/dtime,False)
       ;-148.2925226269828   max=1770.210548306306
-  min_f = min((tot_energy_2d(t,ipAP,:)-tot_energy_2d(t,ipBP,:))/dtime)
-  max_f = max((tot_energy_2d(t,ipAP,:)-tot_energy_2d(t,ipBP,:))/dtime)
+
+
+  min_f = min(dparam)
+  max_f = max(dparam)
   res@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
-  plot(0) = gsn_csm_contour_map_ce(wks,(tot_energy_2d(t,ipAP,:)-tot_energy_2d(t,ipBP,:))/dtime,res)
+  plot(0) = gsn_csm_contour_map_ce(wks,dparam,res)
 
   res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
   res@cnMinLevelValF  =-20.                        ; set the minimum contour level
@@ -844,10 +859,10 @@ begin
 ;  res@tiMainString        = "Pressure work error (pwork) [W/m^2]"
 
 
-  min_f = min((tot_energy_2d(t,ipAM,:)-tot_energy_2d(t,ipAP,:))/dtime)
-  max_f = max((tot_energy_2d(t,ipAM,:)-tot_energy_2d(t,ipAP,:))/dtime)
+  min_f = min(pwork)
+  max_f = max(pwork)
   res@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
-  plot(1) = gsn_csm_contour_map_ce(wks,(tot_energy_2d(t,ipAM,:)-tot_energy_2d(t,ipAP,:))/dtime,res)
+  plot(1) = gsn_csm_contour_map_ce(wks,pwork,res)
 
   res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
   fmin   = -150.
@@ -856,13 +871,15 @@ begin
   res@cnMaxLevelValF  = fmax                   ; set the maximum contour level
   res@cnLevelSpacingF = (fmax-fmin)/50.0                  ; set the interval between contours
 
+
   res@gsnLeftString        = "Adiabatic dycore TE tendency"      
-  min_f = min((tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idBD,:))/dtime)
-  max_f = max((tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idBD,:))/dtime)
+  min_f = min(dadiab)
+  max_f = max(dadiab)
   res@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
-  plot(2) = gsn_csm_contour_map_ce(wks,(tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idBD,:))/dtime,res)
+  plot(2) = gsn_csm_contour_map_ce(wks,dadiab,res)
       printMinMax((tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idBD,:))/dtime,False)
       ;min=-1489.836497456233   max=122.200959737036
+
 
   res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
   res@cnMinLevelValF  = -600.0                        ; set the minimum contour level
@@ -872,27 +889,32 @@ begin
 
 
 
-  min_f = min((tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idBH,:))/dtime)
-  max_f = max((tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idBH,:))/dtime)
+  min_f = min(hvis)
+  max_f = max(hvis)
   res@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
 
-  plot(3) = gsn_csm_contour_map_ce(wks,(tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idBH,:))/dtime,res)	
-;  plot(3) = gsn_csm_contour_map_ce(wks,(tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idBH,:)-(tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idBH,:)))/dtime,res)
+  plot(3) = gsn_csm_contour_map_ce(wks,hvis,res)	
 
-      average_hvis = sum(area(:)*(tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idBH,:))/dtime)/(4.0*PI)
-      print("ave_hvis = "+average_hvis)
-
+;      average_hvis = sum(area(:)*(tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idBH,:))/dtime)/(4.0*PI)
+;      print("ave_hvis = "+average_hvis)
   res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
+ if (dycore.eq."SE") then
   res@cnMinLevelValF  = -0.1                        ; set the minimum contour level
   res@cnMaxLevelValF  = 0.1                   ; set the maximum contour level
   res@cnLevelSpacingF = 0.005                  ; set the interval between contours 
+else
+  res@cnMinLevelValF  = -10.0                        ; set the minimum contour level
+  res@cnMaxLevelValF  = 10.0                   ; set the maximum contour level
+  res@cnLevelSpacingF = 0.5                  ; set the interval between contours 
+end if
   res@gsnLeftString        = "Vertical remapping TE tendency (remap)"      
 
-  min_f = min((tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idAD,:))/dtime)
-  max_f = max((tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idAD,:))/dtime)
+  min_f = min(remap)
+  max_f = max(remap)
   res@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
 
-  plot(4) = gsn_csm_contour_map_ce(wks,(tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idAD,:))/dtime,res)
+  plot(4) = gsn_csm_contour_map_ce(wks,remap,res)
+
 
   res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
   res@cnMinLevelValF  = -10.0                        ; set the minimum contour level
@@ -900,11 +922,12 @@ begin
   res@cnLevelSpacingF = 0.5                  ; set the interval between contours
   res@gsnLeftString        = "Frictional heating TE tendency (fheat)"  
 
-  min_f = min((tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idCH,:))/dtime)
-  max_f = max((tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idCH,:))/dtime)
+  min_f = min(fheat)
+  max_f = max(fheat)
   res@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
 
-  plot(5) = gsn_csm_contour_map_ce(wks,(tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idCH,:))/dtime,res)
+  plot(5) = gsn_csm_contour_map_ce(wks,fheat,res)
+ 
 
   resP                  = True                   ; modify the panel plot
   resP@gsnFrame         = False                  ; don't advance panel plot
@@ -914,7 +937,13 @@ begin
 
 ;  resP@gsnPanelLabelBar = True                   ; add common colorbar
 ;  resP@gsnPanelBottom   = 0.05
+  if (dycore.eq."FV3") then    
+     resP@txString   = "TE tendencies for the default CAM-FV3 configuration (AMIP)"
+  end if
+  if (dycore.eq."SE") then    
      resP@txString   = "TE tendencies for the default CAM-SE configuration (AMIP)"
+  end if
+
      gsn_panel(wks,plot,(/3,2/),resP)               ; now draw as one plot
 
 
