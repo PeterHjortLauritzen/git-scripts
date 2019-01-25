@@ -1,3 +1,7 @@
 Command:
 
 source ../../../te_budgets.sh CESM2.F2000climo.FV3.ave.nc FV3
+
+Extract energy budget variables from h0 files:
+
+ncks -v KE_dAD,KE_dAF,KE_dAP,KE_dAR,KE_dAT,KE_dBD,KE_dBF,KE_dED,KE_pAM,KE_pAP,KE_pBF,KE_pBP,SE_dAD,SE_dAF,SE_dAP,SE_dAR,SE_dAT,SE_dBD,SE_dBF,SE_dED,SE_pAM,SE_pAP,SE_pBF,SE_pBP,WI_dAD,WI_dAF,WI_dAP,WI_dAR,WI_dAT,WI_dBD,WI_dBF,WI_dED,WI_pAM,WI_pAP,WI_pBF,WI_pBP,WL_dAD,WL_dAF,WL_dAP,WL_dAR,WL_dAT,WL_dBD,WL_dBF,WL_dED,WL_pAM,WL_pAP,WL_pBF,WL_pBP,WV_dAD,WV_dAF,WV_dAP,WV_dAR,WV_dAT,WV_dBD,WV_dBF,WV_dED,WV_pAM,WV_pAP,WV_pBF,WV_pBP in_file.nc out_file.nc
