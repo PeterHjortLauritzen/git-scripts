@@ -1,0 +1,260 @@
+default.TE.ave.nc
+Found atm_in file
+Found drv_in file
+Dycore=SE
+dtime =1800
+rsplit=3
+nsplit=2
+hypervis_subcycle=3
+lcp_moist =true
+ Copyright (C) 1995-2018 - All Rights Reserved
+ University Corporation for Atmospheric Research
+ NCAR Command Language Version 6.5.0
+ The use of this software is governed by a License Agreement.
+ See http://www.ncl.ucar.edu/ for more details.
+(0)	File used for energy diagnostics default.TE.ave.nc
+(0)	done input summary
+(0)	 
+(0)	Summary of input to ncl script:
+(0)	===============================
+(0)	 
+(0)	Your data is for the SE dycore
+(0)	 
+(0)	nsplit                   =2
+(0)	rsplit                   =3
+(0)	hypervis_subcycle        =3
+(0)	ftype                    =2
+(0)	qsize_condensate_loading =5
+(0)	lcp_moist                =true
+(0)	File appears to be have the same grid for physics and dynamics - setting pgx=False
+(0)	Number of time-levels = 1
+(0)	dtime                    =1800
+(0)	File appears to contain variables from a non-dry run - setting wet=True
+(0)	PDC vars are present on file
+(0)	No TT vars present on file
+(0)	 
+(0)	 
+(0)	suffix (parameterization side)
+(0)	pBF: state passed to parameterizations, before energy fixer
+(0)	pBP: after energy fixer, before parameterizations
+(0)	pAP: after last phys_update in parameterizations and state saved for energy fixer
+(0)	pAM: after dry mass correction calculate but not used in SE
+(0)	 
+(0)	history files saved off here
+(0)	 
+(0)	suffix (dynamics)
+(0)	dED: state from end of previous dynamics (= pBF + time sampling)
+(0)	   loop over vertical remapping and physics dribbling -------- (nsplit) -------
+(0)	            (dribbling and remapping always done together)                    |
+(0)	          dAF: state from previous remapping                                  |
+(0)	          dBD: state after physics dribble, before dynamics                   |
+(0)	          loop over vertical Lagrangian dynamics --------rsplit-------------  |
+(0)	              dynamics here                                                |  |
+(0)	              loop over hyperviscosity ----------hypervis_sub------------  |  |
+(0)	                 dBH   state before hyperviscosity                      |  |  |
+(0)	                 dCH   state after hyperviscosity                       |  |  |
+(0)	                 dAH   state after hyperviscosity momentum heating      |  |  |
+(0)	              end hyperviscosity loop -----------------------------------  |  |
+(0)	          end of vertical Lagrangian dynamics loop -------------------------  |
+(0)	      dAD  state after dynamics, before vertical remapping                    |
+(0)	      dAR     state after vertical remapping                                  |
+(0)	   end of remapping loop ------------------------------------------------------
+(0)	dBF  state passed to parameterizations = state after last remapping            
+(0)	 
+(0)	 
+(0)	 
+(0)	Dycore diagnostics seem to be on file
+(0)	nvars=5
+(0)	Done integrals
+(0)	Physics diagnostics are on file
+(0)	iii 0 9.969209968386869e+36 0.05159934350152364
+(0)	qqq pBF 0.01018106689010842 0.01018106689010842
+(0)	iii 1 9.969209968386869e+36 0.05159934350152364
+(0)	qqq pBP 0.01018106689010842 0.01018106689010842
+(0)	iii 2 9.969209968386869e+36 0.05159932113680596
+(0)	qqq pAP 0.01018107013428988 0.01018107013428988
+(0)	iii 3 9.969209968386869e+36 0.05159932113680596
+(0)	qqq pAM 0.01018107013428988 0.01018107013428988
+(0)	iii 4 9.969209968386869e+36 0.0515993435015236
+(0)	qqq dED 0.01018106689010705 0.01018106689010705
+(0)	iii 5 9.969209968386869e+36 0.05159933231916511
+(0)	qqq dAF 0.02036213702439696 0.01018106851219848
+(0)	iii 6 9.969209968386869e+36 0.05159932113680599
+(0)	qqq dBD 0.02036214026857993 0.01018107013428996
+(0)	iii 7 9.969209968386869e+36 0.05159932113680623
+(0)	qqq dAD 0.02036214026857967 0.01018107013428984
+(0)	iii 8 9.969209968386869e+36 0.05159932113680623
+(0)	qqq dAR 0.02036214026857967 0.01018107013428984
+(0)	iii 9 9.969209968386869e+36 0.05159932113680557
+(0)	qqq dBF 0.01018107013428992 0.01018107013428992
+(0)	iii 10 9.969209968386869e+36 0.05159932113680609
+(0)	qqq dBH 0.1832592624172172 0.01018107013428984
+(0)	iii 11 9.969209968386869e+36 0.05159932113680609
+(0)	qqq dCH 0.1832592624172172 0.01018107013428984
+(0)	iii 12 9.969209968386869e+36 0.05159932113680609
+(0)	qqq dAH 0.1832592624172172 0.01018107013428984
+(0)	  
+(0)	  
+(0)	  
+(0)	ANALYSIS_START_ANALYSIS_START_ANALYSIS_START_ANALYSIS_START_ANALYSIS_START_ANALYSIS_START
+(0)	  
+(0)	  
+(0)	  
+(0)	WARNING: Total energy formulaes for dynamics and physics are different
+(0)	in dynamics (cp and dp includes all water variables) and physics (cp=cp_dry in internal energy).
+(0)	 
+(0)	=================================================================================
+(0)	|                                                                               |
+(0)	| ANALYSIS OF ENERGY DIAGNOSTICS IN PHYSCS                                      |
+(0)	|                                                                               |
+(0)	=================================================================================
+(0)	 
+(0)	dE/dt parameterizations (param)         (pAP-pBP) 0.00217 W/M^2
+(0)	dE/dt dry mass adjustment (pwork)       (pAM-pAP)  0.316 W/M^2
+(0)	dE/dt energy fixer (efix)               (pBP-pBF) -0.272 W/M^2
+(0)	dE/dt physics total (phys)              (pAM-pBF) 0.0458 W/M^2
+(0)	 
+(0)	=================================================================================
+(0)	|                                                                               |
+(0)	| ANALYSIS OF ENERGY DIAGNOSTICS IN DYNAMICS - specific for SE dycore           |
+(0)	|                                                                               |
+(0)	=================================================================================
+(0)	 
+(0)	dE/dt total adiabatic dynamics (adiab)            -0.589 W/M^2
+(0)	dE/dt 2D dynamics (2D)                  (dAD-dBD) -0.578 W/M^2
+(0)	dE/dt vertical remapping (remap)        (dAR-dAD) -0.0118 W/M^2
+(0)	dE/dt physics tendency in dynamics      (dBD-dAF)  0.592 W/M^2
+(0)	 
+(0)	Breakdown of 2D dynamics:
+(0)	 
+(0)	      dE/dt hypervis (hvis)             (dAH-dBH) -0.587 W/M^2
+(0)	      dE/dt frictional heating (fheat)  (dAH-dCH)  0.579 W/M^2
+(0)	      dE/dt residual (res)                        0.00983 W/M^2
+(0)	 
+(0)	 
+(0)	 
+(0)	=================================================================================
+(0)	|                                                                               |
+(0)	| ANALYSIS OF ENERGY DIAGNOSTICS IN DYNAMICS-PHYSICS COMBINED                   |
+(0)	|                                                                               |
+(0)	=================================================================================
+(0)	 
+(0)	Your model is energy inconsistent (qsize_condensate_loading<>1 and/or cp<>cpdry)
+(0)	 
+(0)	PDC errors can not be assesed trhough 
+(0)	 
+(0)	   dE/dt physics tendency in dynamics (dBD-dAF) does not match dE/dt physics total (pAM-pBF) due to energy discrepancy:-0.546
+(0)	 
+(0)	Some more consisitency/budget terms
+(0)	===================================
+(0)	 
+(0)	Energy fixer fixes dme_adjust (pDMEA), lack of energy conservation in adiabatic
+(0)	dynamical core (dADIA), energy discrepancy (EDIFF) and energy lost/gained in physics-dynamics coupling
+(0)	 
+(0)	 
+(0)			-pEFIX = pDMEA+dADIA+dPDC+EDIFF
+(0)	            
+(0)	          => dPDC+EDIFF = -pEFIX-pDMEA-dADIA =  0.546
+(0)	 
+(0)	 qneg: -3226.680719106727
+(0)	 
+(0)	    
+(0)	    
+(0)	 
+(0)	=================================================================================
+(0)	|                                                                               |
+(0)	| ANALYSIS OF WATER VAPOR, CLOUD LIQUID AND CLOUD ICE BUDGETS                   |
+(0)	|                                                                               |
+(0)	=================================================================================
+(0)	 
+(0)	 
+(0)	Water vapor
+(0)	-----------
+(0)	 
+(0)	dMASS/dt energy fixer                      (pBP-pBF)      0 Pa
+(0)	dMASS/dt parameterizations                 (pAP-pBP) 3.62e-06 Pa
+(0)	dMASS/dt dry mass adjustment               (pAM-pAP)      0 Pa
+(0)	 
+(0)	=> dMASS/dt dynamical core (estimated from physics)  
+(0)	   dMASS/dt energy fixer + dMASS/dt dry mass adjustment      0 Pa
+(0)	=> dMASS/dt physics total                   (pAM-pBF)3.62e-06 Pa
+(0)	  
+(0)	  
+(0)	  
+(0)	dE/dt total adiabatic dynamics                    -5.12e-13 Pa
+(0)	dE/dt 2D dynamics                       (dAD-dBD) -5.12e-13 Pa
+(0)	 
+(0)	Breakdown of 2D dynamics:
+(0)	 
+(0)	      dE/dt hypervis                    (dAH-dBH)      0 Pa
+(0)	      dE/dt frictional heating          (dAH-dCH)      0 Pa
+(0)	      dE/dt residual (time truncation errors)     -5.12e-13 Pa
+(0)	dE/dt vertical remapping                (dAR-dAD)      0 Pa
+(0)	 
+(0)	 
+(0)	dE/dt physics tendency in dynamics      (dBD-dAF) 3.62e-06 Pa
+(0)	Dribbling errors (pAM-pBF-(dBD-dAF))-3.48e-13
+(0)	 
+(0)	---------------------------------------------------------------------------------------------------
+(0)	 
+(0)	Cloud liquid
+(0)	------------
+(0)	 
+(0)	dMASS/dt energy fixer                      (pBP-pBF)      0 Pa
+(0)	dMASS/dt parameterizations                 (pAP-pBP) -2.24e-08 Pa
+(0)	dMASS/dt dry mass adjustment               (pAM-pAP)      0 Pa
+(0)	 
+(0)	=> dMASS/dt dynamical core (estimated from physics)  
+(0)	   dMASS/dt energy fixer + dMASS/dt dry mass adjustment      0 Pa
+(0)	=> dMASS/dt physics total                   (pAM-pBF)-2.24e-08 Pa
+(0)	  
+(0)	  
+(0)	  
+(0)	dE/dt total adiabatic dynamics                    4.72e-16 Pa
+(0)	dE/dt 2D dynamics                       (dAD-dBD) 4.72e-16 Pa
+(0)	 
+(0)	Breakdown of 2D dynamics:
+(0)	 
+(0)	      dE/dt hypervis                    (dAH-dBH)      0 Pa
+(0)	      dE/dt frictional heating          (dAH-dCH)      0 Pa
+(0)	      dE/dt residual (time truncation errors)     4.72e-16 Pa
+(0)	dE/dt vertical remapping                (dAR-dAD)      0 Pa
+(0)	 
+(0)	 
+(0)	dE/dt physics tendency in dynamics      (dBD-dAF) -2.24e-08 Pa
+(0)	Dribbling errors (pAM-pBF-(dBD-dAF))5.48e-16
+(0)	 
+(0)	---------------------------------------------------------------------------------------------------
+(0)	 
+(0)	Cloud ice
+(0)	---------
+(0)	 
+(0)	dMASS/dt energy fixer                      (pBP-pBF)      0 Pa
+(0)	dMASS/dt parameterizations                 (pAP-pBP) 3.24e-09 Pa
+(0)	dMASS/dt dry mass adjustment               (pAM-pAP)      0 Pa
+(0)	 
+(0)	=> dMASS/dt dynamical core (estimated from physics)  
+(0)	   dMASS/dt energy fixer + dMASS/dt dry mass adjustment      0 Pa
+(0)	=> dMASS/dt physics total                   (pAM-pBF)3.24e-09 Pa
+(0)	  
+(0)	  
+(0)	  
+(0)	dE/dt total adiabatic dynamics                    -2.53e-16 Pa
+(0)	dE/dt 2D dynamics                       (dAD-dBD) -2.53e-16 Pa
+(0)	 
+(0)	Breakdown of 2D dynamics:
+(0)	 
+(0)	      dE/dt hypervis                    (dAH-dBH)      0 Pa
+(0)	      dE/dt frictional heating          (dAH-dCH)      0 Pa
+(0)	      dE/dt residual (time truncation errors)     -2.53e-16 Pa
+(0)	dE/dt vertical remapping                (dAR-dAD)      0 Pa
+(0)	 
+(0)	 
+(0)	dE/dt physics tendency in dynamics      (dBD-dAF) 3.24e-09 Pa
+(0)	Dribbling errors (pAM-pBF-(dBD-dAF))-1.51e-15
+(0)	 
+(0)	---------------------------------------------------------------------------------------------------
+(0)	 
+(0)	min=-148.2925226269828   max=1770.210548306306
+(0)	min=-1489.836497456233   max=122.200959737036
+(0)	ave_hvis = -0.5874355042575238
