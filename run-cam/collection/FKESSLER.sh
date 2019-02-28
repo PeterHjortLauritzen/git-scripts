@@ -31,8 +31,8 @@ if(`hostname` == 'hobart.cgd.ucar.edu') then
   set inic="/scratch/cluster/pel/inic"
   set homedir="/home"
   set scratch="/scratch/cluster"
-  set queue="verylong"
-  set pecount="192"
+  set queue="monster"
+  set pecount="480"
   #
   # mapping files (not in cime yet)
   #
@@ -51,7 +51,7 @@ else
   set compiler="intel"
 endif
 
-set caze=192_debug #${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
+set caze=480 #${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 $homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 01:15:00 --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --run-unsupported
 
 cd $scratch/$USER/$caze
@@ -61,7 +61,7 @@ cd $scratch/$USER/$caze
 ./xmlchange EXEROOT=$scratch/$USER/$caze/bld
 ./xmlchange RUNDIR=$scratch/$USER/$caze/run
 #
-./xmlchange DEBUG=TRUE
+#./xmlchange DEBUG=TRUE
 ./xmlchange NTHRDS=$NTHRDS
 ## timing detail
 ./xmlchange TIMER_LEVEL=10
@@ -75,7 +75,7 @@ cd $scratch/$USER/$caze
 
 ./case.setup
 
-echo "se_statefreq       = 1"        >> user_nl_cam
+echo "se_statefreq       = 244"        >> user_nl_cam
 echo "avgflag_pertape(1) = 'I'" >> user_nl_cam
 echo "nhtfrq             = -24,-24 " >> user_nl_cam
 echo "ndens = 1,1 " >> user_nl_cam

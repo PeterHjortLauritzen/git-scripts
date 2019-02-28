@@ -43,7 +43,8 @@ echo ""
 #
 # $case.nc will be interpolated to latitude-longitude grid
 #
-set cases = ( "$filename" )
+#set cases = ( "$filename" )
+set cases = ( "*h1*.nc" ) #to interpolate all h1 files in a directory
 #
 # DO NOT EDIT BELOW
 #
