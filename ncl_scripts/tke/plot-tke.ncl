@@ -8,15 +8,16 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 
 begin
   if (ls_option) then
-    fnames = systemfunc ("ls *.nc")
+    fnames = systemfunc ("ls *.tke_200hPa.nc")
     print(fnames)
     xi = ispan(0,dimsizes(fnames)-1,1)
     print(xi)
     legends=fnames
+    legends=(/"FV","FV3"/)
   else
     print("dir ="+dir)
     print("case="+case)
-    fnames =  (/dir+"/"+case+".tke_250hPa.nc"/)
+    fnames =  (/dir+"/"+case+".tke_200hPa.nc"/)
     print("fnames="+fnames)
     xi=(/0/)
     legends=(/case/)
@@ -24,7 +25,7 @@ begin
   lcompensated = False
   ltsu = True
 
-  titletxt = "CESM2.0 CAM3 APE"
+  titletxt = "CAM6 APE"
 
   avespc   = addfiles(fnames,"r")       ; Open netCDF files.	
   print("fnames = "+fnames)
@@ -43,7 +44,7 @@ begin
   print(fcnt)
   nlat=dimsizes(avespc[0]->spc_avg);
   print(nlat)
-  cut = 120
+  cut = 100
   cutoff = nlat-cut
  print("cut-off"+cutoff)
 
@@ -93,8 +94,8 @@ end do
   res@tmXBMinorThicknessF = athick 
   res@tmYLMinorThicknessF = athick 
   res@tmBorderThicknessF = athick
-  res@tiMainString           = "Average of "+ntime+" instantaneous 250mb (u,v)"
-;  res@tiMainString           = "Average of 200 six-hourly instantaneous 250mb (u,v)"
+  res@tiMainString           = "Average of "+ntime+" instantaneous 200mb (u,v)"
+;  res@tiMainString           = "Average of 200 six-hourly instantaneous 200mb (u,v)"
   res@tiXAxisString          = "Spherical Wavenumber k"
   if (lcompensated) then
     res@tiYAxisString          = "Compensated Total Kinetic Energy E(k)*k^3"
@@ -114,7 +115,7 @@ end do
 /)
   gsn_define_colormap(wks, colors)
 
-  res@xyLineColors = (/"blue","green","DarkGoldenRod1","red3","DarkTurquoise","OrangeRed4","black"/)
+  res@xyLineColors = (/"blue","red3","DarkGoldenRod1","red3","DarkTurquoise","OrangeRed4","black"/)
 ;  res@xyDashPatterns = (/0,1,0,1,0,1,0,1/)
   res@xyDashPattern = 0
 
@@ -196,27 +197,27 @@ end do
 
   circumference = 40074.275;
 
-  four_dx = 4*28.0;
-  four_dx_k = circumference/four_dx
-  xxx = (/four_dx_k,four_dx_k/)
-  yyy = (/ymin,ymax/)
-  polyres@gsLineThicknessF = 4
-  polyres@gsLineColor = "gray75" ;res@xyLineColors(0)
-  gsn_polyline(wks,plot,xxx,yyy,polyres)              ; add polyline
+;  four_dx = 4*100.0;
+;  four_dx_k = circumference/four_dx
+;  xxx = (/four_dx_k,four_dx_k/)
+;  yyy = (/ymin,ymax/)
+;  polyres@gsLineThicknessF = 4
+;  polyres@gsLineColor = "gray75" ;res@xyLineColors(0)
+;  gsn_polyline(wks,plot,xxx,yyy,polyres)              ; add polyline
 ;
-  txres               = True                            
-  txres@txFontHeightF = 0.017
-  xcoord = four_dx_k
-  ycoord = ymax - 1e6
-  text = gsn_add_text(wks,plot,"4dx",xcoord,ycoord ,txres)
-
-  six_dx = 6*28.0;
-  six_dx_k = circumference/six_dx
-  xxx = (/six_dx_k,six_dx_k/)
-  yyy = (/ymin,ymax/)
-  polyres@gsLineThicknessF = 4
-  polyres@gsLineColor = "gray75" ;res@xyLineColors(0)
-  gsn_polyline(wks,plot,xxx,yyy,polyres)              ; add polyline
+;  txres               = True                            
+;  txres@txFontHeightF = 0.017
+;  xcoord = four_dx_k
+;  ycoord = ymax - 1e6
+;  text = gsn_add_text(wks,plot,"4dx",xcoord,ycoord ,txres)
+;
+;  six_dx = 8*100.0;
+;  six_dx_k = circumference/six_dx
+;  xxx = (/six_dx_k,six_dx_k/)
+;  yyy = (/ymin,ymax/)
+;  polyres@gsLineThicknessF = 4
+;  polyres@gsLineColor = "gray75" ;res@xyLineColors(0)
+;  gsn_polyline(wks,plot,xxx,yyy,polyres)              ; add polyline
 
 
 ;

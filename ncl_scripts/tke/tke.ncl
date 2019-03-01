@@ -177,7 +177,7 @@ begin
   lasttime  = dimsizes(fall[:]->time)-1
   print("Total number of time samples "+lasttime)
 
-  plvl    =  250.                ; default  [hPa] 
+  plvl    =  200.                ; default  [hPa] 
 
   timeinc   = 1
   cut =1 ;how many wavelengths are cut off

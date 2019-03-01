@@ -17,7 +17,7 @@ if ( "$#argv" == 1) then
   ncl 'dir="'$scratch_dir/$case'/run"' 'case="'$case'"' 'ls_option=False' $ncl_dir/plot-tke.ncl
 endif
 if ("$#argv" == 0) then
-  echo "Plotting all files in in 'ls *.tke_250hPa.nc' in the current directory"
+  echo "Plotting all files in in 'ls *.tke_200hPa.nc' in the current directory"
   ncl 'dir="'$PWD'"' 'ls_option=True' $ncl_dir/plot-tke.ncl
 endif
 if ("$#argv" > 1) then
