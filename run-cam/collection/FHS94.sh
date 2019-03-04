@@ -8,8 +8,7 @@ setenv PBS_ACCOUNT NACM0003
 #
 #set src="opt-se-cslam-master"
 set src="trunk2"
-#
-# number of test tracers
+set cset="FHS94"
 #
 set NTHRDS="1"
 #
@@ -27,9 +26,9 @@ set steps="1200"
 #
 # DO NOT MODIFY BELOW THIS LINE
 #
-set cset="FHS94"
+
 #
-# location of initial condition file (not in CAM yet)
+# machine specific settings
 #
 if(`hostname` == 'hobart.cgd.ucar.edu') then
   set inic="/scratch/cluster/pel/inic"
@@ -71,10 +70,11 @@ if(`hostname` == 'cheyenne5') then
   #
   # 900, 1800, 2700, 5400 (pecount should divide 6*30*30 evenly)
   #
-  set pecount="2700"
+  set pecount="2700" # 637 SYPD with FHS94 ne30_ne30; runs in 8min
+  set walltime="00:10:00"
+
   set machine="cheyenne"  
   set compiler="intel"
-  set walltime="01:00:00"
 endif
 
 set caze=nu_top_1.5e5_${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}

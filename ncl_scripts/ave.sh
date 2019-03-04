@@ -18,7 +18,8 @@ endif
 if (`hostname` == "izumi.unified.ucar.edu") then
   set data_dir = "/scratch/cluster/$USER/"
 endif
-if (`hostname` == "cheyenne.ucar.edu") then
+if (`hostname` == "cheyenne5") then
+  module load nco
   set data_dir = "/gpfs/fs1/scratch/$USER/"
 endif
 echo "scratch directory is $data_dir"

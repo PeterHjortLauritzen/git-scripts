@@ -56,7 +56,8 @@ if (`hostname` == "izumi.unified.ucar.edu") then
   echo "You are on Hobart"
   echo "NCL directory is"$ncl_dir
 endif
-if (`hostname` == "cheyenne.cgd.ucar.edu") then
+if (`hostname` == "cheyenne5") then
+  module load ncl
   set data_dir = "/glade/scratch/$USER/"
   setenv ncl_dir "/glade/u/home/$USER/git-scripts/ncl_scripts"
 endif
