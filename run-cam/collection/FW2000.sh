@@ -10,7 +10,7 @@ setenv PBS_ACCOUNT NACM0003
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-set src="trunk2"
+set src="trunk"
 #
 # run with CSLAM or without
 #
@@ -219,7 +219,7 @@ endif
 else
   echo "interpolate_output = .true.,.true.,.true.,.true.,.true.,.true.,.true.,.true." >> user_nl_cam
 endif
-#if ($cset == "FW2000") then
+if ($cset == "FW2000") then
 #  echo "se_nsplit = 4" >> user_nl_cam
 #  echo "se_fvm_supercycling     = 7" >> user_nl_cam
 #  echo "se_fvm_supercycling_jet = 7" >> user_nl_cam
@@ -228,7 +228,9 @@ endif
   else
     echo "ncdata = '$inic/20180516waccm_se_spinup_pe720_10days.cam.i.1974-01-02-00000.nc'"   >> user_nl_cam
   endif
-#endif
+else
+   echo "ncdata='/glade/p/cgd/amp/pel/inic/trunk-F2000climo-30yrs-C60topo.cam.i.0023-02-01-00000.nc'" >> user_nl_cam
+endif
 if ($cset == "FKESSLER") then
   echo "ncdata = '$inic/trunk-F2000climo-30yrs-C60topo.cam.i.0023-02-01-00000.nc'"   >> user_nl_cam
 endif

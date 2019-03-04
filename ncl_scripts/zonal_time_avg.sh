@@ -50,18 +50,19 @@ if (`hostname` == "hobart.cgd.ucar.edu") then
   setenv ncl_dir  "/home/$USER/git-scripts/ncl_scripts"
   set line_colors = "(/"\"red\"","\"blue\"","\"sienna1\"","\"deepskyblue\""/)"  
   echo "NCL directory is"$ncl_dir
-endif
+else
 if (`hostname` == "izumi.unified.ucar.edu") then
   echo "You are on Izumi"
   set data_dir = "/scratch/cluster/$USER/"
   setenv ncl_dir  "/home/$USER/git-scripts/ncl_scripts"
   echo "NCL directory is"$ncl_dir
-endif
-if (`hostname` == "cheyenne5") then
+else
   module load ncl
   set data_dir = "/glade/scratch/$USER/"
   setenv ncl_dir "/glade/u/home/$USER/git-scripts/ncl_scripts"
 endif
+endif
+
 set line_colors = "(/"\"red\"","\"blue\"","\"sienna1\"","\"deepskyblue\""/)"
 
 ncl 'vname="'$vname'"' 'vertical_height = True' 'lsArg='$file'' 'titles='$titles'' 'plot_lat_section=True' 'plot_lat_section_min=-90' 'plot_lat_section_max=90' 'coslat= False' 'diff=False' 'line_colors="$line_colors"' 'lsinx = True' < $ncl_dir/zonal_time_avg.ncl

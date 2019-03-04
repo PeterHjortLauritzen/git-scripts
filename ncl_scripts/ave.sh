@@ -15,14 +15,17 @@ set hn = "$argv[$n]"
 if (`hostname` == "hobart.cgd.ucar.edu") then
   set data_dir = "/scratch/cluster/$USER/"
   module load tool/nco/4.7.5
-endif
-if (`hostname` == "izumi.unified.ucar.edu") then
-  set data_dir = "/scratch/cluster/$USER/"
-  module load tool/nco/4.7.5
-endif
-if (`hostname` == "cheyenne5") then
-  module load nco
-  set data_dir = "/gpfs/fs1/scratch/$USER/"
+else
+  if (`hostname` == "izumi.unified.ucar.edu") then
+    set data_dir = "/scratch/cluster/$USER/"
+    module load tool/nco/4.7.5
+  else
+    #
+    # Cheyenne
+    #
+    module load nco
+    set data_dir = "/gpfs/fs1/scratch/$USER/"
+  endif
 endif
 echo "scratch directory is $data_dir"
 echo "ls $data_dir/$case/run/$case.cam.$hn.*"
