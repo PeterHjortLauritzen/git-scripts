@@ -1,10 +1,13 @@
 #!/bin/tcsh
-setenv PBS_ACCOUNT P93300642
+setenv PBS_ACCOUNT NACM0003
+#
+# P93300642
+#
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
 #set src="opt-se-cslam-master"
-set src="trunk"
+set src="trunk2"
 #
 # number of test tracers
 #
@@ -34,6 +37,7 @@ if(`hostname` == 'hobart.cgd.ucar.edu') then
   set scratch="/scratch/cluster"
   set queue="monster"
   set pecount="480" #10 nodes
+  set walltime="01:00:00"
 #  set pecount="768" #16 nodes  
   set machine="hobart"  
   #
@@ -50,6 +54,7 @@ if(`hostname` == 'izumi.unified.ucar.edu') then
   set scratch="/scratch/cluster"
   set queue="monster"
   set pecount="480"
+  set walltime="01:00:00"
   set machine="hobart"
   #
   # mapping files (not in cime yet)
@@ -57,7 +62,7 @@ if(`hostname` == 'izumi.unified.ucar.edu') then
   set pg3map="/scratch/cluster/pel/cslam-mapping-files"
   set compiler="intel"
 endif
-if(`hostname` == 'cheyenne') then
+if(`hostname` == 'cheyenne5') then
   echo "setting up for Cheyenne"
   set inic="/glade/p/cgd/amp/pel/inic"
   set homedir="/glade/u/home"
@@ -66,13 +71,14 @@ if(`hostname` == 'cheyenne') then
   #
   # 900, 1800, 2700, 5400 (pecount should divide 6*30*30 evenly)
   #
-  set pecount="180"
+  set pecount="2700"
   set machine="cheyenne"  
   set compiler="intel"
+  set walltime="01:00:00"
 endif
 
-set caze=nu_top_2.5e5_hypervisOnPlevsFalse_${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
-$homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 24:00:00 --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --machine $machine --run-unsupported
+set caze=nu_top_1.5e5_${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
+$homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime $walltime --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --machine $machine --run-unsupported
 
 cd $scratch/$USER/$caze
 ./xmlchange STOP_OPTION=$stopoption,STOP_N=$steps
@@ -100,8 +106,8 @@ echo "se_statefreq       = 244"        >> user_nl_cam
 echo "nhtfrq             = 0,0 " >> user_nl_cam
 #echo "ndens = 1,1 " >> user_nl_cam
 echo "interpolate_output = .true.,.true.,.true.,.true.,.true." >> user_nl_cam
-#echo "se_nu_top = 1.0e5"  >> user_nl_cam
-echo "se_hypervis_on_plevs           = .false." >> user_nl_cam
+echo "se_nu_top = 1.5e5"  >> user_nl_cam
+#echo "se_hypervis_on_plevs           = .false." >> user_nl_cam
 echo "fincl2 = 'PS'" >> user_nl_cam
 if(`hostname` == 'hobart.cgd.ucar.edu') then
   ./case.build
@@ -109,7 +115,7 @@ endif
 if(`hostname` == 'izumi.unified.ucar.edu') then
   ./case.build
 endif  
-if(`hostname` == 'cheyenne.ucar.edu') then
+if(`hostname` == 'cheyenne5') then
   qcmd -- ./case.build
 endif
 ./case.submit
