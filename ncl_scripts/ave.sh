@@ -14,9 +14,11 @@ set n = 2
 set hn = "$argv[$n]" 
 if (`hostname` == "hobart.cgd.ucar.edu") then
   set data_dir = "/scratch/cluster/$USER/"
+  module load tool/nco/4.7.5
 endif
 if (`hostname` == "izumi.unified.ucar.edu") then
   set data_dir = "/scratch/cluster/$USER/"
+  module load tool/nco/4.7.5
 endif
 if (`hostname` == "cheyenne5") then
   module load nco
