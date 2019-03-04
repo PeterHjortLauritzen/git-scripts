@@ -45,15 +45,16 @@ endif
 # set paths depending on machine
 #
 if (`hostname` == "hobart.cgd.ucar.edu") then
+  echo "You are on Hobart"
   set data_dir = "/scratch/cluster/$USER/"
-  set ncl_dir = "/home/$USER/git-scripts/ncl_scripts"
-set line_colors = "(/"\"red\"","\"blue\"","\"sienna1\"","\"deepskyblue\""/)"  echo "You are on Hobart"
+  setenv ncl_dir  "/home/$USER/git-scripts/ncl_scripts"
+  set line_colors = "(/"\"red\"","\"blue\"","\"sienna1\"","\"deepskyblue\""/)"  
   echo "NCL directory is"$ncl_dir
 endif
 if (`hostname` == "izumi.unified.ucar.edu") then
+  echo "You are on Izumi"
   set data_dir = "/scratch/cluster/$USER/"
   setenv ncl_dir  "/home/$USER/git-scripts/ncl_scripts"
-  echo "You are on Hobart"
   echo "NCL directory is"$ncl_dir
 endif
 if (`hostname` == "cheyenne5") then

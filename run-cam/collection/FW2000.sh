@@ -1,5 +1,6 @@
 #!/bin/tcsh
-setenv PBS_ACCOUNT "P03010039"
+#setenv PBS_ACCOUNT "P03010039"
+setenv PBS_ACCOUNT NACM0003
 # P03010039
 # P93300042
 # P03010083
@@ -9,21 +10,20 @@ setenv PBS_ACCOUNT "P03010039"
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-#set src="trunk"
-set src="cam_cesm2_1_rel_07"
+set src="trunk2"
 #
 # run with CSLAM or without
 #
-set res="ne30pg3_ne30pg3_mg17" #cslam
-#set res="ne30_ne30_mg17"      #no cslam
+#set res="ne30pg3_ne30pg3_mg17" #cslam
+set res="ne30_ne30_mg17"      #no cslam
 #set res="f09_f09_mg17"     
 
-#set climateRun="True"
-set climateRun="False"
+set climateRun="True"
+#set climateRun="False"
 #set energyConsistency="True"
 set energyConsistency="False"
-set test_tracers="True"
-set defaultIO="True"
+set test_tracers="False"
+set defaultIO="False"
 #
 # DO NOT MODIFY BELOW THIS LINE
 #
@@ -42,13 +42,13 @@ echo "Do CSLAM mods in clm and cime:"
 source clm_and_cime_mods_for_cslam.sh $src
 echo "Done"
 if ($climateRun == "True") then
-  set walltime="09:00:00"
+  set walltime="03:00:00"
 #  set walltime="02:00:00"
   #
   # 900, 1800, 2700, 5400 (pecount should divide 6*30*30 evenly)
   #
-  set pecount="5400"
-#  set pecount="2700"
+#  set pecount="5400"
+  set pecount="2700"
   set NTHRDS="1"
   set stopoption="nmonths"
   set steps="12"
@@ -250,5 +250,5 @@ endif
 #echo "se_nu_p   =  0.1E17" >> user_nl_cam
 #echo "se_hypervis_subcycle = 3" >> user_nl_cam
 
-#qcmd -- ./case.build
-#./case.submit
+qcmd -- ./case.build
+./case.submit
