@@ -297,7 +297,7 @@ begin
     ;************************************************       
     ; note, the 7th argument is not used, and so is set to 1.
     ;************************************************
-     fonP = vinth2p(f3d,hyam,hybm,pnew,PS,interp,P0mb,1,extrap)
+    fonP = vinth2p(f3d,hyam,hybm,pnew,PS,interp,P0mb,1,extrap)
   
     ;************************************************
     ;  calculate zonal average of 3d variable
@@ -428,20 +428,22 @@ begin
       nlev = dimsizes(hyam)
       plres = True
       plres@gsLineColor = "white"
-      hybrid_lev = new((/2,nlev/),double)
-      xcoord     = new(2,double)
-      xcoord(0) = -90.0;YYYYMMDD(nn_start)
-      xcoord(1) = 90.0;YYYYMMDD(Fnum-1)
       if (i.eq.0) then
-        dum = new((/nlev/),graphic)
+        hybrid_lev = new((/2,nlev/),double)
+        xcoord     = new(2,double)
+        xcoord(0) = -90.0;YYYYMMDD(nn_start)
+        xcoord(1) = 90.0;YYYYMMDD(Fnum-1)      
+        dum = new((/nlev,fnum_files/),graphic)	
         do k = 0 ,nlev-1
           hybrid_lev(0,k) = hyam(k)*1000.0+hybm(k)*1000.0
           hybrid_lev(1,k) = hyam(k)*1000.0+hybm(k)*1000.0
-        end do
+        end do	
+      end if
+
         do k = 0 ,nlev-1
-          dum(k) = gsn_add_polyline(wks,plot(i),xcoord,hybrid_lev(:,k),plres)
+          dum(k,i) = gsn_add_polyline(wks,plot(i),xcoord,hybrid_lev(:,k),plres)
         end do
-      end if			
+;      end if			
     
   
     else
@@ -464,15 +466,20 @@ begin
 ;    draw(plot)
       delete(PS)
       delete(f3d)
+      delete(lat)
+      delete(fonP)
+      delete(zonal_fonP)
+      delete(res@sfXArray)	      
     end do
     pres = True
     if (.not.diff) then
        pres@gsnPanelLabelBar = True                   ; add common colorbar
        pres@gsnPanelBottom   = 0.05
     end if
-;    pres@txString = "Zonal-time averaged "+vname 
+      pres@gsnPanelMainString = PanelTitle      
+;txString 
     if (fnum_files.ne.1) then
-       gsn_panel(wks,plot,(/2,2/),pres)
+       gsn_panel(wks,plot,(/2,3/),pres)
     else
        gsn_panel(wks,plot,(/1,1/),pres)
     end if

@@ -124,7 +124,7 @@ begin
           res@cnMinLevelValF       = -1.0                  ; min level
           res@cnMaxLevelValF       =  3.0                  ; max level
         else
-          res@cnLevelSpacingF      =  10.0                   ; contour interval
+          res@cnLevelSpacingF      =  5.0                   ; contour interval
           res@cnMinLevelValF       =  185.0                  ; min level
           res@cnMaxLevelValF       =  305.0                  ; max level
         end if
