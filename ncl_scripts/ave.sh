@@ -11,18 +11,21 @@ endif
 set n = 1
 set case = "$argv[$n]" 
 set n = 2
-set hn = "$argv[$n]" 
+set hn = "$argv[$n]"
 if (`hostname` == "hobart.cgd.ucar.edu") then
+    echo "Detected host hobart"
   set data_dir = "/scratch/cluster/$USER/"
   module load tool/nco/4.7.5
 else
   if (`hostname` == "izumi.unified.ucar.edu") then
+    echo "Detected host izumi"
     set data_dir = "/scratch/cluster/$USER/"
     module load tool/nco/4.7.5
   else
     #
     # Cheyenne
     #
+    echo "Detected host Cheyenne"  
     module load nco
     set data_dir = "/gpfs/fs1/scratch/$USER/"
   endif

@@ -6,8 +6,8 @@ setenv PBS_ACCOUNT NACM0003
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-#set src="opt-se-cslam-master"
-set src="trunk"
+set src="opt-se-cslam"
+#set src="trunk"
 set cset="FHS94"
 #
 set NTHRDS="1"
@@ -16,8 +16,8 @@ set NTHRDS="1"
 #
 #set res="f09_f09_mg17"
 #set res="ne30pg2_ne30pg2_mg17" #cslam
-#set res="ne30pg3_ne30pg3_mg17" #cslam
-set res="ne30_ne30_mg17"        #no cslam
+set res="ne30pg3_ne30pg3_mg17" #cslam
+#set res="ne30_ne30_mg17"        #no cslam
 
 #set stopoption="nsteps"
 #set steps="3"
@@ -52,7 +52,7 @@ if(`hostname` == 'izumi.unified.ucar.edu') then
   set homedir="/home"
   set scratch="/scratch/cluster"
   set queue="monster"
-  set pecount="384"
+  set pecount="672" #14 nodes (all of machine)
   set walltime="24:00:00"
   set machine="hobart"
   #
@@ -77,7 +77,7 @@ if(`hostname` == 'cheyenne5') then
   set compiler="intel"
 endif
 
-set caze=hobart_PPMmod_nu_top_0.25e5_${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
+set caze=nu_top_1.25e5_${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 $homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime $walltime --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --machine $machine --run-unsupported
 
 cd $scratch/$USER/$caze
@@ -106,9 +106,9 @@ echo "se_statefreq       = 244"        >> user_nl_cam
 echo "nhtfrq             = 0,0 " >> user_nl_cam
 #echo "ndens = 1,1 " >> user_nl_cam
 echo "interpolate_output = .true.,.true.,.true.,.true.,.true." >> user_nl_cam
-echo "se_nu_top = 0.25e5"  >> user_nl_cam
+echo "se_nu_top = 1.25e5"  >> user_nl_cam
 #echo "se_hypervis_on_plevs           = .false." >> user_nl_cam
-echo "ncdata='/scratch/cluster/pel/nu_top_0.25_trunk_FHS94_CAM_ne30_ne30_mg17_480_NTHRDS1_1200ndays/run/nu_top_0.25_trunk_FHS94_CAM_ne30_ne30_mg17_480_NTHRDS1_1200ndays.cam.i.0002-01-01-00000.nc'"
+#echo "ncdata='/scratch/cluster/pel/nu_top_0.25_trunk_FHS94_CAM_ne30_ne30_mg17_480_NTHRDS1_1200ndays/run/nu_top_0.25_trunk_FHS94_CAM_ne30_ne30_mg17_480_NTHRDS1_1200ndays.cam.i.0002-01-01-00000.nc'"
 echo "fincl2 = 'PS'" >> user_nl_cam
 if(`hostname` == 'hobart.cgd.ucar.edu') then
   ./case.build
