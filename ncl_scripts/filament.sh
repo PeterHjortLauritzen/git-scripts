@@ -26,4 +26,31 @@ else
   setenv ncl_dir "/glade/u/home/$USER/git-scripts/ncl_scripts"
 endif
 
-ncl 'fname="'$file'"' 'vname="'$vname'"'  $ncl_dir/filament.ncl
+#ncl 'fname="'$file'"' 'vname="'$vname'"'  $ncl_dir/filament.ncl
+if (-e filament.gp) then
+  rm filament.gp
+endif
+#
+# Make Gnuplot script
+#
+echo "set terminal postscript eps enhanced color "'"Helvetica"'" 26" >> filament.gp
+echo "set out "'"filament.eps"'""                                    >> filament.gp
+echo "set title "'"Filament diagnostic"'" "                          >> filament.gp
+echo "set xlabel "'"{/Symbol t}"'""                                  >> filament.gp
+echo "set ylabel "'"l_f"'""                                          >> filament.gp
+echo "set grid"                                                      >> filament.gp
+echo "set xtics ("'"0.0"'" 0.0,"'" "'"0.1,"'"0.2"'" 0.2,"'" "'" 0.3,"'"0.4"'" 0.4,"'" "'" 0.5,"'"0.6"'" 0.6,"'" "'" 0.7,"'"0.8"'" 0.8,"'" "'" 0.9,"'"1.0"'" 1.0)" >> filament.gp 
+#echo "set key 0.64,52.13 spacing 1.1 width -2.0 height 1 box " >> filament.gp
+echo "plot "'"filament-ref.dat"'" w l lt -1 lw 3 notitle,"'"filament.dat"'" w lp lt 1 lw 2 title "'"1.5{/Symbol \260}"'" " >> filament.gp
+if (-e filament-ref.dat) then
+  rm filament-ref.dat
+endif
+echo "0.1 100.0" >> filament-ref.dat
+echo "1.0 100.0" >> filament-ref.dat
+gnuplot filament.gp
+if (-e filament.eps) then
+  echo "Script has created filement.eps file"
+else
+  echo "Something went wront: filament.eps was not created" 
+endif
+#gv filament.eps

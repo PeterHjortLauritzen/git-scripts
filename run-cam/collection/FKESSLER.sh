@@ -14,12 +14,13 @@ set NTHRDS="1"
 #
 #set res="ne30pg2_ne30pg2_mg17" #cslam
 #set res="ne30pg3_ne30pg3_mg17" #cslam
-set res="ne30_ne30_mg17"        #no cslam
+#set res="ne30_ne30_mg17"        #no cslam
+set res="ne5_ne5_mg37"
 
-#set stopoption="nsteps"
-#set steps="3"
-set stopoption="ndays"
-set steps="3"
+set stopoption="nsteps"
+set steps="1"
+#set stopoption="ndays"
+#set steps="2"
 #
 # DO NOT MODIFY BELOW THIS LINE
 #
@@ -41,10 +42,10 @@ if(`hostname` == 'izumi.unified.ucar.edu') then
   set inic="/scratch/cluster/pel/inic"
   set homedir="/home"
   set scratch="/scratch/cluster"
-#  set queue="monster"
-#  set pecount="480"
-  set queue="monster"  
-  set pecount="96"
+  set queue="monster"
+  set pecount="1"
+#  set queue="monster"  
+#  set pecount="96"
   #
   # mapping files (not in cime yet)
   #
@@ -63,7 +64,7 @@ if(`hostname` == 'cheyenne.ucar.edu') then
   set compiler="intel"
 endif
 
-set caze=${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
+set caze=izumi_${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 $homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 01:15:00 --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --run-unsupported
 
 cd $scratch/$USER/$caze
