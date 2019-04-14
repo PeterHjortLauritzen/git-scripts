@@ -10,16 +10,17 @@ setenv PBS_ACCOUNT NACM0003
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
+#set src="opt-se-cslam"
 set src="trunk"
 #
 # run with CSLAM or without
 #
-#set res="ne30pg3_ne30pg3_mg17" #cslam
-set res="ne30_ne30_mg17"      #no cslam
+set res="ne30pg3_ne30pg3_mg17" #cslam
+#set res="ne30_ne30_mg17"      #no cslam
 #set res="f09_f09_mg17"     
 
-set climateRun="True"
-#set climateRun="False"
+#set climateRun="True"
+set climateRun="False"
 #set energyConsistency="True"
 set energyConsistency="False"
 set test_tracers="False"
@@ -27,8 +28,9 @@ set defaultIO="False"
 #
 # DO NOT MODIFY BELOW THIS LINE
 #
+set cset="FWHIST"
 #set cset="FW2000climo"
-set cset="F2000climo"
+#set cset="F2000climo"
 #set cset="FHS94"
 #
 # mapping files (not in cime yet)
@@ -38,9 +40,9 @@ set pg3map="/glade/p/cgd/amp/pel/cslam-mapping-files"
 # location of initial condition file (not in CAM yet)
 #
 set inic="/glade/p/cgd/amp/pel/inic"
-echo "Do CSLAM mods in clm and cime:"
-source clm_and_cime_mods_for_cslam.sh $src
-echo "Done"
+#echo "Do CSLAM mods in clm and cime:"
+#source clm_and_cime_mods_for_cslam.sh $src
+#echo "Done"
 if ($climateRun == "True") then
   set walltime="03:00:00"
 #  set walltime="02:00:00"
@@ -54,11 +56,11 @@ if ($climateRun == "True") then
   set steps="12"
 #  set steps="2"
 else
-  set walltime="00:15:00"
-  set pecount="450"
+  set walltime="00:20:00"
+  set pecount="1800"
   set NTHRDS="1"
-  set stopoption="nsteps"
-  set steps="5"
+  set stopoption="ndays"
+  set steps="4"
 endif
 if ($test_tracers == "True") then
     set caze=nadv_climateRun${climateRun}_energyConsistency${energyConsistency}_${src}_${cset}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
@@ -87,12 +89,12 @@ endif
 ./xmlchange TIMER_LEVEL=10
 ##
 if ($res == "ne30pg3_ne30pg3_mg17") then
-  ./xmlchange GLC2LND_SMAPNAME=$pg3map/map_gland4km_TO_ne30pg3_aave.180510.nc
-  ./xmlchange GLC2LND_FMAPNAME=$pg3map/map_gland4km_TO_ne30pg3_aave.180510.nc
-  ./xmlchange LND2GLC_FMAPNAME=$pg3map/map_ne30pg3_TO_gland4km_aave.180515.nc
-  ./xmlchange LND2GLC_SMAPNAME=$pg3map/map_ne30pg3_TO_gland4km_bilin.180515.nc
-  ./xmlchange LND2ROF_FMAPNAME=$pg3map/map_ne30pg3_TO_0.5x0.5_nomask_aave_da_180515.nc
-  ./xmlchange ROF2LND_FMAPNAME=$pg3map/map_0.5x0.5_nomask_TO_ne30pg3_aave_da_180515.nc
+#  ./xmlchange GLC2LND_SMAPNAME=$pg3map/map_gland4km_TO_ne30pg3_aave.180510.nc
+#  ./xmlchange GLC2LND_FMAPNAME=$pg3map/map_gland4km_TO_ne30pg3_aave.180510.nc
+#  ./xmlchange LND2GLC_FMAPNAME=$pg3map/map_ne30pg3_TO_gland4km_aave.180515.nc
+#  ./xmlchange LND2GLC_SMAPNAME=$pg3map/map_ne30pg3_TO_gland4km_bilin.180515.nc
+#  ./xmlchange LND2ROF_FMAPNAME=$pg3map/map_ne30pg3_TO_0.5x0.5_nomask_aave_da_180515.nc
+#  ./xmlchange ROF2LND_FMAPNAME=$pg3map/map_0.5x0.5_nomask_TO_ne30pg3_aave_da_180515.nc
 endif
 #
 
@@ -101,12 +103,12 @@ endif
 
 ./case.setup
 
-if ($res == "ne30pg3_ne30pg3_mg17") then
-  echo "fsurdat='$pg3map/surfdata_ne30np4.pg3_78pfts_CMIP6_simyr2000_c180228.nc'">>user_nl_clm
-endif
-if ($res == "ne30_ne30_mg17") then
-  echo "fsurdat='/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/surfdata_ne30np4_simyr2000_c110801.nc'">>user_nl_clm
-endif
+#if ($res == "ne30pg3_ne30pg3_mg17") then
+#  echo "fsurdat='$pg3map/surfdata_ne30np4.pg3_78pfts_CMIP6_simyr2000_c180228.nc'">>user_nl_clm
+#endif
+#if ($res == "ne30_ne30_mg17") then
+#  echo "fsurdat='/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/surfdata_ne30np4_simyr2000_c110801.nc'">>user_nl_clm
+#endif
 #echo "se_hypervis_subcycle = 2"   >> user_nl_cam
 #echo " se_variable_nsplit = .false."   >> user_nl_cam #xxx
 
@@ -219,20 +221,25 @@ endif
 else
   echo "interpolate_output = .true.,.true.,.true.,.true.,.true.,.true.,.true.,.true." >> user_nl_cam
 endif
-if ($cset == "FW2000") then
+if ($cset == "FW2000climo") then
 #  echo "se_nsplit = 4" >> user_nl_cam
 #  echo "se_fvm_supercycling     = 7" >> user_nl_cam
 #  echo "se_fvm_supercycling_jet = 7" >> user_nl_cam
-  if ($res == "ne30pg3_ne30pg3_mg17") then
-    echo "ncdata = '$inic/waccm.i.spinup.nc'" >> user_nl_cam
-  else
-    echo "ncdata = '$inic/20180516waccm_se_spinup_pe720_10days.cam.i.1974-01-02-00000.nc'"   >> user_nl_cam
-  endif
-else
-   echo "ncdata='/glade/p/cgd/amp/pel/inic/trunk-F2000climo-30yrs-C60topo.cam.i.0023-02-01-00000.nc'" >> user_nl_cam
+#  if ($res == "ne30pg3_ne30pg3_mg17") then
+if ($cset == "FWHIST") then
+   echo "ncdata = '$inic/waccm-FHIST.i.spinup.nc'" >> user_nl_cam
+endif
+if ($cset == "FW2000climo") then
+   echo "ncdata = '$inic/waccm.i.spinup.nc'" >> user_nl_cam
+endif
+#  else
+#    echo "ncdata = '$inic/20180516waccm_se_spinup_pe720_10days.cam.i.1974-01-02-00000.nc'"   >> user_nl_cam
+#  endif
+
+#   echo "ncdata='/glade/p/cgd/amp/pel/inic/trunk-F2000climo-30yrs-C60topo.cam.i.0023-02-01-00000.nc'" >> user_nl_cam
 endif
 if ($cset == "FKESSLER") then
-  echo "ncdata = '$inic/trunk-F2000climo-30yrs-C60topo.cam.i.0023-02-01-00000.nc'"   >> user_nl_cam
+#  echo "ncdata = '$inic/trunk-F2000climo-30yrs-C60topo.cam.i.0023-02-01-00000.nc'"   >> user_nl_cam
 endif
 
 
