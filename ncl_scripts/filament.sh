@@ -1,14 +1,20 @@
 #!/bin/tcsh
-if ( "$#argv" != 2) then
+if ( "$#argv" != 4) then
   echo "Wrong number of arguments specified:"
   echo "  -arg 1 file with data"
   echo "  -arg 2 variable name (e.g., PRECT, PS)"
+  echo "  -arg 3 nstep"
+  echo "  -arg 4 FV,SE,F3"    
   exit
 endif
 set n = 1
 set file = "$argv[$n]" 
 set n = 2
-set vname = "$argv[$n]" 
+set vname = "$argv[$n]"
+set n = 3
+set nstep = "$argv[$n]"
+set n = 4
+set dcore = "$argv[$n]" 
 
 if (`hostname` == "hobart.cgd.ucar.edu") then
   echo "You are on Hobart"
@@ -25,8 +31,10 @@ else
   set data_dir = "/glade/scratch/$USER/"
   setenv ncl_dir "/glade/u/home/$USER/git-scripts/ncl_scripts"
 endif
-
-#ncl 'fname="'$file'"' 'vname="'$vname'"'  $ncl_dir/filament.ncl
+#
+# NCL script to compute lf - data output to ASCII file
+#
+ncl 'fname="'$file'"' 'vname="'$vname'"' 'nstep='$nstep 'dcore="'$dcore'"' $ncl_dir/filament.ncl
 if (-e filament.gp) then
   rm filament.gp
 endif
