@@ -2,30 +2,28 @@
 if ( "$#argv" != 7) then
   echo "Wrong number of arguments specified:"
   echo "  -arg 1 file with data"
-  echo "  -arg 2 variable name 1"
-  echo "  -arg 3 variable name 2"
-  echo "  -arg 4 time step index start"
-  echo "  -arg 5 time step index stop"
-  echo "         (if start and stop index are the same "
-  echo "          then no animation will be generated)"
-  echo "  -arg 6 lat-lon logical"
-  echo "  -arg 7 resolution"    
+  echo "  -arg 2 variable name"
+  echo "  -arg 3 time step index"
+  echo "  -arg 4 lat-lon logical"
+  echo "  -arg 5 resolution"
+  echo "  -arg 6 3D data or not"
+  echo "  -arg 6 level"        
   exit
 endif
 set n = 1
 set file = "$argv[$n]" 
 set n = 2
-set vname1 = "$argv[$n]"
+set vname = "$argv[$n]"
 set n = 3
-set vname2 = "$argv[$n]"
+set ntime = "$argv[$n]"
 set n = 4
-set nstep_start = "$argv[$n]"
-set n = 5
-set nstep_stop = "$argv[$n]"
-set n = 6
 set latlon = "$argv[$n]"
+set n = 5
+set resolution = "$argv[$n]"
+set n = 6
+set threeD = "$argv[$n]"
 set n = 7
-set resolution = "$argv[$n]" 
+set ilev = "$argv[$n]" 
 
 if (`hostname` == "hobart.cgd.ucar.edu") then
   echo "You are on Hobart"
@@ -42,6 +40,6 @@ else
   set data_dir = "/glade/scratch/$USER/"
   setenv ncl_dir "/glade/u/home/$USER/git-scripts/ncl_scripts"
 endif
-ncl 'fname="'$file'"' 'vname1="'$vname1'"' 'vname2="'$vname2'"' 'nstep_start="'$nstep_start'"' 'nstep_stop="'$nstep_stop'"' 'latlon="'$latlon'"' 'resolution="'$resolution'"' $ncl_dir/mixing.ncl
+ncl 'fname="'$file'"' 'vname="'$vname'"' 'ntime="'$ntime'"'  'latlon="'$latlon'"' 'resolution="'$resolution'"' 'threeD="'$threeD'"' 'ilev="'$ilev'"' $ncl_dir/2d_rasta.ncl
 
 

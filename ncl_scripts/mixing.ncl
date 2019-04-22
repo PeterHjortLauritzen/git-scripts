@@ -7,7 +7,7 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 ;**************************************
 
 undef ("get_area_FV_from_lat_lon")
-function get_area_FV_from_lat_lon(lat_in,lon_in,gw)
+function get_area_FV_from_lat_lon(lat_in,lon_in)
 local area,deg2rad,pi,i,j,lat,lon,nlat,nlon,dlon,dlat,lat_edge,dslat,dlat_local
 begin
  pi=3.14159265358979D0
@@ -60,6 +60,14 @@ begin
  end if
  return (out)
 end 
+
+undef ("corr_fct")
+function corr_fct(x)
+local corr
+begin
+  corr = -0.8*x*x+0.9
+  return(corr)
+end  
 
 ;
 ; check that area spans unit sphere
@@ -129,61 +137,192 @@ end
 
 begin
 ;****************************************
-  lf_threshold = (/0.1D0,0.2D0,0.3D0,0.4D0,0.5D0,0.6D0,0.7D0,0.8D0,0.9D0,1.0D0/)
   
   print("fname = "+fname)
   ffname = systemfunc("ls "+fname)
   f  = addfile (ffname,"r") 
 
-  print("dcore="+dcore)
-  if (dcore.eq."FV") then
-    lat = f->lat
-    lon = f->lon
-    gw  = f->gw       
-    area = get_area_FV_from_lat_lon(lat,lon,gw)
+  print("grabbing ..."+vname1+" and "+vname2)
+
+  var1 = f->$vname1$
+  var2 = f->$vname2$
+
+  if (vname1.eq."TT_COSB") then
+    lo = f->TT_COSB_lo
+    lr = f->TT_COSB_lr
+    lu = f->TT_COSB_lu
+  elseif (vname1.eq."TT_COSB2") then
+    lo = f->TT_COSB2_lo
+    lr = f->TT_COSB2_lr
+    lu = f->TT_COSB2_lu
   else
-    area = f->area
-  end if  
-  print(typeof(area))
-  if (check_total_area(area)) then
+    print("Mixing diagnostics variables not found on file")
     exit
   end if
 
-  print("grabbing ..."+vname)
+  time = f->time
 
-  var = f->$vname$
-  time= f->time
-  
-
-  lf_size      = dimsizes(lf_threshold)
-  lf_ref_vals  = new(lf_size,typeof(lf_threshold(0)))
-  lf_vals      = new((/lf_size,2/),(/typeof(lf_threshold(0)),typeof(lf_threshold(0))/))
-  do h=0,lf_size-1
-    if (dcore.eq."FV") then
-      lf_ref_vals(h) = lf(var(0,:,:,:),area,lf_threshold(h))        
+  print("nstep_start="+nstep_start)
+  print("nstep_stop="+nstep_stop)  
+  n1=tointeger(nstep_start)
+  n2=tointeger(nstep_stop)
+  ;
+  ; create file name and directories
+  ;
+  if (n2.gt.dimsizes(time)) then
+    print("nstep_stop larger than time array size "+dimesizes(time))
+    exit
+  end if
+  if (n1.eq.n2) then
+    lani = False
+    out_fname = "scatter_day"+time(n1)+"_"+vname1+"_"+resolution
+    wks   = gsn_open_wks ("pdf",out_fname)           ; send graphics to PNG file    
+  else
+    print("Making png animation")
+    lani = True
+    dirname = "animation_frames"
+    ret = systemfunc("test -d "+dirname+"; echo $?")
+    if (ret.eq.1) then
+      print("Creating directory "+dirname)
+      system("mkdir "+dirname)
     else
-      lf_ref_vals(h) = lf(var(0,:,:),area,lf_threshold(h))
+      print("Directory "+dirname+" exists")
+      print("Delete directory and rerun script!")
+      exit
     end if
-    print("Computing reference data (area of initial condition larger than "+lf_threshold(h)+")")
-    print("lf_ref_vals = "+lf_ref_vals(h))
-  end do
+    out_fname = dirname+"/scatter_animation_"+vname1+"_"+resolution
+    wks   = gsn_open_wks ("png",out_fname)           ; send graphics to PNG file
+  end if
 
-  print("Computing lf at day "+time(nstep))
-  do h=0,lf_size-1
-    lf_vals(h,0) = lf_threshold(h)
-    if (lf_ref_vals(h).ge.1.0D-12) then
-      if (dcore.eq."FV") then    	   
-        lf_vals(h,1) = 100.0D0*lf(var(nstep,:,:,:),area,lf_threshold(h))/lf_ref_vals(h)
-      else
-        lf_vals(h,1) = 100.0D0*lf(var(nstep,:,:),area,lf_threshold(h))/lf_ref_vals(h)
+  ;
+  ; setup plot details
+  ;
+  res                   = True                     ; plot mods desired
+  res@gsnMaximize       = True                     ; maximize plot
+  res@gsnFrame          = False
+  res@xyMarkLineMode    = "Markers"                ; choose to use markers
+  res@xyMarkers         =  16                      ; choose type of marker  
+  res@xyMarkerColor     = "NavyBlue"               ; Marker color
+  res@xyMarkerSizeF     = 0.002                     ; Marker size (default 0.01)
+
+  res@tiXAxisString     = vname1
+  res@tiYAxisString     = vname2
+
+  res@trXMinF          = 0.0
+  res@trXMaxF          = 1.05
+  res@trYMinF          = 0.0
+  res@trYMaxF          = 1.0  
+  ;
+  ; convex hull lines for plot
+  ;
+  npts   = 100
+  xx  = 0.1+0.9*((1.0/npts)*ispan(1,npts,1))
+  yy  = corr_fct(xx)
+
+  res_lines = True
+  res_lines@gsLineThicknessF = 6.0
+  res_lines@gsLineColor      = "orange"
+
+  xxx  = 1.0*ispan(1,2,1)
+  xxx(0)  = 0.1
+  xxx(1)  = 1.0  
+  yyy  = corr_fct(xxx)
+
+  res_lines2 = True
+  res_lines2@gsLineThicknessF = 4.0
+  res_lines2@gsLineColor      = "orange"
+  ;
+  ; for error norms printed on plot
+  ;
+  txres               = True
+  txres@txFontHeightF = 0.03
+  ;
+  ; start time loop
+  ;
+  count=0
+  do nt=n1,n2
+    res@tiMainString      = "Day "+time(nt)+" with "+resolution           ; add title  
+    if (latlon.eq."True") then
+      var1_1d = ndtooned(var1(nt,19,:,:))
+      var2_1d = ndtooned(var2(nt,19,:,:))
+      lr_1d   = ndtooned(lr  (nt,19,:,:))
+      lu_1d   = ndtooned(lu  (nt,19,:,:))
+      lo_1d   = ndtooned(lo  (nt,19,:,:))
+
+      lat = f->lat
+      lon = f->lon
+
+      area_2d = get_area_FV_from_lat_lon(lat,lon)
+      area_1d = ndtooned(area_2d)
+
+      ncol = dimsizes(var1_1d)
+      scatter = new((/2,ncol/),typeof(var1_1d(1)))
+      scatter(0,:) = var1_1d
+      scatter(1,:) = var2_1d
+    else
+      var1_1d = ndtooned(var1(nt,19,:))
+      var2_1d = ndtooned(var2(nt,19,:))
+      lr_1d   = ndtooned(lr  (nt,19,:))
+      lu_1d   = ndtooned(lu  (nt,19,:))
+      lo_1d   = ndtooned(lo  (nt,19,:))    
+      area_1d = f->area
+
+      ncol = dimsizes(var1_1d)
+      scatter = new((/2,ncol/),typeof(var1_1d(1)))
+      scatter(0,:) = var1_1d
+      scatter(1,:) = var2_1d   
+    end if
+
+    if (count.eq.0) then
+      print("ncol="+ncol)
+    
+      lr_error   = new((/n2-n1+1/),typeof(lr_1d(1)))
+      lo_error   = new((/n2-n1+1/),typeof(lr_1d(1)))
+      lu_error   = new((/n2-n1+1/),typeof(lr_1d(1)))
+
+      if (check_total_area(area_1d)) then
+        print("STOP")
+        exit
       end if
-    else
-      print("lf_ref_vals small ...."+lf_ref_vals(h))
-      lf_vals(h,1) = 0.0D0
+      sum_area_inv = 1.0D0/sum(area_1d)      
     end if
-    print("Threshold = "+lf_threshold(h)+"; lf = "+lf_vals(h,1))
-  end do  
-  opt=True
-  opt@fout = "filament.dat"
-  write_matrix(lf_vals, "f12.8,1x,f12.8",opt)	
+    ;
+    ; compute mixing diagnostics
+    ;
+    lr_error(count) = sum(area_1d*lr_1d)*sum_area_inv
+    lo_error(count) = sum(area_1d*lo_1d)*sum_area_inv
+    lu_error(count) = sum(area_1d*lu_1d)*sum_area_inv
+  
+    plot  = gsn_csm_xy (wks,scatter(0,:),scatter(1,:),res)                    ; create plot
+    gsn_polyline(wks,plot,xx,yy,res_lines)
+    p = gsn_add_polyline(wks,plot,xxx,yyy,res_lines2)
+
+    str1 = "l~B~r~N~="+sprintf("%6.2e", lr_error(count)) 
+    str2 = "l~B~u~N~="+sprintf("%6.2e", lu_error(count))
+    str3 = "l~B~o~N~="+sprintf("%6.2e", lo_error(count))
+    dum = gsn_add_text(wks,plot,str1,0.215,0.3,txres)
+    dum = gsn_add_text(wks,plot,str2,0.217,0.2,txres)
+    dum = gsn_add_text(wks,plot,str3,0.22,0.1,txres) 
+
+    count=count+1
+
+    print("Done time = "+time(nt))
+
+    draw(plot)
+    frame(wks)
+ end do
+
+ print(lr_error)
+ print(lu_error)
+ print(lo_error)
+
+ out_fname = "scatter_time"+"_"+vname1+"_"+resolution+".nc"
+ system("/bin/rm -f "+out_fname)
+ ncdf = addfile(out_fname ,"c")  ; open output netCDF file
+ ncdf->lr_error=lr_error
+ ncdf->lu_error=lu_error
+ ncdf->lo_error=lo_error 
+ ncdf->time=time(n1:n2)
+ print("Converting png files into gif animation")
+ system("convert -delay 40 "+dirname+"/scatter_animation_* animation.gif")
 end
