@@ -166,6 +166,10 @@ begin
   print("nstep_stop="+nstep_stop)  
   n1=tointeger(nstep_start)
   n2=tointeger(nstep_stop)
+  if (n1.le.-1) then
+    n1 = 0
+    n2 = dimsizes(time)-1
+  end if
   ;
   ; create file name and directories
   ;
@@ -279,7 +283,10 @@ begin
       lr_error   = new((/n2-n1+1/),typeof(lr_1d(1)))
       lo_error   = new((/n2-n1+1/),typeof(lr_1d(1)))
       lu_error   = new((/n2-n1+1/),typeof(lr_1d(1)))
-
+      min1_val   = new((/n2-n1+1/),typeof(lr_1d(1)))
+      min2_val   = new((/n2-n1+1/),typeof(lr_1d(1)))
+      max1_val   = new((/n2-n1+1/),typeof(lr_1d(1)))      
+      max2_val   = new((/n2-n1+1/),typeof(lr_1d(1)))
       if (check_total_area(area_1d)) then
         print("STOP")
         exit
@@ -292,7 +299,12 @@ begin
     lr_error(count) = sum(area_1d*lr_1d)*sum_area_inv
     lo_error(count) = sum(area_1d*lo_1d)*sum_area_inv
     lu_error(count) = sum(area_1d*lu_1d)*sum_area_inv
-  
+
+    min1_val(count) = min(var1_1d)
+    min2_val(count) = min(var2_1d)    
+    max1_val(count) = max(var1_1d)
+    max2_val(count) = max(var2_1d)    
+
     plot  = gsn_csm_xy (wks,scatter(0,:),scatter(1,:),res)                    ; create plot
     gsn_polyline(wks,plot,xx,yy,res_lines)
     p = gsn_add_polyline(wks,plot,xxx,yyy,res_lines2)
@@ -315,14 +327,23 @@ begin
  print(lr_error)
  print(lu_error)
  print(lo_error)
+ print(min1_val)
+ print(min2_val)	
+ print(max1_val)
+ print(max2_val)
 
  out_fname = "scatter_time"+"_"+vname1+"_"+resolution+".nc"
  system("/bin/rm -f "+out_fname)
  ncdf = addfile(out_fname ,"c")  ; open output netCDF file
  ncdf->lr_error=lr_error
  ncdf->lu_error=lu_error
- ncdf->lo_error=lo_error 
+ ncdf->lo_error=lo_error
+ ncdf->min1_val=min1_val
+ ncdf->min2_val=min2_val
+ ncdf->max1_val=max1_val
+ ncdf->max2_val=max2_val  
  ncdf->time=time(n1:n2)
  print("Converting png files into gif animation")
- system("convert -delay 40 "+dirname+"/scatter_animation_* animation.gif")
+ out_fname = "scatter_time"+"_"+vname1+"_"+resolution+".gif"
+ system("convert -delay 40 "+dirname+"/scatter_animation_* "+out_fname)
 end

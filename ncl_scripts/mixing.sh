@@ -5,6 +5,7 @@ if ( "$#argv" != 7) then
   echo "  -arg 2 variable name 1"
   echo "  -arg 3 variable name 2"
   echo "  -arg 4 time step index start"
+  echo "         (if < 0 animate over all time-steps)"
   echo "  -arg 5 time step index stop"
   echo "         (if start and stop index are the same "
   echo "          then no animation will be generated)"
