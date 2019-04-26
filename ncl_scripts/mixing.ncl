@@ -245,37 +245,70 @@ begin
   ;
   count=0
   do nt=n1,n2
+    print(nt)
     res@tiMainString      = "Day "+time(nt)+" with "+resolution           ; add title  
     if (latlon.eq."True") then
-      var1_1d = ndtooned(var1(nt,19,:,:))
-      var2_1d = ndtooned(var2(nt,19,:,:))
-      lr_1d   = ndtooned(lr  (nt,19,:,:))
-      lu_1d   = ndtooned(lu  (nt,19,:,:))
-      lo_1d   = ndtooned(lo  (nt,19,:,:))
+;      var1_1d = ndtooned(var1(nt,19,:,:))
+;      var2_1d = ndtooned(var2(nt,19,:,:))
+;      lr_1d   = ndtooned(lr  (nt,19,:,:))
+;      lu_1d   = ndtooned(lu  (nt,19,:,:))
+;      lo_1d   = ndtooned(lo  (nt,19,:,:))
+      
+      var1_1d = ndtooned(var1(nt,:,:,:))
+      var2_1d = ndtooned(var2(nt,:,:,:))
+      lr_1d   = ndtooned(lr  (nt,:,:,:))
+      lu_1d   = ndtooned(lu  (nt,:,:,:))
+      lo_1d   = ndtooned(lo  (nt,:,:,:))      
 
-      lat = f->lat
-      lon = f->lon
+      if (nt.eq.n1) then
+        ncol = dimsizes(ndtooned(var1(0,0,:,:)))
+     
+        lat = f->lat
+        lon = f->lon
 
-      area_2d = get_area_FV_from_lat_lon(lat,lon)
-      area_1d = ndtooned(area_2d)
+        area_2d = get_area_FV_from_lat_lon(lat,lon)
+        area_1d_tmp = ndtooned(area_2d)
+        nlev = dimsizes(var1(nt,:,0,0))
+      end if
 
-      ncol = dimsizes(var1_1d)
-      scatter = new((/2,ncol/),typeof(var1_1d(1)))
+      scatter = new((/2,ncol*nlev/),typeof(var1_1d(1)))
       scatter(0,:) = var1_1d
       scatter(1,:) = var2_1d
     else
-      var1_1d = ndtooned(var1(nt,19,:))
-      var2_1d = ndtooned(var2(nt,19,:))
-      lr_1d   = ndtooned(lr  (nt,19,:))
-      lu_1d   = ndtooned(lu  (nt,19,:))
-      lo_1d   = ndtooned(lo  (nt,19,:))    
-      area_1d = f->area
+;      var1_1d = ndtooned(var1(nt,19,:))
+;      var2_1d = ndtooned(var2(nt,19,:))
+;      lr_1d   = ndtooned(lr  (nt,19,:))
+;      lu_1d   = ndtooned(lu  (nt,19,:))
+;      lo_1d   = ndtooned(lo  (nt,19,:))
 
-      ncol = dimsizes(var1_1d)
-      scatter = new((/2,ncol/),typeof(var1_1d(1)))
+      var1_1d = ndtooned(var1(nt,:,:))
+      var2_1d = ndtooned(var2(nt,:,:))
+      lr_1d   = ndtooned(lr  (nt,:,:))
+      lu_1d   = ndtooned(lu  (nt,:,:))
+      lo_1d   = ndtooned(lo  (nt,:,:))
+
+      if (nt.eq.n1) then
+        area_1d_tmp = f->area
+        ncol = dimsizes(var1(0,0,:))
+	nlev = dimsizes(var1(0,:,0))
+      end if
+      
+      scatter = new((/2,ncol*nlev/),typeof(var1_1d(1)))
+;      scatter = new((/2,ncol/),typeof(var1_1d(1)))      
       scatter(0,:) = var1_1d
       scatter(1,:) = var2_1d   
     end if
+
+;    area_1d = area_1d_tmp
+    if (nt.eq.n1) then
+      area_1d = new((/nlev*ncol/),typeof(var1_1d(0)))
+      do k=0,nlev-1
+        do i=0,ncol-1
+          area_1d(i+k*ncol) = area_1d_tmp(i)
+        end do	
+      end do
+    end if
+
 
     if (count.eq.0) then
       print("ncol="+ncol)
@@ -287,11 +320,11 @@ begin
       min2_val   = new((/n2-n1+1/),typeof(lr_1d(1)))
       max1_val   = new((/n2-n1+1/),typeof(lr_1d(1)))      
       max2_val   = new((/n2-n1+1/),typeof(lr_1d(1)))
-      if (check_total_area(area_1d)) then
+      if (check_total_area(area_1d(0:ncol-1))) then
         print("STOP")
         exit
       end if
-      sum_area_inv = 1.0D0/sum(area_1d)      
+      sum_area_inv = 1.0D0/(sum(area_1d)*nlev)      
     end if
     ;
     ; compute mixing diagnostics
@@ -304,6 +337,14 @@ begin
     min2_val(count) = min(var2_1d)    
     max1_val(count) = max(var1_1d)
     max2_val(count) = max(var2_1d)    
+
+    print(time(nt)+" lr  ="+lr_error(count))
+    print(time(nt)+" lo  ="+lo_error(count))
+    print(time(nt)+" lu  ="+lu_error(count))
+    print(time(nt)+" min1="+min1_val(count))
+    print(time(nt)+" max1="+max1_val(count))
+    print(time(nt)+" min2="+min2_val(count))
+    print(time(nt)+" max1="+max2_val(count))    
 
     plot  = gsn_csm_xy (wks,scatter(0,:),scatter(1,:),res)                    ; create plot
     gsn_polyline(wks,plot,xx,yy,res_lines)
@@ -332,18 +373,20 @@ begin
  print(max1_val)
  print(max2_val)
 
- out_fname = "scatter_time"+"_"+vname1+"_"+resolution+".nc"
- system("/bin/rm -f "+out_fname)
- ncdf = addfile(out_fname ,"c")  ; open output netCDF file
- ncdf->lr_error=lr_error
- ncdf->lu_error=lu_error
- ncdf->lo_error=lo_error
- ncdf->min1_val=min1_val
- ncdf->min2_val=min2_val
- ncdf->max1_val=max1_val
- ncdf->max2_val=max2_val  
- ncdf->time=time(n1:n2)
- print("Converting png files into gif animation")
- out_fname = "scatter_time"+"_"+vname1+"_"+resolution+".gif"
- system("convert -delay 40 "+dirname+"/scatter_animation_* "+out_fname)
+ if (.not.lani) then 
+   out_fname = "scatter_time"+"_"+vname1+"_alllevels_"+resolution+".nc"
+   system("/bin/rm -f "+out_fname)
+   ncdf = addfile(out_fname ,"c")  ; open output netCDF file
+   ncdf->lr_error=lr_error
+   ncdf->lu_error=lu_error
+   ncdf->lo_error=lo_error
+   ncdf->min1_val=min1_val
+   ncdf->min2_val=min2_val
+   ncdf->max1_val=max1_val
+   ncdf->max2_val=max2_val  
+   ncdf->time=time(n1:n2)
+   print("Converting png files into gif animation")
+   out_fname = "scatter_time"+"_"+vname1+"_"+resolution+".gif"
+   system("convert -delay 40 "+dirname+"/scatter_animation_* "+out_fname)
+ end if
 end
