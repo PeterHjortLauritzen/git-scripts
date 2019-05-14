@@ -373,7 +373,7 @@ begin
  print(max1_val)
  print(max2_val)
 
- if (.not.lani) then 
+ if (lani) then 
    out_fname = "scatter_time"+"_"+vname1+"_alllevels_"+resolution+".nc"
    system("/bin/rm -f "+out_fname)
    ncdf = addfile(out_fname ,"c")  ; open output netCDF file

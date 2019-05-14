@@ -30,39 +30,22 @@ end
 
 
 begin
-  vname = (/"lr_error","lu_error","lo_error"/)
+  if (fname.eq.-1) then
+    fils = systemfunc ("ls *.nc") ; file paths
 
-
-
-  fils = systemfunc ("ls *.nc") ; file paths
-  print("fils="+fils)
+  else
+    fils = fname
+  end if
+  print("fils="+fils)  
   f    = addfiles (fils, "r") 
   num_files = dimsizes(fils)
   print("num_files = "+num_files)
-
-
-  str1 = (/"'Real' mixing l~B~r~N~","Overshooting l~B~o~N~","Unmixing l~B~u~N~"/)
-  out_fname = "mixing_norms"
-  ;
-  ; good range for day 0-15
+  
+  out_fname = "mixing_entropy_"+resolution 
   ;
 ;  maxDay = 10.0
 ;  minY=(/0.0,0.0,0.0/)
 ;  maxY=(/0.01,0.001,0.001/)  
-  ;
-  ; good range for day 0-8
-  ;
-  maxDay = 8.0
-  minY=(/0.0,0.0,0.0/)
-  maxY=(/0.0025,0.0001,0.0001/)
-  ;
-  ; good range for day 0-4
-  ;
-;  maxDay = 4  
-;  minY=(/0.0,0.0,0.0/)
-;  maxY=(/0.0001,0.00001,0.000005/)
-
-
 
   wks   = gsn_open_wks ("pdf",out_fname)
   plot = new(3,graphic)
@@ -79,7 +62,7 @@ begin
   res@gsnDraw           = False           ; don't draw
   res@gsnFrame          = False
   res@xyLineThicknesses = 6.0
-  res@tmYLFormat = "0*+^e"
+;  res@tmYLFormat = "0*+^e"
   res@tiMainFontHeightF = 0.06
   res@tmXBLabelFontHeightF = 0.04                 ; resize tick labels
   res@tmYLLabelFontHeightF = 0.04
@@ -89,22 +72,55 @@ begin
   txres               = True
   txres@txFontHeightF = 0.04
   txres@txJust        = "CenterLeft"
-  do pl=0,2
+  do pl=0,1
     k=0  
     res@xyLineColor      = colors(k)
 
-    res@tiMainString     = str1(pl)
+;    res@tiMainString     = str1(pl)
   
-    res@trYMinF          = minY(pl)
-    res@trYMaxF          = maxY(pl)
+;    res@trYMinF          = minY(pl)
+;    res@trYMaxF          = maxY(pl)
 
-    res@trXMinF          = 0.0
-    res@trXMaxF          = maxDay
+;    res@trXMinF          = 0.0
+;    res@trXMaxF          = maxDay
 
-    vn = vname(pl)
-    l_error = f[0]->$vn$
+    vn = vname
+    tmp     = f[0]->$vn$
     time    = f[0]->time
+    if (dimsizes(getvardims(tmp)).eq.4) then
+      ;
+      ; lat-lon data
+      ;
+      ntot = dimsizes(tmp(:,0,0,0))
+      ncol = dimsizes(ndtooned(tmp(0,:,:,:)))
+      data = new((/ntot,ncol/),typeof(tmp(0,0,0,0)))
+      do nt=0,ntot-1
+        data(nt,:) = ndtooned(tmp(nt,:,:,:)) 
+      end do
+    else
+      ;
+      ; data not lat-lon data
+      ;
+      ntot = tmp(:,0,0)
+      ncol = dimsizes(ndtooned(tmp(0,:,:)))
+      data = new((/ntot,ncol/),typeof(tmp(0,0,0)))
+      do nt=0,ntot-1
+        data(nt,:) = ndtooned(tmp(nt,:,:)) 
+      end do    
+    end if
+    delete(tmp)
 
+    l_error = new((/ntot/),typeof(data(0,0)))
+    if (pl.eq.0) then
+      do nt=0,ntot-1
+        l_error(nt) = min(data(nt,:))
+      end do
+    end if
+    if (pl.eq.1) then
+      do nt=0,ntot-1
+        l_error(nt) = max(data(nt,:))
+      end do
+    end if      
     plot(pl)  = gsn_csm_xy (wks,time,l_error,res)                    ; create plot
 
     txres@txFontColor  = colors(k)
@@ -114,22 +130,27 @@ begin
       ;
       ; for text location
       ;
-      txtY_start = (maxY(pl)-minY(pl))/1.6
-      txtY_intvl = (maxY(pl)-minY(pl))/10.0   ;    
-      dum = gsn_add_text(wks,plot(pl),chg_filename_to_string(fils(k)),0.5,txtY_start,txres)
-    end if      
+;      txtY_start = (maxY(pl)-minY(pl))/1.6
+;      txtY_intvl = (maxY(pl)-minY(pl))/10.0   ;    
+;      dum = gsn_add_text(wks,plot(pl),chg_filename_to_string(fils(k)),0.5,txtY_start,txres)
+    end if
+
+
+    res_lines@gsLineColor = colors(k)
+    dum2(k+pl*(num_files-1))=gsn_add_polyline(wks,plot(pl),time,l_error,res_lines)      
+
     do k=1,num_files-1
       delete(time)
       delete(l_error)
       l_error = f[k]->$vname(pl)$
       time    = f[k]->time
-      res_lines@gsLineColor = colors(k)
+
       if (pl.eq.0) then
         txres@txFontColor  = colors(k)
-        dum = gsn_add_text(wks,plot(pl),chg_filename_to_string(fils(k)),0.5,txtY_start+k*txtY_intvl,txres)
+ ;       dum = gsn_add_text(wks,plot(pl),chg_filename_to_string(fils(k)),0.5,txtY_start+k*txtY_intvl,txres)
       end if
-      print(k+pl*(num_files-1))
-      dum2(k+pl*(num_files-1))=gsn_add_polyline(wks,plot(pl),time,l_error,res_lines)      
+ ;     print(k+pl*(num_files-1))
+ ;     dum2(k+pl*(num_files-1))=gsn_add_polyline(wks,plot(pl),time,l_error,res_lines)      
     end do
     delete(time)
     delete(l_error)
