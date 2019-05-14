@@ -12,10 +12,10 @@ begin
   
   print(fname)
   print("xx"+fname)
-  ffname = systemfunc("ls "+fname)
+  ffname = systemfunc("ls "+fname*)
 ;  
   print("addfile "+ffname)
-  f  = addfile (ffname,"r") 
+  f  = addfiles (ffname,"r") 
 ;
 ;
   time = f->time
@@ -23,14 +23,15 @@ begin
   v2 = f->$vname2$
 
   ntot = dimsizes(v1(:,1,1))
+  nfiles = dimesizes(f)
 
-
-
-  do t=0,ntot-1
-    var1 = ndtooned(v1(t,:,:))    
-    var2 = ndtooned(v2(t,:,:))    
-    rms  = dim_rmsd(var1,var2)
-    print("Rms at time "+time(t)+" is "+rms)
+  do f=0,nfiles-1
+    do t=0,ntot-1
+      var1 = ndtooned(v1(t,:,:))    
+      var2 = ndtooned(v2(t,:,:))    
+      rms  = dim_rmsd(var1,var2)
+      print("Rms at time "+time(t)+" is "+rms)
+    end do
   end do
 
   diff = v1(ntot-1,:,:)
