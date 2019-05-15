@@ -6,8 +6,8 @@ setenv PBS_ACCOUNT NACM0003
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-#set src="opt-se-cslam-pgf"
-set src="trunk"
+set src="opt-se-cslam"
+#set src="trunk"
 set cset="FHS94"
 #
 set NTHRDS="1"
@@ -82,13 +82,13 @@ if(`hostname` == 'cheyenne5') then
   #
 #  set pecount="10800" 
   set pecount="2700" 
-  set walltime="00:15:00"
+  set walltime="00:25:00"
 
   set machine="cheyenne"  
   set compiler="intel"
 endif
 
-set caze=C60topo_${cset}_topo_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
+set caze=dyn_ref_1.0nu_p_0.5_nu_6.0_nu_div_C60topo_${cset}_topo_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 $homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime $walltime --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --machine $machine --run-unsupported
 
 cd $scratch/$USER/$caze
@@ -120,18 +120,18 @@ if ($res == "f09_f09_mg17") then
   echo "ncdata   = '$inputdir/inic/fv/cami-mam3_0000-01-01_0.9x1.25_L30_c100618.nc'" >>user_nl_cam
 else
 
-  #echo "se_statefreq       = 244"        >> user_nl_cam
   #echo "avgflag_pertape(1) = 'I'" >> user_nl_cam
 
   #echo "ndens = 1,1 " >> user_nl_cam
   echo "interpolate_output = .true.,.true.,.false." >> user_nl_cam  
 
+#  echo "se_hypervis_dynamic_ref_state = .true." >> user_nl_cam
 #  echo "se_nu              =   0.5e15  ">> user_nl_cam
-#  echo "se_nu_div          =   2.0e15  ">> user_nl_cam
+#  echo "se_nu_div          =   6.0e15  ">> user_nl_cam
 #  echo "se_nu_p            =   1.0e15  ">> user_nl_cam
-#  echo "se_hypervis_subcycle    = 2">>user_nl_cam
+#  echo "se_hypervis_subcycle    = 5">>user_nl_cam
 #  echo "se_hypervis_subcycle_q  = 1">>user_nl_cam
-#echo "se_hypervis_on_plevs           = .false." >> user_nl_cam
+
   if ($res == "ne30_ne30_mg17") then
     echo "se_statefreq       = 256"        >> user_nl_cam
     echo "interpolate_nlat = 192,192,192" >> user_nl_cam
