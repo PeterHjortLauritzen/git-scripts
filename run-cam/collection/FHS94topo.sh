@@ -123,8 +123,7 @@ else
 
   #echo "ndens = 1,1 " >> user_nl_cam
   echo "interpolate_output = .true.,.true.,.false." >> user_nl_cam  
-  echo "interpolate_nlat = 192,1440,192" >> user_nl_cam
-  echo "interpolate_nlon = 288,720,288" >> user_nl_cam
+
 #  echo "se_nu              =   0.5e15  ">> user_nl_cam
 #  echo "se_nu_div          =   2.5e15  ">> user_nl_cam
 #  echo "se_nu_p            =   1.0e15  ">> user_nl_cam
@@ -132,18 +131,24 @@ else
 #  echo "se_hypervis_subcycle_q  = 1">>user_nl_cam
 #echo "se_hypervis_on_plevs           = .false." >> user_nl_cam
   if ($res == "ne30_ne30_mg17") then
+    echo "interpolate_nlat = 192,192,192" >> user_nl_cam
+    echo "interpolate_nlon = 288,288,288" >> user_nl_cam    
     echo "bnd_topo = '/fs/cgd/csm/inputdata/atm/cam/topo/se/ne30np4_nc3000_Co060_Fi001_PF_nullRR_Nsw042_20171020.nc'">>user_nl_cam
 #  echo "bnd_topo = '/project/amp/pel/release/topo/old/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc'">>user_nl_cam
     echo "ncdata = '/fs/cgd/csm/inputdata/atm/cam/inic/se/ape_topo_cam4_ne30np4_L30_c171020.nc'" >>user_nl_cam
   endif
 
   if ($res == "ne30pg3_ne30pg3_mg17") then
+    echo "interpolate_nlat = 192,192,192" >> user_nl_cam
+    echo "interpolate_nlon = 288,288,288" >> user_nl_cam  
     echo "bnd_topo = '/fs/cgd/csm/inputdata/atm/cam/topo/se/ne30pg3_nc3000_Co060_Fi001_PF_nullRR_Nsw042_20171014.nc'">>user_nl_cam
 #  echo "bnd_topo = '/project/amp/pel/release/topo/old/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc'">>user_nl_cam
     echo "ncdata = '/fs/cgd/csm/inputdata/atm/cam/inic/se/ape_topo_cam4_ne30np4_L30_c171020.nc'" >>user_nl_cam
   endif
 
   if ($res == "ne120_ne120_mg16") then
+    echo "interpolate_nlat = 192,720,192" >> user_nl_cam
+    echo "interpolate_nlon = 288,1440,288" >> user_nl_cam  
     echo "bnd_topo = '/glade/scratch/pel/ne120np4_nc3000_Co060_Fi001_PF_nullRR_Nsw042_20171010.nc'">>user_nl_cam
     echo "ncdata = '/glade/p/cesmdata/cseg/inputdata/atm/cam/inic/se/ape_topo_cam4_ne120np4_L30_c171024.nc'" >>user_nl_cam
     echo "restart_n = 1"              >> user_nl_cam
