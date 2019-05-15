@@ -157,10 +157,10 @@ else
 
 endif
 
-echo "nhtfrq             = 0,0 " >> user_nl_cam
-echo "fincl1             = 'PS','T','Z3','U','V','OMEGA','PHIS','OMEGA500','OMEGA850' ">> user_nl_cam
-echo "fincl2             = 'PS','T','Z3','U','V','OMEGA','PHIS','OMEGA500','OMEGA850' ">> user_nl_cam
-echo "fincl3             = 'PS','T','Z3','U','V','OMEGA','PHIS','OMEGA500','OMEGA850' ">> user_nl_cam
+echo "nhtfrq             = 0,0,0 " >> user_nl_cam
+echo "fincl1             = 'PS','T','Z3','U','V','OMEGA','PHIS','OMEGA500','OMEGA850','PSL' ">> user_nl_cam
+echo "fincl2             = 'PS','T','Z3','U','V','OMEGA','PHIS','OMEGA500','OMEGA850','PSL' ">> user_nl_cam
+echo "fincl3             = 'PS','T','Z3','U','V','OMEGA','PHIS','OMEGA500','OMEGA850','PSL' ">> user_nl_cam
 echo "inithist           =  'MONTHLY'">>user_nl_cam
 
 if(`hostname` == 'hobart.cgd.ucar.edu') then
