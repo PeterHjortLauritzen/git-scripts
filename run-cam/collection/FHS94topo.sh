@@ -6,7 +6,7 @@ setenv PBS_ACCOUNT NACM0003
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-set src="opt-se-cslam"
+set src="opt-se-cslam-pgf"
 #set src="trunk"
 set cset="FHS94"
 #
@@ -35,6 +35,7 @@ if(`hostname` == 'hobart.cgd.ucar.edu') then
   set inic="/scratch/cluster/pel/inic"
   set homedir="/home"
   set scratch="/scratch/cluster"
+  set inputdir="/fs/cgd/csm/inputdata/atm/cam/"  
   set queue="monster"
 #  set pecount="480" #10 nodes
   set pecount="192"
@@ -54,7 +55,7 @@ endif
 if(`hostname` == 'izumi.unified.ucar.edu') then
   set inic="/scratch/cluster/pel/inic"
   set homedir="/home"
-  set inputdir="fs/cgd/csm/inputdata/atm/cam/"
+  set inputdir="/fs/cgd/csm/inputdata/atm/cam/"
   set scratch="/scratch/cluster"
   set queue="monster"
 #  set pecount="672" #14 nodes (all of machine)
@@ -88,7 +89,7 @@ if(`hostname` == 'cheyenne5') then
   set compiler="intel"
 endif
 
-set caze=dyn_ref_1.0nu_p_0.5_nu_6.0_nu_div_C60topo_${cset}_topo_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
+set caze=1.0nu_p_0.5_nu_6.0_nu_div_C60topo_${src}_${cset}_topo_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 $homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime $walltime --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --machine $machine --run-unsupported
 
 cd $scratch/$USER/$caze
@@ -126,10 +127,10 @@ else
   echo "interpolate_output = .true.,.true.,.false." >> user_nl_cam  
 
 #  echo "se_hypervis_dynamic_ref_state = .true." >> user_nl_cam
-#  echo "se_nu              =   0.5e15  ">> user_nl_cam
-#  echo "se_nu_div          =   6.0e15  ">> user_nl_cam
-#  echo "se_nu_p            =   1.0e15  ">> user_nl_cam
-#  echo "se_hypervis_subcycle    = 5">>user_nl_cam
+  echo "se_nu              =   0.5e15  ">> user_nl_cam
+  echo "se_nu_div          =   6.0e15  ">> user_nl_cam
+  echo "se_nu_p            =   1.0e15  ">> user_nl_cam
+  echo "se_hypervis_subcycle    = 5">>user_nl_cam
 #  echo "se_hypervis_subcycle_q  = 1">>user_nl_cam
 
   if ($res == "ne30_ne30_mg17") then
