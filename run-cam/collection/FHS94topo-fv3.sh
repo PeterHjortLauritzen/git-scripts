@@ -4,7 +4,11 @@
 ### git checkout addfms
 ### ./manage_externals/checkout_externals -o
 
-
+#
+# interpolating:
+#
+# env SRCFILE=new.FHS94.C96_C96_mg17.cam.h0.0001-02.nc DSTFILE=2.nc ncl < /project/amp/jet/remapfv3h0.ncl
+#
 ##########################################################################
 # Modify these to setup the CASE
 ##########################################################################
