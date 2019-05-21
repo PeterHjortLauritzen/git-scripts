@@ -14,10 +14,10 @@ set NTHRDS="1"
 #
 # run with CSLAM or without
 #
-#set res="f09_f09_mg17"
+set res="f09_f09_mg17"
 #set res="ne30pg2_ne30pg2_mg17" #cslam
 #set res="ne30pg3_ne30pg3_mg17" #cslam
-set res="ne30_ne30_mg17"        #no cslam
+#set res="ne30_ne30_mg17"        #no cslam
 #set res="ne120_ne120_mg16"
 #set stopoption="nsteps"
 #set steps="3"
@@ -82,14 +82,14 @@ if(`hostname` == 'cheyenne5') then
   # 637 SYPD with FHS94 ne30_ne30 using 2700 PEs; runs in 8min
   #
 #  set pecount="10800" 
-  set pecount="2700" 
-  set walltime="00:25:00"
+  set pecount="900" 
+  set walltime="00:45:00"
 
   set machine="cheyenne"  
   set compiler="intel"
 endif
 
-set caze=1.0nu_p_0.5_nu_6.0_nu_div_C60topo_${src}_${cset}_topo_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
+set caze=C60topo_${cset}_${src}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 $homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime $walltime --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --machine $machine --run-unsupported
 
 cd $scratch/$USER/$caze
@@ -125,12 +125,19 @@ else
 
   #echo "ndens = 1,1 " >> user_nl_cam
   echo "interpolate_output = .true.,.true.,.false." >> user_nl_cam  
-
+#  echo "se_hypervis_on_plevs = .false." >> user_nl_cam
 #  echo "se_hypervis_dynamic_ref_state = .true." >> user_nl_cam
+<<<<<<< HEAD
   echo "se_nu              =   0.5e15  ">> user_nl_cam
   echo "se_nu_div          =   6.0e15  ">> user_nl_cam
   echo "se_nu_p            =   1.0e15  ">> user_nl_cam
   echo "se_hypervis_subcycle    = 5">>user_nl_cam
+=======
+#  echo "se_nu              =   0.5e15  ">> user_nl_cam
+#  echo "se_nu_div          =   2.0e15  ">> user_nl_cam
+#  echo "se_nu_p            =   1.0e15  ">> user_nl_cam
+#  echo "se_hypervis_subcycle    = 3">>user_nl_cam
+>>>>>>> improve scripts
 #  echo "se_hypervis_subcycle_q  = 1">>user_nl_cam
 
   if ($res == "ne30_ne30_mg17") then
@@ -148,7 +155,7 @@ else
     echo "interpolate_nlon = 288,288,288" >> user_nl_cam  
     echo "bnd_topo = '$inputdir/topo/se/ne30pg3_nc3000_Co060_Fi001_PF_nullRR_Nsw042_20171014.nc'">>user_nl_cam
 #  echo "bnd_topo = '/project/amp/pel/release/topo/old/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc'">>user_nl_cam
-    echo "ncdata = '$inputdir/cam/inic/se/ape_topo_cam4_ne30np4_L30_c171020.nc'" >>user_nl_cam
+    echo "ncdata = '$inputdir/inic/se/ape_topo_cam4_ne30np4_L30_c171020.nc'" >>user_nl_cam
   endif
 
   if ($res == "ne120_ne120_mg16") then
