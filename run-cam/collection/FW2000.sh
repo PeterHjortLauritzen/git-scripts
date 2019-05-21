@@ -10,17 +10,18 @@ setenv PBS_ACCOUNT NACM0003
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-#set src="opt-se-cslam"
-set src="trunk"
+set src="opt-se-cslam"
+#set src="trunk"
 #
 # run with CSLAM or without
 #
-set res="ne30pg3_ne30pg3_mg17" #cslam
+#set res="ne30pg3_ne30pg3_mg17" #cslam
 #set res="ne30_ne30_mg17"      #no cslam
-#set res="f09_f09_mg17"     
 
-#set climateRun="True"
-set climateRun="False"
+set res="f09_f09_mg17"     
+
+set climateRun="True"
+#set climateRun="False"
 #set energyConsistency="True"
 set energyConsistency="False"
 set test_tracers="False"
@@ -28,9 +29,9 @@ set defaultIO="False"
 #
 # DO NOT MODIFY BELOW THIS LINE
 #
-set cset="FWHIST"
+#set cset="FWHIST"
 #set cset="FW2000climo"
-#set cset="F2000climo"
+set cset="F2000climo"
 #set cset="FHS94"
 #
 # mapping files (not in cime yet)
@@ -44,16 +45,16 @@ set inic="/glade/p/cgd/amp/pel/inic"
 #source clm_and_cime_mods_for_cslam.sh $src
 #echo "Done"
 if ($climateRun == "True") then
-  set walltime="03:00:00"
-#  set walltime="02:00:00"
+#  set walltime="06:00:00"
+  set walltime="02:00:00"
   #
   # 900, 1800, 2700, 5400 (pecount should divide 6*30*30 evenly)
   #
 #  set pecount="5400"
-  set pecount="2700"
+  set pecount="1800"
   set NTHRDS="1"
   set stopoption="nmonths"
-  set steps="12"
+  set steps="3"
 #  set steps="2"
 else
   set walltime="00:20:00"
@@ -65,7 +66,7 @@ endif
 if ($test_tracers == "True") then
     set caze=nadv_climateRun${climateRun}_energyConsistency${energyConsistency}_${src}_${cset}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 else
-    set caze=${src}_${cset}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
+    set caze=tke_${src}_${cset}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 endif
 /glade/u/home/$USER/src/$src/cime/scripts/create_newcase --case /glade/scratch/$USER/$caze --compset $cset --res $res  --q regular --walltime $walltime --pecount $pecount  --project $PBS_ACCOUNT --run-unsupported
 cd /glade/scratch/$USER/$caze
@@ -74,6 +75,14 @@ cd /glade/scratch/$USER/$caze
 #./xmlchange CASEROOT=/glade/scratch/$USER/$caze
 #./xmlchange EXEROOT=/glade/scratch/$USER/$caze/bld
 #./xmlchange RUNDIR=/glade/scratch/$USER/$caze/run
+
+set se="False"
+if ($res == "ne30pg3_ne30pg3_mg17") then
+  set se="True"
+endif
+if ($res == "ne30_ne30_mg17") then
+  set se="True"
+endif
 
 if ($test_tracers == "True") then
     ./xmlchange --append CAM_CONFIG_OPTS="-cppdefs -Dwaccm_debug -nadv_tt=10"
@@ -130,28 +139,35 @@ endif
 
 if ($defaultIO == "False") then
 if ($climateRun == "True") then
+  if ($se == "True") then
     echo "se_statefreq       = 244"        >> user_nl_cam
+  endif
     if ($cset == "FHS94") then
     else
 	echo "empty_htapes       = .true."   >> user_nl_cam
     echo "fincl1            = 'PS','PSDRY','PSL','OMEGA','OMEGA500','OMEGA850','PRECL','PRECC',     ">> user_nl_cam
    if ($res == "ne30_ne30_mg17") then
-     echo "                    'PTTEND','FT','OMEGAT','CLDTOT','TMQ','ABS_dPSdt','FU','FV','U','V','T'  ">> user_nl_cam
+     echo "                    'PTTEND','FT','OMEGAT','CLDTOT','TMQ','ABS_dPSdt','FU','FV','U','V','T','OMEGA500','OMEGA850'  ">> user_nl_cam
    endif
    if ($res == "ne30pg3_ne30pg3_mg17") then
-     echo "                    'PTTEND','FT','OMEGAT','CLDTOT','TMQ','ABS_dPSdt','CSLAM_gamma','FU','FV','U','V','T'  ">> user_nl_cam
+     echo "                    'PTTEND','FT','OMEGAT','CLDTOT','TMQ','ABS_dPSdt','CSLAM_gamma','FU','FV','U','V','T','OMEGA500','OMEGA850'  ">> user_nl_cam
     endif
    if ($res == "f09_f09_mg17") then
      echo "                    'PTTEND','FT','OMEGAT','CLDTOT','TMQ'  ">> user_nl_cam
     endif
+    echo "fincl2            = 'PS','U','V','U200','V200','U250','V250'">> user_nl_cam
+
 
     endif
     echo "avgflag_pertape(1) = 'A'"                                                    >> user_nl_cam
-    echo "avgflag_pertape(2) = 'A'"                                                    >> user_nl_cam
+    echo "avgflag_pertape(2) = 'I'"                                                    >> user_nl_cam
     echo "avgflag_pertape(3) = 'A'"                                                    >> user_nl_cam
     echo "avgflag_pertape(4) = 'A'"                                                    >> user_nl_cam
-    echo "nhtfrq             = 0,0,0,0                                             ">> user_nl_cam
-    echo "interpolate_output = .true.,.true.,.false.,.true."       	   >> user_nl_cam
+    echo "nhtfrq             = 0,-6,0,0                                             ">> user_nl_cam
+    if ($se == "True") then
+      echo "interpolate_output = .true.,.true.,.false.,.true."       	   >> user_nl_cam
+    endif
+
     echo "ndens              = 2,2,1,2                                            ">> user_nl_cam
     echo "restart_n = 1" >> user_nl_cam
     if ($cset == "FHS94") then
@@ -207,7 +223,7 @@ else
   echo "se_statefreq       = 1"        >> user_nl_cam
   echo "empty_htapes       = .true."   >> user_nl_cam
   echo "fincl1             = 'PS','PSDRY','PSL','OMEGA','OMEGA500','OMEGA850','PRECL','PRECC',  "   >> user_nl_cam
-  echo "                    'PTTEND','FT','OMEGAT','CLDTOT','TMQ','ABS_dPSdt'  ">> user_nl_cam
+  echo "                    'PTTEND','OMEGAT','CLDTOT','TMQ','ABS_dPSdt'  ">> user_nl_cam
 #  echo "                    'PTTEND','FT','OMEGAT','CLDTOT','TMQ','ABS_dPSdt','CSLAM_gamma'  ">> user_nl_cam
   if ($test_tracers == "True") then
     echo "fincl2 = 'TT_LW', 'TT_MD', 'TT_HI', 'TTRMD' , 'TT_UN'" >> user_nl_cam
