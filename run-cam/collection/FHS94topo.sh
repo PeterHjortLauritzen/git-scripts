@@ -14,11 +14,11 @@ set NTHRDS="1"
 #
 # run with CSLAM or without
 #
-set res="f09_f09_mg17"
+#set res="f09_f09_mg17"
 #set res="ne30pg2_ne30pg2_mg17" #cslam
 #set res="ne30pg3_ne30pg3_mg17" #cslam
 #set res="ne30_ne30_mg17"        #no cslam
-#set res="ne120_ne120_mg16"
+set res="ne120_ne120_mg16"
 #set stopoption="nsteps"
 #set steps="3"
 set stopoption="ndays"
@@ -69,7 +69,7 @@ if(`hostname` == 'izumi.unified.ucar.edu') then
   set pg3map="/scratch/cluster/pel/cslam-mapping-files"
   set compiler="intel"
 endif
-if(`hostname` == 'cheyenne5') then
+if(`hostname` == 'cheyenne3') then
   echo "setting up for Cheyenne"
   set inic="/glade/p/cgd/amp/pel/inic"
   set homedir="/glade/u/home"
@@ -82,8 +82,9 @@ if(`hostname` == 'cheyenne5') then
   # 637 SYPD with FHS94 ne30_ne30 using 2700 PEs; runs in 8min
   #
 #  set pecount="10800" 
-  set pecount="900" 
-  set walltime="00:45:00"
+  set pecount="5400" 
+#  set pecount="900" 
+  set walltime="10:00:00"
 
   set machine="cheyenne"  
   set compiler="intel"
@@ -127,17 +128,10 @@ else
   echo "interpolate_output = .true.,.true.,.false." >> user_nl_cam  
 #  echo "se_hypervis_on_plevs = .false." >> user_nl_cam
 #  echo "se_hypervis_dynamic_ref_state = .true." >> user_nl_cam
-<<<<<<< HEAD
-  echo "se_nu              =   0.5e15  ">> user_nl_cam
-  echo "se_nu_div          =   6.0e15  ">> user_nl_cam
-  echo "se_nu_p            =   1.0e15  ">> user_nl_cam
-  echo "se_hypervis_subcycle    = 5">>user_nl_cam
-=======
 #  echo "se_nu              =   0.5e15  ">> user_nl_cam
 #  echo "se_nu_div          =   2.0e15  ">> user_nl_cam
 #  echo "se_nu_p            =   1.0e15  ">> user_nl_cam
 #  echo "se_hypervis_subcycle    = 3">>user_nl_cam
->>>>>>> improve scripts
 #  echo "se_hypervis_subcycle_q  = 1">>user_nl_cam
 
   if ($res == "ne30_ne30_mg17") then
@@ -182,7 +176,7 @@ endif
 if(`hostname` == 'izumi.unified.ucar.edu') then
   ./case.build
 endif  
-if(`hostname` == 'cheyenne5') then
+if(`hostname` == 'cheyenne3') then
   qcmd -- ./case.build
 endif
 ./case.submit
