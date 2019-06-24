@@ -15,10 +15,10 @@ set src="opt-se-cslam"
 #
 # run with CSLAM or without
 #
-#set res="ne30pg3_ne30pg3_mg17" #cslam
+set res="ne30pg3_ne30pg3_mg17" #cslam
 #set res="ne30_ne30_mg17"      #no cslam
 
-set res="f09_f09_mg17"     
+#set res="f09_f09_mg17"     
 
 set climateRun="True"
 #set climateRun="False"
@@ -30,13 +30,9 @@ set defaultIO="False"
 # DO NOT MODIFY BELOW THIS LINE
 #
 #set cset="FWHIST"
-#set cset="FW2000climo"
-set cset="F2000climo"
+set cset="FW2000climo"
+#set cset="F2000climo"
 #set cset="FHS94"
-#
-# mapping files (not in cime yet)
-#
-set pg3map="/glade/p/cgd/amp/pel/cslam-mapping-files"
 #
 # location of initial condition file (not in CAM yet)
 #
@@ -46,15 +42,15 @@ set inic="/glade/p/cgd/amp/pel/inic"
 #echo "Done"
 if ($climateRun == "True") then
 #  set walltime="06:00:00"
-  set walltime="02:00:00"
+  set walltime="03:00:00"
   #
   # 900, 1800, 2700, 5400 (pecount should divide 6*30*30 evenly)
   #
 #  set pecount="5400"
-  set pecount="1800"
+  set pecount="2700"
   set NTHRDS="1"
   set stopoption="nmonths"
-  set steps="3"
+  set steps="12"
 #  set steps="2"
 else
   set walltime="00:20:00"
@@ -66,7 +62,7 @@ endif
 if ($test_tracers == "True") then
     set caze=nadv_climateRun${climateRun}_energyConsistency${energyConsistency}_${src}_${cset}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 else
-    set caze=tke_${src}_${cset}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
+    set caze=${src}_${cset}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 endif
 /glade/u/home/$USER/src/$src/cime/scripts/create_newcase --case /glade/scratch/$USER/$caze --compset $cset --res $res  --q regular --walltime $walltime --pecount $pecount  --project $PBS_ACCOUNT --run-unsupported
 cd /glade/scratch/$USER/$caze
@@ -97,15 +93,7 @@ endif
 ## timing detail
 ./xmlchange TIMER_LEVEL=10
 ##
-if ($res == "ne30pg3_ne30pg3_mg17") then
-#  ./xmlchange GLC2LND_SMAPNAME=$pg3map/map_gland4km_TO_ne30pg3_aave.180510.nc
-#  ./xmlchange GLC2LND_FMAPNAME=$pg3map/map_gland4km_TO_ne30pg3_aave.180510.nc
-#  ./xmlchange LND2GLC_FMAPNAME=$pg3map/map_ne30pg3_TO_gland4km_aave.180515.nc
-#  ./xmlchange LND2GLC_SMAPNAME=$pg3map/map_ne30pg3_TO_gland4km_bilin.180515.nc
-#  ./xmlchange LND2ROF_FMAPNAME=$pg3map/map_ne30pg3_TO_0.5x0.5_nomask_aave_da_180515.nc
-#  ./xmlchange ROF2LND_FMAPNAME=$pg3map/map_0.5x0.5_nomask_TO_ne30pg3_aave_da_180515.nc
-endif
-#
+
 
 ./xmlquery EXEROOT
 ./xmlquery CASEROOT
@@ -155,7 +143,7 @@ if ($climateRun == "True") then
    if ($res == "f09_f09_mg17") then
      echo "                    'PTTEND','FT','OMEGAT','CLDTOT','TMQ'  ">> user_nl_cam
     endif
-    echo "fincl2            = 'PS','U','V','U200','V200','U250','V250'">> user_nl_cam
+#    echo "fincl2            = 'PS','U','V','U200','V200','U250','V250'">> user_nl_cam #TKE
 
 
     endif
@@ -163,12 +151,13 @@ if ($climateRun == "True") then
     echo "avgflag_pertape(2) = 'I'"                                                    >> user_nl_cam
     echo "avgflag_pertape(3) = 'A'"                                                    >> user_nl_cam
     echo "avgflag_pertape(4) = 'A'"                                                    >> user_nl_cam
-    echo "nhtfrq             = 0,-6,0,0                                             ">> user_nl_cam
+#    echo "nhtfrq             = 0,-6,0,0                                             ">> user_nl_cam  #TKE
+    echo "nhtfrq             = 0,0,0,0                                             ">> user_nl_cam
     if ($se == "True") then
       echo "interpolate_output = .true.,.true.,.false.,.true."       	   >> user_nl_cam
     endif
 
-    echo "ndens              = 2,2,1,2                                            ">> user_nl_cam
+    echo "ndens              = 2,1,2,2                                            ">> user_nl_cam
     echo "restart_n = 1" >> user_nl_cam
     if ($cset == "FHS94") then
 	echo "fincl3 =   'SE_pBF','KE_pBF', ">> user_nl_cam
@@ -186,7 +175,7 @@ if ($climateRun == "True") then
 	echo "           'SE_dAH','KE_dAH', ">> user_nl_cam
 	echo "           'SE_p2d','KE_p2d' ">> user_nl_cam
     else
-	echo "fincl3 =   'WV_pBF','WL_pBF','WI_pBF','SE_pBF','KE_pBF', ">> user_nl_cam
+	echo "fincl2 =   'WV_pBF','WL_pBF','WI_pBF','SE_pBF','KE_pBF', ">> user_nl_cam
 	echo "           'WV_pBP','WL_pBP','WI_pBP','SE_pBP','KE_pBP', ">> user_nl_cam
 	echo "           'WV_pAP','WL_pAP','WI_pAP','SE_pAP','KE_pAP', ">> user_nl_cam
 	echo "           'WV_pAM','WL_pAM','WI_pAM','SE_pAM','KE_pAM', ">> user_nl_cam
@@ -218,6 +207,8 @@ if ($climateRun == "True") then
 #  echo "           'WV_p2d','WL_p2d','WI_p2d','SE_p2d','KE_p2d', ">> user_nl_cam
 #  echo "           'WV_PDC','WL_PDC','WI_PDC'                    ">> user_nl_cam
     echo "inithist           = 'YEARLY'"   >> user_nl_cam
+   echo "ncdata = '/gpfs/fs1/scratch/pel/spunup.i.nc'" >> user_nl_cam
+  echo "se_phys_dyn_cp=2"  >> user_nl_cam
 else
   echo "inithist           = 'DAILY'"   >> user_nl_cam
   echo "se_statefreq       = 1"        >> user_nl_cam
@@ -246,7 +237,7 @@ if ($cset == "FWHIST") then
    echo "ncdata = '$inic/waccm-FHIST.i.spinup.nc'" >> user_nl_cam
 endif
 if ($cset == "FW2000climo") then
-   echo "ncdata = '$inic/waccm.i.spinup.nc'" >> user_nl_cam
+   echo "ncdata = '$inic/waccm-FW2000climo.i.spinup.nc'" >> user_nl_cam
 endif
 #  else
 #    echo "ncdata = '$inic/20180516waccm_se_spinup_pe720_10days.cam.i.1974-01-02-00000.nc'"   >> user_nl_cam

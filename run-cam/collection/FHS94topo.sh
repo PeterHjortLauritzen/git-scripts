@@ -6,7 +6,7 @@ setenv PBS_ACCOUNT NACM0003
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-set src="opt-se-cslam-pgf"
+set src="opt-se-cslam"
 #set src="trunk"
 set cset="FHS94"
 #
@@ -16,9 +16,10 @@ set NTHRDS="1"
 #
 #set res="f09_f09_mg17"
 #set res="ne30pg2_ne30pg2_mg17" #cslam
-#set res="ne30pg3_ne30pg3_mg17" #cslam
+set res="ne30pg3_ne30pg3_mg17" #cslam
 #set res="ne30_ne30_mg17"        #no cslam
-set res="ne120_ne120_mg16"
+#set res="ne120_ne120_mg16"
+#set res="ne120pg3_ne120pg3_mg17"
 #set stopoption="nsteps"
 #set steps="3"
 set stopoption="ndays"
@@ -69,7 +70,7 @@ if(`hostname` == 'izumi.unified.ucar.edu') then
   set pg3map="/scratch/cluster/pel/cslam-mapping-files"
   set compiler="intel"
 endif
-if(`hostname` == 'cheyenne3') then
+if(`hostname` == 'cheyenne1') then
   echo "setting up for Cheyenne"
   set inic="/glade/p/cgd/amp/pel/inic"
   set homedir="/glade/u/home"
@@ -80,17 +81,18 @@ if(`hostname` == 'cheyenne3') then
   # 900, 1800, 2700, 5400 (pecount should divide 6*30*30 evenly)
   #
   # 637 SYPD with FHS94 ne30_ne30 using 2700 PEs; runs in 8min
+  #  81 SYPD with FHS94 ne30pg3_ne30pg3 using  900 PEs
   #
 #  set pecount="10800" 
-  set pecount="5400" 
-#  set pecount="900" 
-  set walltime="10:00:00"
+#  set pecount="5400" 
+  set pecount="900" 
+  set walltime="02:00:00"
 
   set machine="cheyenne"  
   set compiler="intel"
 endif
 
-set caze=C60topo_${cset}_${src}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
+set caze=C60topo_WACCM_vis_${cset}_${src}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 $homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime $walltime --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --machine $machine --run-unsupported
 
 cd $scratch/$USER/$caze
@@ -128,11 +130,13 @@ else
   echo "interpolate_output = .true.,.true.,.false." >> user_nl_cam  
 #  echo "se_hypervis_on_plevs = .false." >> user_nl_cam
 #  echo "se_hypervis_dynamic_ref_state = .true." >> user_nl_cam
-#  echo "se_nu              =   0.5e15  ">> user_nl_cam
-#  echo "se_nu_div          =   2.0e15  ">> user_nl_cam
-#  echo "se_nu_p            =   1.0e15  ">> user_nl_cam
-#  echo "se_hypervis_subcycle    = 3">>user_nl_cam
-#  echo "se_hypervis_subcycle_q  = 1">>user_nl_cam
+  echo "se_nu              =   0.5e15  ">> user_nl_cam
+  echo "se_nu_div          =   5.0e15  ">> user_nl_cam
+  echo "se_nu_p            =   1.0e15  ">> user_nl_cam
+  echo "se_hypervis_subcycle    = 3">>user_nl_cam
+  echo "se_hypervis_subcycle_q  = 1">>user_nl_cam
+
+
 
   if ($res == "ne30_ne30_mg17") then
     echo "se_statefreq       = 256"        >> user_nl_cam
@@ -162,6 +166,16 @@ else
     echo "restart_option = 'nmonths'" >> user_nl_cam
   endif
 
+  if ($res == "ne120pg3_ne120pg3_mg17") then
+    echo "se_statefreq       = 600"        >> user_nl_cam
+    echo "interpolate_nlat = 192,720,192" >> user_nl_cam
+    echo "interpolate_nlon = 288,1440,288" >> user_nl_cam  
+    echo "bnd_topo = '/glade/p/cesmdata/cseg/inputdata/atm/cam/topo/se/ne120pg3_nc3000_Co015_Fi001_PF_nullRR_Nsw010_20171014.nc'">>user_nl_cam
+    echo "ncdata = '/glade/p/cesmdata/cseg/inputdata/atm/cam/inic/lsse/ape_topo_cam4_ne120np4_L30_c171024.nc'" >>user_nl_cam
+    echo "restart_n = 1"              >> user_nl_cam
+    echo "restart_option = 'nmonths'" >> user_nl_cam
+  endif
+
 endif
 
 echo "nhtfrq             = 0,0,0 " >> user_nl_cam
@@ -176,7 +190,7 @@ endif
 if(`hostname` == 'izumi.unified.ucar.edu') then
   ./case.build
 endif  
-if(`hostname` == 'cheyenne3') then
+if(`hostname` == 'cheyenne1') then
   qcmd -- ./case.build
 endif
 ./case.submit

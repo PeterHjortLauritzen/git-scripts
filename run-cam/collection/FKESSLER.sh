@@ -3,7 +3,7 @@ setenv PBS_ACCOUNT P93300642
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-set src="opt-se-cslam-pgf"
+set src="opt-se-cslam"
 #set src="trunk"
 #
 # number of test tracers
@@ -15,13 +15,14 @@ set NTHRDS="1"
 #set res="ne30pg2_ne30pg2_mg17" #cslam
 #set res="ne30pg3_ne30pg3_mg17" #cslam
 #set res="ne30_ne30_mg17"        #no cslam
-set res="ne5_ne5_mg37"
+set res="ne0CONUSne30x8_ne0CONUSne30x8_mg17"
+#set res="ne5_ne5_mg37"
 #set res="f09_f09_mg17"
 
-set stopoption="nsteps"
-set steps="3"
-#set stopoption="ndays"
-#set steps="1"
+#set stopoption="nsteps"
+#set steps="3"
+set stopoption="ndays"
+set steps="10"
 #
 # DO NOT MODIFY BELOW THIS LINE
 #
@@ -56,7 +57,7 @@ if(`hostname` == 'izumi.unified.ucar.edu') then
 #  set compiler="nag"
   set compiler="intel"
 endif
-if(`hostname` == 'cheyenne.ucar.edu') then
+if(`hostname` == 'cheyenne5') then
   echo "setting up for Cheyenne"
   set inic="/glade/p/cgd/amp/pel/inic"
   set homedir="/glade/u/home"
@@ -65,12 +66,12 @@ if(`hostname` == 'cheyenne.ucar.edu') then
   #
   # 900, 1800, 2700, 5400 (pecount should divide 6*30*30 evenly)
   #
-  set pecount="180"
+  set pecount="450"
   set compiler="intel"
 endif
 
 set caze=${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
-$homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 01:15:00 --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --run-unsupported
+$homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 00:15:00 --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --run-unsupported
 
 cd $scratch/$USER/$caze
 ./xmlchange STOP_OPTION=$stopoption,STOP_N=$steps
@@ -141,7 +142,7 @@ endif
 if(`hostname` == 'izumi.unified.ucar.edu') then
  ./case.build
 endif
-if(`hostname` == 'cheyenne.ucar.edu') then
+if(`hostname` == 'cheyenne5') then
 qcmd -- ./case.build
 endif
 ./case.submit
