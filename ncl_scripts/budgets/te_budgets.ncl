@@ -403,8 +403,8 @@ begin
 ;     tot_energy(t,j)  = subcycle(j)*int_vars(1,j,t); K energy only	       
 ;      print("t="+t": "+str_stage(j)+"   "+tot_energy(t,j))
 
-;      tot_energy_2d(t,j,:) = subcycle(j)*(vars(0,j,t,0:ncol-1)); themal energy only
-     tot_energy_2d(t,j,:) = subcycle(j)*(vars(0,j,t,0:ncol-1)+vars(1,j,t,0:ncol-1))
+      tot_energy_2d(t,j,:) = subcycle(j)*(vars(0,j,t,0:ncol-1)); themal energy only
+;     tot_energy_2d(t,j,:) = subcycle(j)*(vars(0,j,t,0:ncol-1)+vars(1,j,t,0:ncol-1))
       if (wet) then
         idx = str_match_ind(str_vars,"WV")
         tracer_mass(t,0,j) = subcycle(j)*(int_vars(idx,j,t))
@@ -616,6 +616,7 @@ begin
         print("PDC errors can not be assesed trhough ")
         print(" ")
         print("   dE/dt physics tendency in dynamics (dBD-dAF) does not match dE/dt physics total (pAM-pBF) due to energy discrepancy:"+sprintf("%6.3g",value_pdc))
+	print(phys_total+"  "+rate_of_change_physics)
         str_pdc = "undef"
       end if
       print(" ")

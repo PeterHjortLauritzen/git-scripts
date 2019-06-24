@@ -34,8 +34,8 @@ if(`hostname` == 'hobart.cgd.ucar.edu') then
   set inic="/scratch/cluster/pel/inic"
   set homedir="/home"
   set scratch="/scratch/cluster"
-#  set queue="monster"
-#  set pecount="480"
+  set queue="monster"
+  set pecount="480"
 #  set queue="monster"
 #  set pecount="672"  
 #  set compiler="nag"
@@ -47,10 +47,10 @@ if(`hostname` == 'izumi.unified.ucar.edu') then
   set inic="/scratch/cluster/pel/inic"
   set homedir="/home"
   set scratch="/scratch/cluster"
-#  set queue="monster"
-#  set pecount="288"
-  set queue="short"  
-  set pecount="94"
+  set queue="monster"
+  set pecount="480"
+#  set queue="short"  
+#  set pecount="94"
   #
   # mapping files (not in cime yet)
   #
@@ -80,7 +80,7 @@ cd $scratch/$USER/$caze
 ./xmlchange EXEROOT=$scratch/$USER/$caze/bld
 ./xmlchange RUNDIR=$scratch/$USER/$caze/run
 #
-#./xmlchange DEBUG=TRUE
+./xmlchange DEBUG=TRUE
 ./xmlchange NTHRDS=$NTHRDS
 ## timing detail
 ./xmlchange TIMER_LEVEL=10
@@ -117,9 +117,9 @@ echo "avgflag_pertape(3) = 'I'" >> user_nl_cam
 echo "avgflag_pertape(4) = 'I'" >> user_nl_cam
 echo "avgflag_pertape(5) = 'I'" >> user_nl_cam
 echo "nhtfrq             = -24,-24,-24,-24,-24,-24" >> user_nl_cam
-echo "ndens = 1,1,1,1,1 " >> user_nl_cam
-#echo "interpolate_output = .true.,.true.,.true.,.false." >> user_nl_cam
-#echo "se_statefreq       = 144" >> user_nl_cam
+#echo "ndens = 1,1,1,1,1 " >> user_nl_cam
+echo "interpolate_output = .true.,.true.,.true.,.false." >> user_nl_cam
+echo "se_statefreq       = 144" >> user_nl_cam
 
 #echo "fincl1         = 'PS','PRECL'" >> user_nl_cam
 #echo "fincl2         = 'Q','CLDLIQ','RAINQM','T','U','V','iCLy','iCL','iCL2','OMEGA'" >> user_nl_cam
