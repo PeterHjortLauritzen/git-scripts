@@ -3,7 +3,8 @@ setenv PBS_ACCOUNT P93300642
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-set src="opt-se-cslam"
+#set src="opt-se-cslam-pgf"
+set src="opt-se-cslam-test"
 #set src="trunk"
 #
 # number of test tracers
@@ -14,15 +15,15 @@ set NTHRDS="1"
 #
 #set res="ne30pg2_ne30pg2_mg17" #cslam
 #set res="ne30pg3_ne30pg3_mg17" #cslam
-#set res="ne30_ne30_mg17"        #no cslam
-set res="ne0CONUSne30x8_ne0CONUSne30x8_mg17"
+set res="ne30_ne30_mg17"        #no cslam
+#set res="ne0CONUSne30x8_ne0CONUSne30x8_mg17"
 #set res="ne5_ne5_mg37"
 #set res="f09_f09_mg17"
 
-#set stopoption="nsteps"
-#set steps="3"
-set stopoption="ndays"
-set steps="10"
+#set stopoption="ndays"
+#set steps="10"
+set stopoption="nsteps"
+set steps="5"
 #
 # DO NOT MODIFY BELOW THIS LINE
 #
@@ -34,12 +35,12 @@ if(`hostname` == 'hobart.cgd.ucar.edu') then
   set inic="/scratch/cluster/pel/inic"
   set homedir="/home"
   set scratch="/scratch/cluster"
-  set queue="monster"
-  set pecount="480"
 #  set queue="monster"
+#  set pecount="480"
+  set queue="monster"
 #  set pecount="672"  
 #  set compiler="nag"
-  set queue="short"
+#  set queue="short"
   set pecount="192"  
   set compiler="nag"
 endif  
@@ -48,7 +49,11 @@ if(`hostname` == 'izumi.unified.ucar.edu') then
   set homedir="/home"
   set scratch="/scratch/cluster"
   set queue="monster"
-  set pecount="480"
+#  set pecount="480"
+#  set pecount="384"
+#  set pecount="240"
+  set pecount="192"  
+  
 #  set queue="short"  
 #  set pecount="94"
   #
@@ -66,12 +71,12 @@ if(`hostname` == 'cheyenne5') then
   #
   # 900, 1800, 2700, 5400 (pecount should divide 6*30*30 evenly)
   #
-  set pecount="450"
+  set pecount="450" 
   set compiler="intel"
 endif
 
 set caze=${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
-$homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 00:15:00 --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --run-unsupported
+$homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 99:00:00 --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --run-unsupported
 
 cd $scratch/$USER/$caze
 ./xmlchange STOP_OPTION=$stopoption,STOP_N=$steps
@@ -80,7 +85,7 @@ cd $scratch/$USER/$caze
 ./xmlchange EXEROOT=$scratch/$USER/$caze/bld
 ./xmlchange RUNDIR=$scratch/$USER/$caze/run
 #
-./xmlchange DEBUG=TRUE
+./xmlchange DEBUG=FALSE
 ./xmlchange NTHRDS=$NTHRDS
 ## timing detail
 ./xmlchange TIMER_LEVEL=10
@@ -118,7 +123,7 @@ echo "avgflag_pertape(4) = 'I'" >> user_nl_cam
 echo "avgflag_pertape(5) = 'I'" >> user_nl_cam
 echo "nhtfrq             = -24,-24,-24,-24,-24,-24" >> user_nl_cam
 #echo "ndens = 1,1,1,1,1 " >> user_nl_cam
-echo "interpolate_output = .true.,.true.,.true.,.false." >> user_nl_cam
+#echo "interpolate_output = .true.,.true.,.true.,.false." >> user_nl_cam
 echo "se_statefreq       = 144" >> user_nl_cam
 
 #echo "fincl1         = 'PS','PRECL'" >> user_nl_cam

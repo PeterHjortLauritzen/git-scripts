@@ -13,17 +13,22 @@ set n = 2
 set filename = "$argv[$n]"
 if (`hostname` == "hobart.cgd.ucar.edu") then
   set work_dir = "/scratch/cluster/$USER/work"
-  setenv my_ncl_dir  "/home/$USER/git-scripts/ncl_scripts"
+  setenv my_ncl_dir  "/home/$USER/git-scripts/ncl_scripts"  
 else
-  set work_dir = "/glade/scratch/$USER/work"
-  setenv my_ncl_dir  "/glade/u/home/$USER/git-scripts/ncl_scripts"
+  if (`hostname` == "izumi.unified.ucar.edu") then
+    set work_dir = "/scratch/cluster/$USER/work"
+    setenv my_ncl_dir  "/home/$USER/git-scripts/ncl_scripts"    
+  else
+    set work_dir = "/glade/scratch/$USER/work"
+    setenv my_ncl_dir  "/glade/u/home/$USER/git-scripts/ncl_scripts"
+  endif    
 endif
 set interp_dir =  "$PWD" #"$work_dir/interp-data"
 
 
 
-set nlon  = 360
-set nlat  = 180
+set nlon  = 720
+set nlat  = 360
 set interp_method = "bilinear" #patch
 #set interp_method = "patch" #patch
 echo ""
@@ -43,14 +48,15 @@ echo ""
 #
 # $case.nc will be interpolated to latitude-longitude grid
 #
-#set cases = ( "$filename" )
-set cases = ( "*h1*.nc" ) #to interpolate all h1 files in a directory
+set cases = ( "$filename" )
+#set cases = ( "*h1*.nc" ) #to interpolate all h1 files in a directory
 #
 # DO NOT EDIT BELOW
 #
 if (! -e $work_dir) mkdir $work_dir
 if (! -e $interp_dir) mkdir $interp_dir
 foreach case ($cases)
+  echo "$cases "$cases
   foreach file (`ls $data_dir/$case | grep -v ''$interp_method'_to_nlon'$nlon'xnlat'$nlat'.nc'`)
     #*********************************************
     #
@@ -58,6 +64,7 @@ foreach case ($cases)
     #
     #*********************************************
     setenv interpfile  {$case}.{$interp_method}_to_nlon{$nlon}xnlat{$nlat}.nc
+    echo "$interpfile "$interpfile
     if (-e $interp_dir/$interpfile) then
       echo "Skipping interpolating ($interpfile exists)"
     else
