@@ -6,7 +6,7 @@ setenv PBS_ACCOUNT NACM0003
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-set src="opt-se-cslam-test"
+set src="opt-se-cslam"
 #set src="trunk"
 set cset="FHS94"
 #
@@ -22,7 +22,7 @@ set res="ne0CONUSne30x8_ne0CONUSne30x8_mg17"
 #set res="ne120_ne120_mg16"
 #set res="ne120pg3_ne120pg3_mg17"
 #set stopoption="nsteps"
-#set steps="3"
+#set steps="10"
 set stopoption="ndays"
 set steps="1200"
 #set steps="1"
@@ -71,7 +71,7 @@ if(`hostname` == 'izumi.unified.ucar.edu') then
   #
   set compiler="intel"
 endif
-if(`hostname` == 'cheyenne1') then
+if(`hostname` == 'cheyenne5') then
   echo "setting up for Cheyenne"
   set inic="/glade/p/cgd/amp/pel/inic"
   set homedir="/glade/u/home"
@@ -85,15 +85,16 @@ if(`hostname` == 'cheyenne1') then
   #  81 SYPD with FHS94 ne30pg3_ne30pg3 using  900 PEs
   #
 #  set pecount="10800" 
-#  set pecount="5400" 
-  set pecount="900" 
-  set walltime="02:00:00"
+  set pecount="5400" 
+#  set pecount="2700" 
+#  set walltime="00:15:00"
+  set walltime="06:00:00"
 
   set machine="cheyenne"  
   set compiler="intel"
 endif
 
-set caze=debug_${cset}_${src}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
+set caze=new_${cset}_${src}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 $homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime $walltime --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --machine $machine --run-unsupported
 
 cd $scratch/$USER/$caze
@@ -105,10 +106,11 @@ cd $scratch/$USER/$caze
 ./xmlchange RUNDIR=$scratch/$USER/$caze/run
 
 #
-./xmlchange DEBUG=TRUE
+#./xmlchange DEBUG=TRUE
 ./xmlchange NTHRDS=$NTHRDS
 ## timing detail
 ./xmlchange TIMER_LEVEL=10
+#./xmlchange EPS_AAREA=1.0e-04
 ##
 #./xmlchange --append CAM_CONFIG_OPTS="-nadv_tt=194" #there are already 6 tracers in FKESSLER
 #./xmlchange CAM_CONFIG_OPTS="-phys kessler -chem terminator -analytic_ic  -nlev $nlev"
@@ -134,30 +136,37 @@ else
 
 
   if ($res == "ne0CONUSne30x8_ne0CONUSne30x8_mg17") then
-    echo "bnd_topo = '/project/amp/pel/release/topo/conus/conus_30_x8_nc3000_Co060_Fi001_MulG_PF_CONUS_Nsw042_20170417.nc'">>user_nl_cam  
-    echo "ncdata   = '/project/amp/pel/release/topo/conus/f_asd2017.cam6_clm5_ne0conus30x8_t12_1980-01-01-00000.nc'">>user_nl_cam
-    echo "se_nu = 8.5e-9">>user_nl_cam
-    echo "se_nu_div = 8.5e-8">>user_nl_cam
-    echo "se_nu_p = 3.4e-8">>user_nl_cam
-    echo "se_hypervis_subcycle   = 10">>user_nl_cam
-    echo "se_hypervis_power = 0">>user_nl_cam
-    echo "se_hypervis_scaling = 3.0">>user_nl_cam
-    echo "se_nsplit = 4">>user_nl_cam
-    echo "se_rsplit = 4">>user_nl_cam
+    echo "se_statefreq       = 512"        >> user_nl_cam
+  #  echo "bnd_topo = '$inputdir/topo/conus_30_x8_nc3000_Co060_Fi001_MulG_PF_CONUS_Nsw042_20170417.nc'">> user_nl_cam
+#    echo "bnd_topo = '/glade/scratch/pel/FHS94_opt-se-cslam_ne0CONUSne30x8_ne0CONUSne30x8_mg17_1800_NTHRDS1_1200ndays/run/conus_30_x8_nc3000_Co060_Fi001_MulG_PF_nullRR_Nsw042-C60everywhere-new.nc'">> user_nl_cam
+    echo "bnd_topo = '/glade/p/cgd/amp/pel/topo/conus_30_x8_nc3000_Co060_Fi001_MulG_PF_nullRR_Nsw042.C60-repaired.nc'">>user_nl_cam
+    echo "ncdata   = '$inputdir/inic/se/f_asd2017.cam6_clm5_ne0conus30x8_t12_1980-01-01-00000.nc'">>user_nl_cam
+    echo "interpolate_output = .true.,.true.,.false." >> user_nl_cam      
+    echo "interpolate_nlat = 360,192,192" >> user_nl_cam
+    echo "interpolate_nlon = 720,288,288" >> user_nl_cam    
+#    echo "interpolate_output = .true.,.true.,.false." >> user_nl_cam      
+#    echo "se_nu = 8.5e-9">>user_nl_cam
+#    echo "se_nu_div = 8.5e-8">>user_nl_cam
+#    echo "se_nu_p = 3.4e-8">>user_nl_cam
+#    echo "se_hypervis_subcycle   = 10">>user_nl_cam
+#    echo "se_hypervis_power = 0">>user_nl_cam
+#    echo "se_hypervis_scaling = 3.0">>user_nl_cam
+#    echo "se_nsplit = 6">>user_nl_cam
+#    echo "se_rsplit = 4">>user_nl_cam
   endif
 
   if ($res == "ne30_ne30_mg17") then
   
     echo "se_statefreq       = 256"        >> user_nl_cam
     echo "interpolate_output = .true.,.true.,.false." >> user_nl_cam      
-    echo "interpolate_nlat = 192,192,192" >> user_nl_cam
-    echo "interpolate_nlon = 288,288,288" >> user_nl_cam    
+    echo "interpolate_nlat = 360,192,192" >> user_nl_cam
+    echo "interpolate_nlon = 720,288,288" >> user_nl_cam    
     echo "bnd_topo = '$inputdir/topo/se/ne30np4_nc3000_Co060_Fi001_PF_nullRR_Nsw042_20171020.nc'">>user_nl_cam
 #  echo "bnd_topo = '/project/amp/pel/release/topo/old/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc'">>user_nl_cam
     echo "ncdata = '$inputdir/inic/se/ape_topo_cam6_ne30np4_L32_c171023.nc'" >>user_nl_cam
-    echo "se_nu = 0.5E15"   >>user_nl_cam #xxxx
-    echo "se_nu_div = 5.0E15">>user_nl_cam #xxxx
-    echo "se_nu_p = 1.0E15"  >>user_nl_cam #xxxx
+#    echo "se_nu = 0.5E15"   >>user_nl_cam #xxxx
+#    echo "se_nu_div = 5.0E15">>user_nl_cam #xxxx
+#    echo "se_nu_p = 1.0E15"  >>user_nl_cam #xxxx
   endif
 
   if ($res == "ne30pg3_ne30pg3_mg17") then
@@ -194,7 +203,7 @@ else
 endif
 
 echo "nhtfrq             = 0,0,0 " >> user_nl_cam
-echo "fincl1             = 'PS','T','Z3','U','V','OMEGA','PHIS','OMEGA500','OMEGA850','PSL' ">> user_nl_cam
+echo "fincl1             = 'PS','T','Z3','U','V','OMEGA','PHIS','OMEGA500','OMEGA850','PSL','PHIS' ">> user_nl_cam
 echo "fincl2             = 'PS','T','Z3','U','V','OMEGA','PHIS','OMEGA500','OMEGA850','PSL' ">> user_nl_cam
 echo "fincl3             = 'PS','T','Z3','U','V','OMEGA','PHIS','OMEGA500','OMEGA850','PSL' ">> user_nl_cam
 echo "inithist           =  'MONTHLY'">>user_nl_cam
@@ -205,7 +214,7 @@ endif
 if(`hostname` == 'izumi.unified.ucar.edu') then
   ./case.build
 endif  
-if(`hostname` == 'cheyenne1') then
+if(`hostname` == 'cheyenne5') then
   qcmd -- ./case.build
 endif
 ./case.submit

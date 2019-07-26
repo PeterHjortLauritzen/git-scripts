@@ -15,7 +15,11 @@ set src="opt-se-cslam"
 #
 # run with CSLAM or without
 #
-set res="ne30pg3_ne30pg3_mg17" #cslam
+#set res="ne30pg3_ne30pg3_mg17" #cslam
+#
+# still need to att ne30pg3 to components/clm/bld/namelist_files/namelist_definition_ctsm.xml?
+#
+set res="ne0CONUSne30x8_ne0CONUSne30x8_mg17"
 #set res="ne30_ne30_mg17"      #no cslam
 
 #set res="f09_f09_mg17"     
@@ -41,28 +45,28 @@ set inic="/glade/p/cgd/amp/pel/inic"
 #source clm_and_cime_mods_for_cslam.sh $src
 #echo "Done"
 if ($climateRun == "True") then
-#  set walltime="06:00:00"
-  set walltime="03:00:00"
+  set walltime="12:00:00"
+#  set walltime="03:00:00"
   #
   # 900, 1800, 2700, 5400 (pecount should divide 6*30*30 evenly)
   #
-#  set pecount="5400"
-  set pecount="2700"
+  set pecount="5400"
+#  set pecount="2700"
   set NTHRDS="1"
   set stopoption="nmonths"
   set steps="12"
 #  set steps="2"
 else
-  set walltime="00:20:00"
-  set pecount="1800"
+  set walltime="00:30:00"
+  set pecount="5400"
   set NTHRDS="1"
   set stopoption="ndays"
-  set steps="4"
+  set steps="30"
 endif
 if ($test_tracers == "True") then
     set caze=nadv_climateRun${climateRun}_energyConsistency${energyConsistency}_${src}_${cset}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 else
-    set caze=${src}_${cset}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
+    set caze=new_${src}_${cset}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 endif
 /glade/u/home/$USER/src/$src/cime/scripts/create_newcase --case /glade/scratch/$USER/$caze --compset $cset --res $res  --q regular --walltime $walltime --pecount $pecount  --project $PBS_ACCOUNT --run-unsupported
 cd /glade/scratch/$USER/$caze
@@ -93,7 +97,7 @@ endif
 ## timing detail
 ./xmlchange TIMER_LEVEL=10
 ##
-
+./xmlchange EPS_AAREA=1.0e-04
 
 ./xmlquery EXEROOT
 ./xmlquery CASEROOT
@@ -109,7 +113,7 @@ endif
 #echo "se_hypervis_subcycle = 2"   >> user_nl_cam
 #echo " se_variable_nsplit = .false."   >> user_nl_cam #xxx
 
-#echo " se_nsplit = 5"   >> user_nl_cam #xxx
+#echo " se_nsplit = 6"   >> user_nl_cam #xxx
 #echo " se_rsplit = 6"   >> user_nl_cam #xxx
 
 if ($energyConsistency == "True") then
@@ -237,8 +241,26 @@ if ($cset == "FWHIST") then
    echo "ncdata = '$inic/waccm-FHIST.i.spinup.nc'" >> user_nl_cam
 endif
 if ($cset == "FW2000climo") then
-   echo "ncdata = '$inic/waccm-FW2000climo.i.spinup.nc'" >> user_nl_cam
+   if ($res == "ne0CONUSne30x8_ne0CONUSne30x8_mg17") then
+      echo "ncdata = '/glade/p/nsc/nacm0003/input/CAM-SE/FW2000climo_conus_30_x8_c190613.nc'" >> user_nl_cam
+   else
+      echo "ncdata = '$inic/waccm-FW2000climo.i.spinup.nc'" >> user_nl_cam
+   endif
 endif
+
+if ($cset == "F2000climo") then
+  if ($res == "ne0CONUSne30x8_ne0CONUSne30x8_mg17") then
+    echo "se_statefreq       = 512"        >> user_nl_cam
+  #  echo "bnd_topo = '$inputdir/topo/conus_30_x8_nc3000_Co060_Fi001_MulG_PF_CONUS_Nsw042_20170417.nc'">> user_nl_cam
+#    echo "bnd_topo = '/glade/scratch/pel/FHS94_opt-se-cslam_ne0CONUSne30x8_ne0CONUSne30x8_mg17_1800_NTHRDS1_1200ndays/run/conus_30_x8_nc3000_Co060_Fi001_MulG_PF_nullRR_Nsw042-C60everywhere-new.nc'">> user_nl_cam
+    echo "bnd_topo = '/glade/p/cgd/amp/pel/topo/conus_30_x8_nc3000_Co060_Fi001_MulG_PF_nullRR_Nsw042.C60-repaired.nc'">>user_nl_cam
+    echo "ncdata   = '$inputdir/inic/se/f_asd2017.cam6_clm5_ne0conus30x8_t12_1980-01-01-00000.nc'">>user_nl_cam
+    echo "interpolate_output = .true.,.true.,.true." >> user_nl_cam      
+#    echo "interpolate_nlat = 360,192,1" >> user_nl_cam
+#    echo "interpolate_nlon = 720,288,288" >> user_nl_cam    
+  endif
+endif
+
 #  else
 #    echo "ncdata = '$inic/20180516waccm_se_spinup_pe720_10days.cam.i.1974-01-02-00000.nc'"   >> user_nl_cam
 #  endif
