@@ -20,9 +20,9 @@ set res="ne0CONUSne30x8_ne0CONUSne30x8_mg17"
 
 
 #set cset="FWHIST"
-set cset="FW2000climo"
+#set cset="FW2000climo"
 #set cset="F2000climo"
-#set cset="FHS94"
+set cset="FHS94"
 #set cset="FADIAB"
 #set cset="FKESSLER"
 #
@@ -32,9 +32,9 @@ if(`hostname` == 'izumi.unified.ucar.edu') then
   set homedir="/home"
   set scratch="/scratch/cluster"
   set walltime="00:55:00"
-  set pecount="192"  
-#  set queue="monster"
-  set queue="verylong"  
+  set pecount="480"  
+  set queue="monster"
+#  set queue="verylong"  
 else
   set homedir="/glade/u/home"
   set inic="/glade/p/cgd/amp/pel/inic"
@@ -86,10 +86,13 @@ endif
 #echo "interpolate_output = .true.,.true."              	                    >> user_nl_cam
 #echo "inithist           = '6-HOURLY'"   >> user_nl_cam
 echo "se_statefreq       = 1"                                             >> user_nl_cam
-
+if(`hostname` == 'izumi.unified.ucar.edu') then
+ echo "bnd_topo = '/project/amp/pel/release/topo/conus/conus_30_x8_nc3000_Co060_Fi001_MulG_PF_nullRR_Nsw042.C60-repaired.nc'"  >> user_nl_cam
+else
  echo "ncdata = '/glade/p/nsc/nacm0003/input/CAM-SE/FW2000climo_conus_30_x8_c190613.nc'"   >> user_nl_cam
  echo "bnd_topo = '/glade/p/cgd/amp/pel/topo/conus_30_x8_nc3000_Co060_Fi001_MulG_PF_nullRR_Nsw042.C60-repaired.nc'" >>user_nl_cam
- echo "use_topo_file      =  .true.   ">>user_nl_cam
+endif
+echo "use_topo_file      =  .true.   ">>user_nl_cam
 
 if(`hostname` == 'izumi.unified.ucar.edu') then
   ./case.build
