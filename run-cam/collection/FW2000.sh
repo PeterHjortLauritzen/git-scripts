@@ -10,17 +10,19 @@ setenv PBS_ACCOUNT NACM0003
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-set src="opt-se-cslam"
-#set src="trunk"
+#set src="opt-se-cslam"
+set src="trunk"
 #
 # run with CSLAM or without
 #
 #set res="ne30pg3_ne30pg3_mg17" #cslam
-#
+\#
 # still need to att ne30pg3 to components/clm/bld/namelist_files/namelist_definition_ctsm.xml?
 #
-set res="ne0CONUSne30x8_ne0CONUSne30x8_mg17"
+#set res="ne0CONUSne30x8_ne0CONUSne30x8_mg17"
 #set res="ne30_ne30_mg17"      #no cslam
+set res="ne30pg3_ne30pg3_mg17"      #cslam
+set res="ne120pg3_ne120pg3_mg17"
 
 #set res="f09_f09_mg17"     
 
@@ -34,8 +36,8 @@ set defaultIO="False"
 # DO NOT MODIFY BELOW THIS LINE
 #
 #set cset="FWHIST"
-set cset="FW2000climo"
-#set cset="F2000climo"
+#set cset="FW2000climo"
+set cset="F2000climo"
 #set cset="FHS94"
 #
 # location of initial condition file (not in CAM yet)
@@ -57,11 +59,11 @@ if ($climateRun == "True") then
   set steps="12"
 #  set steps="2"
 else
-  set walltime="00:30:00"
+  set walltime="01:00:00"
   set pecount="5400"
   set NTHRDS="1"
   set stopoption="ndays"
-  set steps="30"
+  set steps="3"
 endif
 if ($test_tracers == "True") then
     set caze=nadv_climateRun${climateRun}_energyConsistency${energyConsistency}_${src}_${cset}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
@@ -142,6 +144,9 @@ if ($climateRun == "True") then
      echo "                    'PTTEND','FT','OMEGAT','CLDTOT','TMQ','ABS_dPSdt','FU','FV','U','V','T','OMEGA500','OMEGA850'  ">> user_nl_cam
    endif
    if ($res == "ne30pg3_ne30pg3_mg17") then
+     echo "                    'PTTEND','FT','OMEGAT','CLDTOT','TMQ','ABS_dPSdt','CSLAM_gamma','FU','FV','U','V','T','OMEGA500','OMEGA850'  ">> user_nl_cam
+    endif
+  if ($res == "ne120pg3_ne120pg3_mg17") then
      echo "                    'PTTEND','FT','OMEGAT','CLDTOT','TMQ','ABS_dPSdt','CSLAM_gamma','FU','FV','U','V','T','OMEGA500','OMEGA850'  ">> user_nl_cam
     endif
    if ($res == "f09_f09_mg17") then
@@ -289,4 +294,4 @@ endif
 #echo "se_hypervis_subcycle = 3" >> user_nl_cam
 
 qcmd -- ./case.build
-./case.submit
+#./case.submit
