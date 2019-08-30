@@ -6,7 +6,7 @@ setenv PBS_ACCOUNT NACM0003
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-set src="opt-se-cslam"
+set src="opt-se-cslam-new-trunk"
 #set src="trunk"
 set cset="FHS94"
 #
@@ -17,14 +17,15 @@ set NTHRDS="1"
 #set res="f09_f09_mg17"
 #set res="ne30pg2_ne30pg2_mg17" #cslam
 #set res="ne30pg3_ne30pg3_mg17" #cslam
-set res="ne0CONUSne30x8_ne0CONUSne30x8_mg17"
-#set res="ne30_ne30_mg17"        #no cslam
+#set res="ne0CONUSne30x8_ne0CONUSne30x8_mg17"
+set res="ne30_ne30_mg17"        #no cslam
 #set res="ne120_ne120_mg16"
 #set res="ne120pg3_ne120pg3_mg17"
 #set stopoption="nsteps"
-#set steps="10"
+#set steps="3"
 set stopoption="ndays"
 set steps="1200"
+set topo="True"
 #set steps="1"
 #
 # DO NOT MODIFY BELOW THIS LINE
@@ -62,8 +63,8 @@ if(`hostname` == 'izumi.unified.ucar.edu') then
   set scratch="/scratch/cluster"
   set queue="monster"
 #  set pecount="672" #14 nodes (all of machine)
-  set pecount="480"
-#  set pecount="192"  
+#  set pecount="480"
+  set pecount="192"  
   set walltime="24:00:00"
   set machine="izumi"
   #
@@ -100,13 +101,14 @@ $homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze 
 cd $scratch/$USER/$caze
 ./xmlchange STOP_OPTION=$stopoption,STOP_N=$steps
 ./xmlchange DOUT_S=FALSE
-./xmlchange CAM_CONFIG_OPTS="-phys held_suarez -nlev 32" #very important: otherwise you get PS=1000hPa initial condition
+#./xmlchange CAM_CONFIG_OPTS="-phys held_suarez -nlev 32" #very important: otherwise you get PS=1000hPa initial condition
+./xmlchange CAM_CONFIG_OPTS="-analytic_ic -phys held_suarez -nlev 32"
 ./xmlchange CASEROOT=$scratch/$USER/$caze
 ./xmlchange EXEROOT=$scratch/$USER/$caze/bld
 ./xmlchange RUNDIR=$scratch/$USER/$caze/run
 
 #
-#./xmlchange DEBUG=TRUE
+./xmlchange DEBUG=TRUE
 ./xmlchange NTHRDS=$NTHRDS
 ## timing detail
 ./xmlchange TIMER_LEVEL=10
@@ -121,11 +123,14 @@ cd $scratch/$USER/$caze
 
 ./case.setup
 
-echo "use_topo_file      =  .true.   ">>user_nl_cam
-if ($res == "f09_f09_mg17") then
-  echo "bnd_topo = '$inputdir/topo/fv_0.9x1.25_nc3000_Nsw042_Nrs008_Co060_Fi001_ZR_sgh30_24km_GRNL_c170103.nc'">>user_nl_cam
-  echo "ncdata   = '$inputdir/inic/fv/cami-mam3_0000-01-01_0.9x1.25_L30_c100618.nc'" >>user_nl_cam
-else
+if ($topo == "true") then
+  echo "use_topo_file      =  .true.   ">>user_nl_cam
+
+  if ($res == "f09_f09_mg17") then
+    echo "bnd_topo = '$inputdir/topo/fv_0.9x1.25_nc3000_Nsw042_Nrs008_Co060_Fi001_ZR_sgh30_24km_GRNL_c170103.nc'">>user_nl_cam
+    echo "ncdata   = '$inputdir/inic/fv/cami-mam3_0000-01-01_0.9x1.25_L32_c141031.nccami-mam3_0000-01-01_0.9x1.25_L30_c100618.nc'" >>user_nl_cam
+  endif
+
 
   #echo "avgflag_pertape(1) = 'I'" >> user_nl_cam
 
@@ -156,7 +161,6 @@ else
   endif
 
   if ($res == "ne30_ne30_mg17") then
-  
     echo "se_statefreq       = 256"        >> user_nl_cam
     echo "interpolate_output = .true.,.true.,.false." >> user_nl_cam      
     echo "interpolate_nlat = 360,192,192" >> user_nl_cam
@@ -217,5 +221,5 @@ endif
 if(`hostname` == 'cheyenne5') then
   qcmd -- ./case.build
 endif
-./case.submit
+#./case.submit
 
