@@ -10,19 +10,20 @@ setenv PBS_ACCOUNT NACM0003
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-#set src="opt-se-cslam"
-set src="trunk"
+set src="opt-se-cslam-new"
+#set src="trunk"
 #
 # run with CSLAM or without
 #
 #set res="ne30pg3_ne30pg3_mg17" #cslam
-\#
+#
 # still need to att ne30pg3 to components/clm/bld/namelist_files/namelist_definition_ctsm.xml?
 #
 #set res="ne0CONUSne30x8_ne0CONUSne30x8_mg17"
-#set res="ne30_ne30_mg17"      #no cslam
-set res="ne30pg3_ne30pg3_mg17"      #cslam
-set res="ne120pg3_ne120pg3_mg17"
+set res="ne30_ne30_mg17"      #no cslam
+#set res="ne30pg3_ne30pg3_mg17"      #cslam
+#set res="ne120pg3_ne120pg3_mg17"
+#set res="ne120pg3_ne120pg3_mt13"
 
 #set res="f09_f09_mg17"     
 
@@ -36,6 +37,7 @@ set defaultIO="False"
 # DO NOT MODIFY BELOW THIS LINE
 #
 #set cset="FWHIST"
+#set cset="FCHIST"
 #set cset="FW2000climo"
 set cset="F2000climo"
 #set cset="FHS94"
@@ -47,23 +49,23 @@ set inic="/glade/p/cgd/amp/pel/inic"
 #source clm_and_cime_mods_for_cslam.sh $src
 #echo "Done"
 if ($climateRun == "True") then
-  set walltime="12:00:00"
-#  set walltime="03:00:00"
+#  set walltime="04:00:00"
+  set walltime="03:00:00"
   #
   # 900, 1800, 2700, 5400 (pecount should divide 6*30*30 evenly)
   #
-  set pecount="5400"
-#  set pecount="2700"
+#  set pecount="5400"
+  set pecount="1800"
   set NTHRDS="1"
   set stopoption="nmonths"
-  set steps="12"
+  set steps="1"
 #  set steps="2"
 else
-  set walltime="01:00:00"
-  set pecount="5400"
+  set walltime="00:30:00"
+  set pecount="1800"
   set NTHRDS="1"
   set stopoption="ndays"
-  set steps="3"
+  set steps="1"
 endif
 if ($test_tracers == "True") then
     set caze=nadv_climateRun${climateRun}_energyConsistency${energyConsistency}_${src}_${cset}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
@@ -82,6 +84,10 @@ set se="False"
 if ($res == "ne30pg3_ne30pg3_mg17") then
   set se="True"
 endif
+if ($res == "ne120pg3_ne120pg3_mt13") then
+  set se="True"
+endif
+
 if ($res == "ne30_ne30_mg17") then
   set se="True"
 endif
@@ -98,8 +104,9 @@ endif
 ./xmlchange NTHRDS=$NTHRDS
 ## timing detail
 ./xmlchange TIMER_LEVEL=10
-##
-./xmlchange EPS_AAREA=1.0e-04
+
+
+#./xmlchange EPS_AAREA=1.0e-04
 
 ./xmlquery EXEROOT
 ./xmlquery CASEROOT
@@ -138,12 +145,15 @@ if ($climateRun == "True") then
   endif
     if ($cset == "FHS94") then
     else
-	echo "empty_htapes       = .true."   >> user_nl_cam
+#	echo "empty_htapes       = .true."   >> user_nl_cam
     echo "fincl1            = 'PS','PSDRY','PSL','OMEGA','OMEGA500','OMEGA850','PRECL','PRECC',     ">> user_nl_cam
    if ($res == "ne30_ne30_mg17") then
      echo "                    'PTTEND','FT','OMEGAT','CLDTOT','TMQ','ABS_dPSdt','FU','FV','U','V','T','OMEGA500','OMEGA850'  ">> user_nl_cam
    endif
    if ($res == "ne30pg3_ne30pg3_mg17") then
+     echo "                    'PTTEND','FT','OMEGAT','CLDTOT','TMQ','ABS_dPSdt','CSLAM_gamma','FU','FV','U','V','T','OMEGA500','OMEGA850'  ">> user_nl_cam
+    endif
+   if ($res == "ne120pg3_ne120pg3_mg12") then
      echo "                    'PTTEND','FT','OMEGAT','CLDTOT','TMQ','ABS_dPSdt','CSLAM_gamma','FU','FV','U','V','T','OMEGA500','OMEGA850'  ">> user_nl_cam
     endif
   if ($res == "ne120pg3_ne120pg3_mg17") then

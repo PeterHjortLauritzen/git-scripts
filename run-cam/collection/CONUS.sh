@@ -10,8 +10,8 @@ setenv PBS_ACCOUNT NACM0003
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-set src="trunk"
-#set src="opt-se-cslam-new"
+#set src="trunk"
+set src="opt-se-cslam-new"
 
 #set res="ne0CONUSne30x8_ne0CONUSne30x8_mg17"
 set res="ne0CONUSne30x8_ne0CONUSne30x8_mt12"
@@ -20,9 +20,9 @@ set res="ne0CONUSne30x8_ne0CONUSne30x8_mt12"
 
 
 #set cset="FWHIST"
-#set cset="FW2000climo"
+set cset="FW2000climo"
 #set cset="FC2000climo"
-set cset="FCHIST"
+#set cset="FCHIST"
 #set cset="F2000climo"
 #set cset="FHS94"
 #set cset="FADIAB"
@@ -49,7 +49,7 @@ endif
 
 set NTHRDS="1"
 set stopoption="nsteps"
-set steps="5"
+set steps="3"
 
 set caze=${src}_${cset}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 $homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime $walltime --pecount $pecount  --project $PBS_ACCOUNT --run-unsupported
