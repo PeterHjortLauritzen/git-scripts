@@ -4,7 +4,7 @@
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
 #set src="trunk"
-set src="opt-se-cslam-new-trunk"
+set src="opt-se-cslam-trunk"
 #set src="opt-se-cslam-tmp"
 set NTHRDS="1"
 #
@@ -12,16 +12,16 @@ set NTHRDS="1"
 #
 #set res="ne30pg2_ne30pg2_mg17" #cslam
 
-set res="ne30pg3_ne30pg3_mg17" #cslam
+#set res="ne30pg3_ne30pg3_mg17" #cslam
 #set res="ne5_ne5_mg37" #cslam
-#set res="ne30_ne30_mg17"        #no cslam
+set res="ne30_ne30_mg17"        #no cslam
 #set res="f19_f19_mg17"        #no cslam
 #set res="f09_f09_mg17"        #no cslam
 
 #set res="ne5_ne5_mg37"        #no cslam
 
 set stopoption="nsteps"
-set steps="10"
+set steps="3"
 #set stopoption="nmonths"
 #set steps="12"
 #
@@ -46,7 +46,7 @@ set cset="QPC4"
 #  set pg3map="/scratch/cluster/pel/cslam-mapping-files"
 #  set compiler="nag"
 #endif
-if(`hostname` == 'izumi.unified.ucar.edu') then
+#if(`hostname` == 'izumi.unified.ucar.edu') then
   set inic="/scratch/cluster/pel/inic"
   set homedir="/home"
   set scratch="/scratch/cluster"
@@ -54,7 +54,7 @@ if(`hostname` == 'izumi.unified.ucar.edu') then
   set pecount="196"
   set compiler="intel"
 #  set compiler="nag"
-endif
+#endif
 if(`hostname` == 'cheyenne2') then
   echo "setting up for Cheyenne"
   set inic="/glade/p/cgd/amp/pel/inic"
@@ -68,7 +68,7 @@ if(`hostname` == 'cheyenne2') then
   set compiler="intel"
 endif
 
-set caze=${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
+set caze=hobart_${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 #set caze=check-fluxes-new
 #$homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 24:15:00 --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --run-unsupported
 $homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 12:00:00 --pecount $pecount  --compiler $compiler  --run-unsupported
@@ -95,6 +95,7 @@ cd $scratch/$USER/$caze
 ./case.setup
 
 echo "se_statefreq       = 1"        >> user_nl_cam
+echo "se_numtrac = 99" >> user_nl_cam
 #echo "avgflag_pertape(1) = 'I'" >> user_nl_cam
 #echo "nhtfrq             = -24,-24 " >> user_nl_cam
 #echo "ndens = 1,1 " >> user_nl_cam

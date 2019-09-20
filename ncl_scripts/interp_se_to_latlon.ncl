@@ -83,7 +83,7 @@ begin
             Opt@ForceOverWrite=True
             Opt@PrintTimings  =True
             Opt@Title         =grid_options(igrid)+" grid"  
-            Opt@Debug         =False ; True
+            Opt@Debug         =True ; False
             unstructured_to_ESMF(ESMF_srcGridName,src_file->$lat_name(igrid)$,src_file->$lon_name(igrid)$,Opt)
             delete(Opt)
           end if

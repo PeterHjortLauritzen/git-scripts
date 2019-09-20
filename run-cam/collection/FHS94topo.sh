@@ -6,7 +6,7 @@ setenv PBS_ACCOUNT NACM0003
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-set src="opt-se-cslam-new-trunk"
+set src="opt-se-cslam-trunk"
 #set src="trunk"
 set cset="FHS94"
 #
@@ -22,7 +22,7 @@ set res="ne30_ne30_mg17"        #no cslam
 #set res="ne120_ne120_mg16"
 #set res="ne120pg3_ne120pg3_mg17"
 #set stopoption="nsteps"
-#set steps="3"
+#set steps="12"
 set stopoption="ndays"
 set steps="1200"
 set topo="True"
@@ -63,8 +63,8 @@ if(`hostname` == 'izumi.unified.ucar.edu') then
   set scratch="/scratch/cluster"
   set queue="monster"
 #  set pecount="672" #14 nodes (all of machine)
-#  set pecount="480"
-  set pecount="192"  
+  set pecount="480"
+#  set pecount="192"  
   set walltime="24:00:00"
   set machine="izumi"
   #
@@ -95,20 +95,21 @@ if(`hostname` == 'cheyenne5') then
   set compiler="intel"
 endif
 
-set caze=new_${cset}_${src}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
+set caze=nu0.5E15_nu_div5.0E15_nu_p_1.0E15
+#set caze=${cset}_${src}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 $homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime $walltime --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --machine $machine --run-unsupported
 
 cd $scratch/$USER/$caze
 ./xmlchange STOP_OPTION=$stopoption,STOP_N=$steps
 ./xmlchange DOUT_S=FALSE
-#./xmlchange CAM_CONFIG_OPTS="-phys held_suarez -nlev 32" #very important: otherwise you get PS=1000hPa initial condition
-./xmlchange CAM_CONFIG_OPTS="-analytic_ic -phys held_suarez -nlev 32"
+./xmlchange CAM_CONFIG_OPTS="-phys held_suarez -nlev 32" #very important: otherwise you get PS=1000hPa initial condition
+#./xmlchange CAM_CONFIG_OPTS="-analytic_ic -phys held_suarez -nlev 32"
 ./xmlchange CASEROOT=$scratch/$USER/$caze
 ./xmlchange EXEROOT=$scratch/$USER/$caze/bld
 ./xmlchange RUNDIR=$scratch/$USER/$caze/run
 
 #
-./xmlchange DEBUG=TRUE
+#./xmlchange DEBUG=TRUE
 ./xmlchange NTHRDS=$NTHRDS
 ## timing detail
 ./xmlchange TIMER_LEVEL=10
@@ -123,7 +124,7 @@ cd $scratch/$USER/$caze
 
 ./case.setup
 
-if ($topo == "true") then
+if ($topo == "True") then
   echo "use_topo_file      =  .true.   ">>user_nl_cam
 
   if ($res == "f09_f09_mg17") then
@@ -163,14 +164,14 @@ if ($topo == "true") then
   if ($res == "ne30_ne30_mg17") then
     echo "se_statefreq       = 256"        >> user_nl_cam
     echo "interpolate_output = .true.,.true.,.false." >> user_nl_cam      
-    echo "interpolate_nlat = 360,192,192" >> user_nl_cam
-    echo "interpolate_nlon = 720,288,288" >> user_nl_cam    
+#    echo "interpolate_nlat = 360,192,192" >> user_nl_cam
+#    echo "interpolate_nlon = 720,288,288" >> user_nl_cam    
     echo "bnd_topo = '$inputdir/topo/se/ne30np4_nc3000_Co060_Fi001_PF_nullRR_Nsw042_20171020.nc'">>user_nl_cam
 #  echo "bnd_topo = '/project/amp/pel/release/topo/old/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc'">>user_nl_cam
     echo "ncdata = '$inputdir/inic/se/ape_topo_cam6_ne30np4_L32_c171023.nc'" >>user_nl_cam
-#    echo "se_nu = 0.5E15"   >>user_nl_cam #xxxx
-#    echo "se_nu_div = 5.0E15">>user_nl_cam #xxxx
-#    echo "se_nu_p = 1.0E15"  >>user_nl_cam #xxxx
+    echo "se_nu     = 0.5E15" >>user_nl_cam
+    echo "se_nu_div = 5.0E15" >>user_nl_cam
+    echo "se_nu_p = 1.0E15"   >>user_nl_cam
   endif
 
   if ($res == "ne30pg3_ne30pg3_mg17") then
@@ -208,9 +209,9 @@ endif
 
 echo "nhtfrq             = 0,0,0 " >> user_nl_cam
 echo "fincl1             = 'PS','T','Z3','U','V','OMEGA','PHIS','OMEGA500','OMEGA850','PSL','PHIS' ">> user_nl_cam
-echo "fincl2             = 'PS','T','Z3','U','V','OMEGA','PHIS','OMEGA500','OMEGA850','PSL' ">> user_nl_cam
-echo "fincl3             = 'PS','T','Z3','U','V','OMEGA','PHIS','OMEGA500','OMEGA850','PSL' ">> user_nl_cam
-echo "inithist           =  'MONTHLY'">>user_nl_cam
+#echo "fincl2             = 'PS','T','Z3','U','V','OMEGA','PHIS','OMEGA500','OMEGA850','PSL' ">> user_nl_cam
+#echo "fincl3             = 'PS','T','Z3','U','V','OMEGA','PHIS','OMEGA500','OMEGA850','PSL' ">> user_nl_cam
+#echo "inithist           =  'MONTHLY'">>user_nl_cam
 
 if(`hostname` == 'hobart.cgd.ucar.edu') then
   ./case.build
@@ -221,5 +222,5 @@ endif
 if(`hostname` == 'cheyenne5') then
   qcmd -- ./case.build
 endif
-#./case.submit
+./case.submit
 
