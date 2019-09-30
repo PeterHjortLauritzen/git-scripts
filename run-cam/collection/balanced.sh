@@ -38,7 +38,7 @@ if(`hostname` == 'izumi.unified.ucar.edu') then
   set queue="short"
 #  set pecount="672" #14 nodes (all of machine)
 #  set pecount="480"
-  set pecount="96"  
+  set pecount="4"  
   set walltime="02:00:00"
   set machine="izumi"
   #
@@ -65,7 +65,7 @@ if ($lev == "waccmx") then
 endif
 #./xmlchange --append CAM_CONFIG_OPTS="-analytic_ic"
 #
-./xmlchange DEBUG=TRUE
+#./xmlchange DEBUG=TRUE
 ./xmlchange NTHRDS=$NTHRDS
 ## timing detail
 #./xmlchange --append CAM_CONFIG_OPTS="-nadv_tt=194" #there are already 6 tracers in FKESSLER

@@ -5,7 +5,7 @@
 #
 #set src="trunk"
 set src="opt-se-cslam-trunk"
-#set src="opt-se-cslam-tmp"
+#set src="zzz"
 set NTHRDS="1"
 #
 # run with CSLAM or without
@@ -20,9 +20,9 @@ set res="ne30_ne30_mg17"        #no cslam
 
 #set res="ne5_ne5_mg37"        #no cslam
 
-set stopoption="nsteps"
+#set stopoption="nsteps"
 set steps="3"
-#set stopoption="nmonths"
+set stopoption="nmonths"
 #set steps="12"
 #
 # DO NOT MODIFY BELOW THIS LINE
@@ -51,7 +51,7 @@ set cset="QPC4"
   set homedir="/home"
   set scratch="/scratch/cluster"
   set queue="monster"
-  set pecount="196"
+  set pecount="480"
   set compiler="intel"
 #  set compiler="nag"
 #endif
@@ -70,8 +70,9 @@ endif
 
 set caze=hobart_${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 #set caze=check-fluxes-new
-#$homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 24:15:00 --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --run-unsupported
-$homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 12:00:00 --pecount $pecount  --compiler $compiler  --run-unsupported
+$homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 24:00:00 --pecount $pecount   --compiler $compiler --run-unsupported
+#$homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 00:15:00 --pecount $pecount  --compiler $compiler  --run-unsupported
+#/scratch/cluster/pel/opt-se-cslam/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 00:15:00 --pecount $pecount  --compiler $compiler  --run-unsupported
 
 cd $scratch/$USER/$caze
 ./xmlchange STOP_OPTION=$stopoption,STOP_N=$steps
@@ -94,20 +95,24 @@ cd $scratch/$USER/$caze
 
 ./case.setup
 
-echo "se_statefreq       = 1"        >> user_nl_cam
-echo "se_numtrac = 99" >> user_nl_cam
+echo "se_qsize_condensate_loading = 1" >> user_nl_cam
+echo "se_lcp_moist = .false." >> user_nl_cam
+
+echo "se_statefreq       = 256"        >> user_nl_cam
+echo "se_statediag_numtrac = 99" >> user_nl_cam
+echo "se_ftype = 2">> user_nl_cam
 #echo "avgflag_pertape(1) = 'I'" >> user_nl_cam
-#echo "nhtfrq             = -24,-24 " >> user_nl_cam
-#echo "ndens = 1,1 " >> user_nl_cam
-#echo "interpolate_output = .true.,.true.,.true.,.true." >> user_nl_cam
+echo "nhtfrq             = 0,0 " >> user_nl_cam
+echo "ndens = 2,1 " >> user_nl_cam
+echo "interpolate_output = .true.,.false.,.true.,.true." >> user_nl_cam
 #echo "fincl2 = 'TT_LW','TT_MD','TT_HI','TTRMD','TT_UN','OMEGA'" >> user_nl_cam
 #echo "EMPTY_HTAPES=.true." >> user_nl_cam
 #echo "diff_cnsrv_mass_check=.true." >> user_nl_cam
 #echo "se_statediag_numtrac = 99" >> user_nl_cam
 
 #echo "se_statefreq       = 1"        >> user_nl_cam
-#echo "avgflag_pertape(1) = 'A'" >> user_nl_cam
-#echo "avgflag_pertape(2) = 'A'" >> user_nl_cam
+echo "avgflag_pertape(1) = 'A'" >> user_nl_cam
+echo "avgflag_pertape(2) = 'A'" >> user_nl_cam
 #echo "avgflag_pertape(3) = 'I'" >> user_nl_cam
 #echo "nhtfrq             = 1 " >> user_nl_cam
 #echo "ndens = 1,1,1 " >> user_nl_cam
@@ -115,35 +120,43 @@ echo "se_numtrac = 99" >> user_nl_cam
 #echo "fincl1 = 'PS_fvm','PS_gll'" >> user_nl_cam
 #echo "fincl2 = 'PS_fvm','PS_gll'" >> user_nl_cam
 #echo "fincl3 = 'TT_LW','TT_MD','TT_HI','TTRMD','TT_UN'" >> user_nl_cam
-#echo "EMPTY_HTAPES=.true." >> user_nl_cam
+echo "EMPTY_HTAPES=.true." >> user_nl_cam
 #echo "diff_cnsrv_mass_check=.true." >> user_nl_cam
 #echo "se_statediag_numtrac = 1" >> user_nl_cam
 #
-#	echo "fincl1 =   'WV_pBF','WL_pBF','WI_pBF','SE_pBF','KE_pBF', ">> user_nl_cam
-#	echo "           'WV_pBP','WL_pBP','WI_pBP','SE_pBP','KE_pBP', ">> user_nl_cam
-#	echo "           'WV_pAP','WL_pAP','WI_pAP','SE_pAP','KE_pAP', ">> user_nl_cam
-#	echo "           'WV_pAM','WL_pAM','WI_pAM','SE_pAM','KE_pAM', ">> user_nl_cam
-#	echo "           'WV_dED','WL_dED','WI_dED','SE_dED','KE_dED', ">> user_nl_cam
-#	echo "           'WV_dAF','WL_dAF','WI_dAF','SE_dAF','KE_dAF', ">> user_nl_cam
-#	echo "           'WV_dBD','WL_dBD','WI_dBD','SE_dBD','KE_dBD', ">> user_nl_cam
-#	echo "           'WV_dAD','WL_dAD','WI_dAD','SE_dAD','KE_dAD', ">> user_nl_cam
-#	echo "           'WV_dAR','WL_dAR','WI_dAR','SE_dAR','KE_dAR', ">> user_nl_cam
-#	echo "           'WV_dBF','WL_dBF','WI_dBF','SE_dBF','KE_dBF', ">> user_nl_cam
-#	echo "           'WV_dBH','WL_dBH','WI_dBH','SE_dBH','KE_dBH', ">> user_nl_cam
-#	echo "           'WV_dCH','WL_dCH','WI_dCH','SE_dCH','KE_dCH', ">> user_nl_cam
-#	echo "           'WV_dAH','WL_dAH','WI_dAH','SE_dAH','KE_dAH', ">> user_nl_cam
-#	echo "           'WV_p2d','WL_p2d','WI_p2d','SE_p2d','KE_p2d', ">> user_nl_cam
-#	echo "           'WV_PDC','WL_PDC','WI_PDC'                    ">> user_nl_cam
+  echo "fincl1             = 'PS','PSDRY','PSL','OMEGA','OMEGA500','OMEGA850','PRECL','PRECC',  "   >> user_nl_cam
+  echo "                    'PTTEND','OMEGAT','CLDTOT','TMQ','ABS_dPSdt'  ">> user_nl_cam
 
+  echo "fincl2 =   'WV_pBF','WL_pBF','WI_pBF','SE_pBF','KE_pBF', ">> user_nl_cam 
+  echo "           'WV_pBP','WL_pBP','WI_pBP','SE_pBP','KE_pBP', ">> user_nl_cam
+  echo "           'WV_pAP','WL_pAP','WI_pAP','SE_pAP','KE_pAP', ">> user_nl_cam
+  echo "           'WV_pAM','WL_pAM','WI_pAM','SE_pAM','KE_pAM', ">> user_nl_cam
+  echo "           'WV_dED','WL_dED','WI_dED','SE_dED','KE_dED', ">> user_nl_cam
+  echo "           'WV_dAF','WL_dAF','WI_dAF','SE_dAF','KE_dAF', ">> user_nl_cam
+  echo "           'WV_dBB','WL_dBB','WI_dBB','SE_dBB','KE_dBB', ">> user_nl_cam
+  echo "           'WV_dBD','WL_dBD','WI_dBD','SE_dBD','KE_dBD', ">> user_nl_cam
+  echo "           'WV_dBK','WL_dBK','WI_dBK','SE_dBK','KE_dBK', ">> user_nl_cam
+  echo "           'WV_dAK','WL_dAK','WI_dAK','SE_dAK','KE_dAK', ">> user_nl_cam
+  echo "           'WV_dAD','WL_dAD','WI_dAD','SE_dAD','KE_dAD', ">> user_nl_cam
+  echo "           'WV_dAR','WL_dAR','WI_dAR','SE_dAR','KE_dAR', ">> user_nl_cam
+  echo "           'WV_dBF','WL_dBF','WI_dBF','SE_dBF','KE_dBF', ">> user_nl_cam
+  echo "           'WV_dBH','WL_dBH','WI_dBH','SE_dBH','KE_dBH', ">> user_nl_cam
+  echo "           'WV_dCH','WL_dCH','WI_dCH','SE_dCH','KE_dCH', ">> user_nl_cam
+  echo "           'WV_dAH','WL_dAH','WI_dAH','SE_dAH','KE_dAH', ">> user_nl_cam
+  echo "           'WV_dBS','WL_dBS','WI_dBS','SE_dBS','KE_dBS', ">> user_nl_cam
+  echo "           'WV_dAS','WL_dAS','WI_dAS','SE_dAS','KE_dAS', ">> user_nl_cam
+  echo "           'WV_p2d','WL_p2d','WI_p2d','SE_p2d','KE_p2d', ">> user_nl_cam
+  echo "           'WV_PDC','WL_PDC','WI_PDC'                    ">> user_nl_cam
+  
 
-#if(`hostname` == 'hobart.cgd.ucar.edu') then
-#  ./case.build
-#endif
+if(`hostname` == 'hobart.cgd.ucar.edu') then
+  ./case.build
+endif
 if(`hostname` == 'izumi.unified.ucar.edu') then
  ./case.build
 endif
 #if(`hostname` == 'cheyenne2') then
 #qcmd -- ./case.build
 #endif
-#./case.submit
+./case.submit
 
