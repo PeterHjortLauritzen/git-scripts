@@ -41,15 +41,15 @@ else
   set homedir="/glade/u/home"
   set inic="/glade/p/cgd/amp/pel/inic"
   set scratch="/glade/scratch"  
-  set walltime="00:20:00"
-  set pecount="1800"
+  set walltime="00:25:00"
+  set pecount="10800"
   set queue="regular"  
 endif
 
 
 set NTHRDS="1"
-set stopoption="nsteps"
-set steps="3"
+set stopoption="ndays"
+set steps="1"
 
 set caze=${src}_${cset}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 $homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime $walltime --pecount $pecount  --project $PBS_ACCOUNT --run-unsupported
@@ -88,7 +88,7 @@ endif
 #echo "fincl1             = 'OMEGA500','OMEGA850','PTTEND','FT','ABS_dPSdt'" >> user_nl_cam
 #echo "interpolate_output = .true.,.true."              	                    >> user_nl_cam
 #echo "inithist           = '6-HOURLY'"   >> user_nl_cam
-echo "se_statefreq       = 1"                                             >> user_nl_cam
+#echo "se_statefreq       = 1"                                             >> user_nl_cam
 if(`hostname` == 'izumi.unified.ucar.edu') then
  echo "bnd_topo = '/project/amp/pel/release/topo/conus/conus_30_x8_nc3000_Co060_Fi001_MulG_PF_nullRR_Nsw042.C60-repaired.nc'"  >> user_nl_cam
 else
@@ -103,4 +103,4 @@ if(`hostname` == 'izumi.unified.ucar.edu') then
 else
   qcmd -- ./case.build
 endif  
-#./case.submit
+./case.submit

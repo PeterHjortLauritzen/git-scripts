@@ -25,7 +25,8 @@ begin
 ;******************************************************
 
 ;  gsn_define_colormap(wks,"BlAqGrYeOrReVi200")   ; choose colormap
-   gsn_define_colormap(wks,"temp_diff_18lev")
+;   gsn_define_colormap(wks,"temp_diff_18lev")
+   gsn_define_colormap(wks,"NCV_blu_red")
 
   res                     = True         ; plot modifications desired
   res@gsnMaximize         = True         ; Maximize size of plot in frame
@@ -73,7 +74,14 @@ begin
       if (threeD.eq."True") then
         var   = fall[k]->$vname$(nt,tointeger(ilev),:,:)    ; Read some data; convert to 1D.
       else
-        var   = fall[k]->$vname$(nt,:,:)    ; Read some data; convert to 1D.        
+        if (vname.eq."PRECT") then
+          var1   = fall[k]->PRECC(nt,:,:)    ; Read some data; convert to 1D.        
+          var2   = fall[k]->PRECL(nt,:,:)    ; Read some data; convert to 1D.        
+          var    = var1
+          var    = var1+var2
+        else
+          var   = fall[k]->$vname$(nt,:,:)    ; Read some data; convert to 1D.        
+        end if
       end if
     else
       if (threeD.eq."True") then    
@@ -107,6 +115,11 @@ begin
       res@cnMinLevelValF  = 0.92
       res@cnMaxLevelValF  = 1.08
       res@cnLevelSpacingF = 0.01
+    end if
+
+    if (vname.eq."PRECT") then
+       res@cnLevelSelectionMode = "ExplicitLevels"   ; set explicit contour levels
+      res@cnLevels    = (/0.2,0.5,1.0,2,3,4,5,6,7,8,9,10,12,14,17/)
     end if
 
     if (vname.eq."iCLy") then
