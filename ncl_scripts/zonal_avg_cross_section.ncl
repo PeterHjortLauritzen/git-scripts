@@ -270,11 +270,12 @@ begin
  
      ; create an array of desired pressure levels:
      if (vertical_height) then       
-       minP = 10.0
+       minP = 10.0;xxx
+       minP = 30.0
      else
-       minP = 1.0
+       minP = 1.0;xxx
+       minP = 30.0
      end if
-     minP = 1.0
      maxP = 1000.0
      dp   = (maxP-minP)/(nlev-1)
      pnew = new(nlev,double)
@@ -424,7 +425,7 @@ begin
 
       
       plot(i) = gsn_csm_pres_hgt(wks,zonal_fonP,res)
-
+      print("xxxxxxxxxxxxxxxxxxxxx")
       nlev = dimsizes(hyam)
       plres = True
       plres@gsLineColor = "white"

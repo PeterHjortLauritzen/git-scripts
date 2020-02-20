@@ -8,7 +8,7 @@ endif
 set n = 1
 set file = "$argv[$n]" 
 
-if (`hostname` == "cheyenne1") then
+if (`hostname` == "cheyenne3") then
   set data_dir = "/glade/$USER/pel/"
   set ncl_dir = "/glade/u/home/$USER/git-scripts/ncl_scripts/budgets"
 else
@@ -116,5 +116,5 @@ echo "nsplit="$nsplit
 echo "hypervis_subcycle="$hyper
 echo "hypervis_subcycle_sponge="$hyper_sponge
 echo "lcp_moist ="$lcp_moist
-ncl 'dir="'$PWD'"' 'fname="'$file'"' 'rsplit='$rsplit'' 'nsplit='$nsplit'' 'hypervis_subcycle='$hyper'' 'hypervis_subcycle_sponge='$hyper_sponge'' 'ftype='$ftype'' 'qsize_condensate_loading='$qsize_condensate_loading'' 'dtime='$dtime'' 'lcp_moist="'$lcp_moist'"' 'dycore="'$dycore'"' $ncl_dir/te_budgets_new.ncl  
+ncl 'dir="'$PWD'"' 'fname="'$file'"' 'rsplit='$rsplit'' 'nsplit='$nsplit'' 'hypervis_subcycle='$hyper'' 'hypervis_subcycle_sponge='$hyper_sponge'' 'ftype='$ftype'' 'qsize_condensate_loading='$qsize_condensate_loading'' 'dtime='$dtime'' 'lcp_moist="'$lcp_moist'"' 'dycore="'$dycore'"' $ncl_dir/te_budgets.ncl  
 

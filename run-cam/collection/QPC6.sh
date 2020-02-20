@@ -1,10 +1,10 @@
 #!/bin/tcsh
-#setenv PBS_ACCOUNT P93300642
+setenv PBS_ACCOUNT P93300642
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-#set src="trunk"
-set src="opt-se-cslam-trunk"
+set src="ne480"
+#set src="opt-se-cslam-trunk"
 #set src="zzz"
 set NTHRDS="1"
 #
@@ -13,22 +13,23 @@ set NTHRDS="1"
 #set res="ne30pg2_ne30pg2_mg17" #cslam
 
 #set res="ne30pg3_ne30pg3_mg17" #cslam
+set res="ne480pg3_ne480pg3_mg17" #cslam
 #set res="ne5_ne5_mg37" #cslam
-set res="ne30_ne30_mg17"        #no cslam
+#set res="ne30_ne30_mg17"        #no cslam
 #set res="f19_f19_mg17"        #no cslam
 #set res="f09_f09_mg17"        #no cslam
 
 #set res="ne5_ne5_mg37"        #no cslam
 
-#set stopoption="nsteps"
-set steps="3"
-set stopoption="nmonths"
+set stopoption="nsteps"
+set steps="1"
+#set stopoption="nmonths"
 #set steps="12"
 #
 # DO NOT MODIFY BELOW THIS LINE
 #
-#set cset="QPC6"
-set cset="QPC4"
+set cset="QPC6"
+#set cset="QPC4"
 #
 # location of initial condition file (not in CAM yet)
 #
@@ -55,7 +56,7 @@ set cset="QPC4"
   set compiler="intel"
 #  set compiler="nag"
 #endif
-if(`hostname` == 'cheyenne2') then
+if(`hostname` == 'cheyenne6') then
   echo "setting up for Cheyenne"
   set inic="/glade/p/cgd/amp/pel/inic"
   set homedir="/glade/u/home"
@@ -68,9 +69,9 @@ if(`hostname` == 'cheyenne2') then
   set compiler="intel"
 endif
 
-set caze=hobart_${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
+set caze=ne480 #hobart_${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 #set caze=check-fluxes-new
-$homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 24:00:00 --pecount $pecount   --compiler $compiler --run-unsupported
+$homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 00:20:00 --pecount $pecount   --compiler $compiler --project $PBS_ACCOUNT --run-unsupported
 #$homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 00:15:00 --pecount $pecount  --compiler $compiler  --run-unsupported
 #/scratch/cluster/pel/opt-se-cslam/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 00:15:00 --pecount $pecount  --compiler $compiler  --run-unsupported
 
@@ -95,16 +96,15 @@ cd $scratch/$USER/$caze
 
 ./case.setup
 
-echo "se_qsize_condensate_loading = 1" >> user_nl_cam
-echo "se_lcp_moist = .false." >> user_nl_cam
+#echo "se_qsize_condensate_loading = 1" >> user_nl_cam
+#echo "se_lcp_moist = .false." >> user_nl_cam
 
-echo "se_statefreq       = 256"        >> user_nl_cam
+echo "se_statefreq       = 1"        >> user_nl_cam
 echo "se_statediag_numtrac = 99" >> user_nl_cam
-echo "se_ftype = 2">> user_nl_cam
 #echo "avgflag_pertape(1) = 'I'" >> user_nl_cam
 echo "nhtfrq             = 0,0 " >> user_nl_cam
 echo "ndens = 2,1 " >> user_nl_cam
-echo "interpolate_output = .true.,.false.,.true.,.true." >> user_nl_cam
+#echo "interpolate_output = .true.,.false.,.true.,.true." >> user_nl_cam
 #echo "fincl2 = 'TT_LW','TT_MD','TT_HI','TTRMD','TT_UN','OMEGA'" >> user_nl_cam
 #echo "EMPTY_HTAPES=.true." >> user_nl_cam
 #echo "diff_cnsrv_mass_check=.true." >> user_nl_cam
@@ -155,8 +155,8 @@ endif
 if(`hostname` == 'izumi.unified.ucar.edu') then
  ./case.build
 endif
-#if(`hostname` == 'cheyenne2') then
-#qcmd -- ./case.build
-#endif
+if(`hostname` == 'cheyenne6') then
+ qcmd -- ./case.build
+endif
 ./case.submit
 

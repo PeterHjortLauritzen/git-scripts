@@ -272,8 +272,9 @@ begin
 	  end do
 	else
           fld = fall->$str$(:,:)
-          vars(variable,stage,:,:) = fall->$str$(:,:)	  
+;xxx             vars(variable,stage,:,:) = fall->$str$(:,:)	  
 	  if (dimsizes(fld(0,:)).eq.ncol_p) then
+
             do t=0,nt-1	      
               int_vars(variable,stage,t) = sum(area_p(0:ncol_p-1)*fld(t,0:ncol_p-1))*inv_area_sphere_p
 	    end do
@@ -403,8 +404,8 @@ begin
 ;     tot_energy(t,j)  = subcycle(j)*int_vars(1,j,t); K energy only	       
 ;      print("t="+t": "+str_stage(j)+"   "+tot_energy(t,j))
 
-      tot_energy_2d(t,j,:) = subcycle(j)*(vars(0,j,t,0:ncol-1)); themal energy only
-;     tot_energy_2d(t,j,:) = subcycle(j)*(vars(0,j,t,0:ncol-1)+vars(1,j,t,0:ncol-1))
+;      tot_energy_2d(t,j,:) = subcycle(j)*(vars(0,j,t,0:ncol-1)); themal energy only
+     tot_energy_2d(t,j,:) = subcycle(j)*(vars(0,j,t,0:ncol-1)+vars(1,j,t,0:ncol-1))
       if (wet) then
         idx = str_match_ind(str_vars,"WV")
         tracer_mass(t,0,j) = subcycle(j)*(int_vars(idx,j,t))
