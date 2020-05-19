@@ -6,7 +6,7 @@ setenv PBS_ACCOUNT NACM0003
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-set src="opt-se-cslam-pgf"
+set src="opt-se-cslam-new"
 #set src="trunk"
 set cset="FHS94"
 #
@@ -117,8 +117,8 @@ echo "se_nu_p            =   1.0e15  ">> user_nl_cam
 echo "use_topo_file      =  .true.   ">>user_nl_cam
 echo "se_hypervis_subcycle        = 3">>user_nl_cam
 
-#echo "bnd_topo = '/fs/cgd/csm/inputdata/atm/cam/topo/se/ne30np4_nc3000_Co060_Fi001_PF_nullRR_Nsw042_20171020.nc'">>user_nl_cam
-echo "bnd_topo = '/project/amp/pel/release/topo/old/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc'">>user_nl_cam
+echo "bnd_topo = '/fs/cgd/csm/inputdata/atm/cam/topo/se/ne30np4_nc3000_Co060_Fi001_PF_nullRR_Nsw042_20171020.nc'">>user_nl_cam
+#echo "bnd_topo = '/project/amp/pel/release/topo/old/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc'">>user_nl_cam
 echo "ncdata = '/fs/cgd/csm/inputdata/atm/cam/inic/se/ape_topo_cam4_ne30np4_L30_c171020.nc'" >>user_nl_cam
 #echo "ncdata = '/scratch/cluster/pel/opt-se-cslam-pgf_FHS94_CAM_ne30_ne30_mg17_480_NTHRDS1_1200ndays/run/opt-se-cslam-pgf_FHS94_CAM_ne30_ne30_mg17_480_NTHRDS1_1200ndays.cam.i.0001-02-01-00000.nc'">>user_nl_cam
 
