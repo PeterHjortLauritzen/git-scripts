@@ -38,8 +38,10 @@ begin
   res2 = True
   res2@gsnFrame  = False
   res2@gsnDraw   = False        ; do not draw picture
-  res2@vpXF      = 0.18
-  res2@vpYF      = 0.46;46 ;6 phl 
+  res2@vpXF      = 0.174
+  res2@vpYF      = 0.575;46 ;6 phl
+;  res2@vpXF      = 0.18
+;  res2@vpYF      = 0.46;46 ;6 phl   
   res2@vpWidthF  = 0.15
   res2@vpHeightF = 0.1
   res2@xyLineColors = (/"blue","red","green","blue","red","green"/)  ; 3 different colors 
@@ -99,7 +101,7 @@ begin
    resP                 = True
   resP@gsnPanelYWhiteSpacePercent = 2
 ;  resP@gsnPanelXWhiteSpacePercent = 3
-  resP@txString         = "Dynamical core Axial Angular Momentum (AAM) diagnostics for CAM-SE"
+  resP@txString         = "Dynamical core Axial Angular Momentum (AAM) diagnostics for CAM-FV3"
 
   resP@gsnMaximize        = True                   ; use full page
 
