@@ -68,8 +68,8 @@ if ($argv[$n] == "SE") then
   set ftype = `sed -r 's/([^0-9]*([0-9]*)){1}.*/\2/' tmp_file`
   rm tmp_file
   touch tmp_file
-  grep "se_qsize_condensate_loading[[:space:]]"            atm_in >> tmp_file
-  set  qsize_condensate_loading = `sed -r 's/([^0-9]*([0-9]*)){1}.*/\2/' tmp_file`
+#  grep "se_qsize_condensate_loading[[:space:]]"            atm_in >> tmp_file
+  set  qsize_condensate_loading = 5 #`sed -r 's/([^0-9]*([0-9]*)){1}.*/\2/' tmp_file`
   rm tmp_file
   rm tmp_file2
   touch tmp_file2
@@ -117,5 +117,6 @@ echo "nsplit="$nsplit
 echo "hypervis_subcycle="$hyper
 echo "hypervis_subcycle_sponge="$hyper_sponge
 echo "lcp_moist ="$lcp_moist
+#ncl 'dir="'$PWD'"' 'fname="'$file'"' 'rsplit='$rsplit'' 'nsplit='$nsplit'' 'hypervis_subcycle='$hyper'' 'hypervis_subcycle_sponge='$hyper_sponge'' 'ftype='$ftype'' 'qsize_condensate_loading='$qsize_condensate_loading'' 'dtime='$dtime'' 'lcp_moist="'$lcp_moist'"' 'dycore="'$dycore'"' $ncl_dir/te_budgets.ncl  
 ncl 'dir="'$PWD'"' 'fname="'$file'"' 'rsplit='$rsplit'' 'nsplit='$nsplit'' 'hypervis_subcycle='$hyper'' 'hypervis_subcycle_sponge='$hyper_sponge'' 'ftype='$ftype'' 'qsize_condensate_loading='$qsize_condensate_loading'' 'dtime='$dtime'' 'lcp_moist="'$lcp_moist'"' 'dycore="'$dycore'"' $ncl_dir/te_budgets.ncl  
 
