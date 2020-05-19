@@ -8,13 +8,13 @@ endif
 set n = 1
 set file = "$argv[$n]" 
 
-if (`hostname` == "cheyenne3") then
+#if (`hostname` == "cheyenne1") then
   set data_dir = "/glade/$USER/pel/"
   set ncl_dir = "/glade/u/home/$USER/git-scripts/ncl_scripts/budgets"
-else
-  set data_dir = "/scratch/cluster/$USER/"
-  set ncl_dir = "/home/$USER/git-scripts/ncl_scripts/budgets"
-endif
+#else
+#  set data_dir = "/scratch/cluster/$USER/"
+#  set ncl_dir = "/home/$USER/git-scripts/ncl_scripts/budgets"
+#endif
 
 echo $file
 if (! -e atm_in) then
@@ -78,6 +78,7 @@ if ($argv[$n] == "SE") then
   set lcp_moist     = `sed -e 's/\.//g' tmp_file3`
   rm tmp_file*
   touch tmp_file
+  set qsize_condensate_loading = "5" #xxx
 endif
 if ($argv[$n] == "FV") then
   set supportedDycore=True

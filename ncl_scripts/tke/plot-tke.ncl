@@ -8,15 +8,16 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 
 begin
   ldx=True
-  titletxt = "F2000climo"
+  titletxt = "WACCM 110 level, (u,v) powerspectrum at 200hPa"
   if (ls_option) then
-    fnames = systemfunc ("ls *.tke_200hPa.nc")
+;    fnames = systemfunc ("ls *.tke_200hPa.nc")
+    fnames = systemfunc ("ls *.tke_0.01hPa.nc")
     print(fnames)
     xi = ispan(0,dimsizes(fnames)-1,1)
     print(xi)
-;    legends=(fnames)
-    legends=(/"FV","SE trunk","SE new"/)
-    cut = (/0,100,100/)
+    legends=(fnames)
+    legends=(/"FV","SE-CSLAM"/);,"SE new"/)
+    cut = (/1,1/)
   else
     print("dir ="+dir)
     print("case="+case)
@@ -120,7 +121,7 @@ do i=0,fcnt-1
   nlat=dimsizes(avespc[fk]->spc_avg);
   print(nlat)
 
-;  cut = 100
+  cut = 10
   cutoff = nlat-cut(fk)
  print("cut-off"+cutoff)
 

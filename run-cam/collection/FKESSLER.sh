@@ -4,7 +4,7 @@ setenv PBS_ACCOUNT P93300642
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
 #set src="opt-se-cslam-pgf"
-set src="opt-se-cslam-test"
+set src="cam_pel_development"
 #set src="trunk"
 #
 # number of test tracers
@@ -20,10 +20,10 @@ set res="ne30_ne30_mg17"        #no cslam
 #set res="ne5_ne5_mg37"
 #set res="f09_f09_mg17"
 
-#set stopoption="ndays"
-#set steps="10"
-set stopoption="nsteps"
-set steps="5"
+set stopoption="ndays"
+set steps="15"
+#set stopoption="nsteps"
+#set steps="5"
 #
 # DO NOT MODIFY BELOW THIS LINE
 #
@@ -71,12 +71,12 @@ if(`hostname` == 'cheyenne5') then
   #
   # 900, 1800, 2700, 5400 (pecount should divide 6*30*30 evenly)
   #
-  set pecount="450" 
+  set pecount="900" 
   set compiler="intel"
 endif
 
 set caze=${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
-$homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 99:00:00 --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --run-unsupported
+$homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 00:20:00 --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --run-unsupported
 
 cd $scratch/$USER/$caze
 ./xmlchange STOP_OPTION=$stopoption,STOP_N=$steps
@@ -126,7 +126,7 @@ echo "nhtfrq             = -24,-24,-24,-24,-24,-24" >> user_nl_cam
 #echo "interpolate_output = .true.,.true.,.true.,.false." >> user_nl_cam
 echo "se_statefreq       = 144" >> user_nl_cam
 
-#echo "fincl1         = 'PS','PRECL'" >> user_nl_cam
+echo "fincl1         = 'PS','ABS_dPSdt'" >> user_nl_cam
 #echo "fincl2         = 'Q','CLDLIQ','RAINQM','T','U','V','iCLy','iCL','iCL2','OMEGA'" >> user_nl_cam
 #echo "fincl3         = 'TT_SLOT', 'TT_SLOT2', 'TT_SLOT3','TT_COSB', 'TT_CCOSB', 'TT_mix_lr', 'TT_mix_lo'," >> user_nl_cam
 #echo "                 'TT_mix_lu','TT_COSB2', 'TT_CCOSB2','TT_SLOT_SUM'" >> user_nl_cam

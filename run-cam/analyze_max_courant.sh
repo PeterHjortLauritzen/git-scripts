@@ -18,8 +18,8 @@ echo "set grid" > plot.gp
 echo "plot\" >> plot.gp
 
 
-set j = 10
-set max = 20
+set j = 0
+set max = 40
 while ( $j <= $max )
   if ( -e tmp.dat) then
     rm tmp.dat

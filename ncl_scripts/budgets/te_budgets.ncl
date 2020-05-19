@@ -17,6 +17,7 @@ begin
     print("nsplit                   ="+nsplit)
     print("rsplit                   ="+rsplit)
     print("hypervis_subcycle        ="+hypervis_subcycle)
+    print("hypervis_subcycle_sponge ="+hypervis_subcycle_sponge)
     print("ftype                    ="+ftype)
     print("qsize_condensate_loading ="+qsize_condensate_loading)
     print("lcp_moist                ="+lcp_moist)
@@ -203,6 +204,21 @@ begin
   print(" ")
   print(" ")
 
+;      " end of previous dynamics                           ",& !dED
+;      " from previous remapping or state passed to dynamics",& !dAF - state in beginning of nsplit loop
+;      " state after applying CAM forcing                   ",& !dBD - state after applyCAMforcing
+;      " before vertical remapping                          ",& !dAD - state before vertical remapping
+;      " after vertical remapping                           ",& !dAR - state at end of nsplit loop
+;      " state passed to parameterizations                  ",& !dBF
+;      " state before hypervis                              ",& !dBH
+;      " state after hypervis but before adding heating term",& !dCH
+;      " state after hypervis                               ",& !dAH
+;      " state before sponge layer diffusion                ",& !dBS - state before sponge del2
+;      " state after sponge layer diffusion                 ",& !dAS - state after sponge del2
+;      " state before two dz filter                         ",& !dBZ
+;      " state after two dz filter                          ",& !dAZ
+;      " phys2dyn mapping errors (requires ftype-1)         " & !p2d - for asses
+
   if (wet) then
     qsize = 3
     str_vars      = (/"SE","KE","WV","WL","WI"/);,"TT"/)
@@ -213,8 +229,8 @@ begin
         subcycle      = (/1.0D0,1.0D0,1.0D0,1.0D0,1.0D0,1.0D0,1.0D0,1.0D0,nsplit,nsplit,nsplit,1.0D0/)
 ;        subcycle      = (/1D0  ,1D0  ,1D0  ,1D0  ,1.0D0,1.0D0,1.0D0,1D0,1D0,1D0,1D0/)	;averaging is not being done by CAM history
       else
-        str_stage     = (/"pBF","pBP","pAP","pAM","dED","dAF","dBD","dAD","dAR","dBF","dBH","dCH","dAH"/)
-        subcycle    =     (/1D0,1D0  ,1D0  ,1D0  ,1.0D0,nsplit,nsplit,nsplit,nsplit,1.0D0,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle/)	
+        str_stage     = (/"pBF","pBP","pAP","pAM","dED","dAF","dBD"  ,"dAD" ,"dAR" ,"dBF","dBH","dCH","dAH","dBS","dAS"/);,"dBZ","dAZ"/)
+        subcycle    =     (/1D0,1D0  ,1D0  ,1D0  ,1.0D0,nsplit,nsplit,nsplit,nsplit,1.0D0,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit,nsplit*rsplit/);,nsplit,nsplit/)	
       end if	
       dycoreDiags = True
     else
@@ -272,9 +288,8 @@ begin
 	  end do
 	else
           fld = fall->$str$(:,:)
-;xxx             vars(variable,stage,:,:) = fall->$str$(:,:)	  
+;xxx          vars(variable,stage,:,:) = fall->$str$(:,:)	  
 	  if (dimsizes(fld(0,:)).eq.ncol_p) then
-
             do t=0,nt-1	      
               int_vars(variable,stage,t) = sum(area_p(0:ncol_p-1)*fld(t,0:ncol_p-1))*inv_area_sphere_p
 	    end do
@@ -382,10 +397,33 @@ begin
   else
     idAP = -1
   end if
+
   if (isfilevar(fall,"SE_dAT")) then
     idAT = str_match_ind(str_stage,"dAT")
   else
     idAT = -1
+  end if                      
+
+
+  if (isfilevar(fall,"SE_dBS")) then
+    idBS = str_match_ind(str_stage,"dBS")
+  else
+    idBS = -1
+  end if                      
+  if (isfilevar(fall,"SE_dAS")) then
+    idAS = str_match_ind(str_stage,"dAS")
+  else
+    idAS = -1
+  end if                      
+  if (isfilevar(fall,"SE_dBZ")) then
+    idBZ = str_match_ind(str_stage,"dBZ")
+  else
+    idBZ = -1
+  end if                      
+  if (isfilevar(fall,"SE_dAZ")) then
+    idAZ = str_match_ind(str_stage,"dAZ")
+  else
+    idAZ = -1
   end if                      
 
 
@@ -400,12 +438,12 @@ begin
   do t=0,nt-1
     do j=0,nstage-1
       tot_energy(t,j)     = subcycle(j)*(int_vars(0,j,t)+int_vars(1,j,t))
-;     tot_energy(t,j)  = subcycle(j)*int_vars(0,j,t) ; thermal energy only
+;    tot_energy(t,j)  = subcycle(j)*int_vars(0,j,t) ; thermal energy only
 ;     tot_energy(t,j)  = subcycle(j)*int_vars(1,j,t); K energy only	       
 ;      print("t="+t": "+str_stage(j)+"   "+tot_energy(t,j))
 
-;      tot_energy_2d(t,j,:) = subcycle(j)*(vars(0,j,t,0:ncol-1)); themal energy only
-     tot_energy_2d(t,j,:) = subcycle(j)*(vars(0,j,t,0:ncol-1)+vars(1,j,t,0:ncol-1))
+      tot_energy_2d(t,j,:) = subcycle(j)*(vars(0,j,t,0:ncol-1)); themal energy only
+;     tot_energy_2d(t,j,:) = subcycle(j)*(vars(0,j,t,0:ncol-1)+vars(1,j,t,0:ncol-1))
       if (wet) then
         idx = str_match_ind(str_vars,"WV")
         tracer_mass(t,0,j) = subcycle(j)*(int_vars(idx,j,t))
@@ -561,6 +599,11 @@ begin
 
       dadiab = (tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idBD,:))/dtime
 
+      diffusion_del4       = (tot_energy(t,idCH)-tot_energy(t,idBH))/dtime
+      diffusion_fric       = (tot_energy(t,idAH)-tot_energy(t,idCH))/dtime
+      diffusion_del4_tot   = (tot_energy(t,idAH)-tot_energy(t,idBH))/dtime
+      diffusion_sponge     = (tot_energy(t,idAS)-tot_energy(t,idBS))/dtime
+
 
       print("dE/dt total adiabatic dynamics (adiab)            "+sprintf("%6.3g",dADIA)+" W/M^2")    
       print("dE/dt 2D dynamics (2D)                  (dAD-dBD) "+sprintf("%6.3g",rate_of_change_2D_dyn)+" W/M^2")
@@ -574,13 +617,17 @@ begin
       fheat = (tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idCH,:))/dtime
 
       hvis = (tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idBH,:))/dtime
+      rate_of_change_hvis_sponge = (tot_energy(t,idAS)-tot_energy(t,idBS))/dtime
 
-      rate_of_change_hypervis_total           = (tot_energy(t,idAH)-tot_energy(t,idBH))/dtime
-      print("      dE/dt hypervis (hvis)             (dAH-dBH) "+sprintf("%6.3g",rate_of_change_hypervis_total)+" W/M^2")
+      rate_of_change_hypervis_total           = diffusion_del4_tot+diffusion_sponge
+      print("      dE/dt hypervis del4 (hvis)             (dBH-dCH) "+sprintf("%6.3g",diffusion_del4)+" W/M^2")
+      print("      dE/dt hypervis frictional heating      (dAH-dCH) "+sprintf("%6.3g",diffusion_fric)+" W/M^2")
+      print("      dE/dt hypervis del4 total (hvis)       (dBH-dCH) "+sprintf("%6.3g",diffusion_del4_tot)+" W/M^2")
+      print("      dE/dt hypervis sponge total            (dAS-dBS) "+sprintf("%6.3g",diffusion_sponge)+" W/M^2")
 
+;      rate_of_change_two_dz           = (tot_energy(t,idAZ)-tot_energy(t,idBZ))/dtime
 
-      print("      dE/dt frictional heating (fheat)  (dAH-dCH) "+sprintf("%6.3g",rate_of_change_heating_term_put_back_in)+" W/M^2")
-      twoDresidual = rate_of_change_2D_dyn-rate_of_change_hypervis_total
+      twoDresidual = rate_of_change_2D_dyn-rate_of_change_hypervis_total-rate_of_change_hvis_sponge
       print("      dE/dt residual (res)                        "+sprintf("%6.3g",twoDresidual)+" W/M^2")
     end if
     print(" ")

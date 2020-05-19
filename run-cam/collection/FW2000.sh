@@ -1,5 +1,6 @@
 #!/bin/tcsh
 setenv PBS_ACCOUNT "P03010039"
+#setenv PBS_ACCOUNT "P93300642"
 #setenv PBS_ACCOUNT NACM0003
 # P03010039
 # P93300042
@@ -10,7 +11,7 @@ setenv PBS_ACCOUNT "P03010039"
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-set src="cam_pel_development"
+set src="cam_pel_development_trunk"
 #
 # run with CSLAM or without
 #
@@ -26,8 +27,8 @@ set res="ne30pg3_ne30pg3_mg17"      #cslam
 
 #set res="f09_f09_mg17"     
 
-set climateRun="True"
-#set climateRun="False"
+#set climateRun="True"
+set climateRun="False"
 #set energyConsistency="True"
 set energyConsistency="False"
 set test_tracers="False"
@@ -37,8 +38,8 @@ set defaultIO="False"
 #
 #set cset="FWHIST"
 #set cset="FCHIST"
-#set cset="FW2000climo"
-set cset="F2000climo"
+set cset="FW2000climo"
+#set cset="F2000climo"
 #set cset="FHS94"
 #
 # location of initial condition file (not in CAM yet)
@@ -48,28 +49,28 @@ set inic="/glade/p/cgd/amp/pel/inic"
 #source clm_and_cime_mods_for_cslam.sh $src
 #echo "Done"
 if ($climateRun == "True") then
-  set walltime="00:45:00"
+  set walltime="00:20:00"
 #  set walltime="03:00:00"
   #
   # 900, 1800, 2700, 5400 (pecount should divide 6*30*30 evenly)
   #
 #  set pecount="5400"
-  set pecount="1800"
+  set pecount="2700"
   set NTHRDS="1"
   set stopoption="nmonths"
+#  set steps="1"
   set steps="1"
-#  set steps="2"
 else
-  set walltime="01:00:00"
+  set walltime="00:10:00"
   set pecount="1800"
   set NTHRDS="1"
-  set stopoption="nmonths"
+  set stopoption="nsteps"
   set steps="2"
 endif
 if ($test_tracers == "True") then
     set caze=nadv_climateRun${climateRun}_energyConsistency${energyConsistency}_${src}_${cset}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 else
-    set caze=${src}_${cset}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
+    set caze=baseline_${src}_${cset}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 endif
 /glade/u/home/$USER/src/$src/cime/scripts/create_newcase --case /glade/scratch/$USER/$caze --compset $cset --res $res  --q regular --walltime $walltime --pecount $pecount  --project $PBS_ACCOUNT --run-unsupported
 cd /glade/scratch/$USER/$caze

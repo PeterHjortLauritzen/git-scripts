@@ -1,12 +1,12 @@
 #!/bin/tcsh
-setenv PBS_ACCOUNT NACM0003
+setenv PBS_ACCOUNT "P93300642"
 #
 # P93300642
 #
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-set src="opt-se-cslam-trunk"
+set src="cam_pel_development"
 #set src="trunk"
 set cset="FHS94"
 #
@@ -26,6 +26,7 @@ set res="ne30_ne30_mg17"        #no cslam
 set stopoption="ndays"
 set steps="1200"
 set topo="True"
+set nlev="110"
 #set steps="1"
 #
 # DO NOT MODIFY BELOW THIS LINE
@@ -72,7 +73,7 @@ if(`hostname` == 'izumi.unified.ucar.edu') then
   #
   set compiler="intel"
 endif
-if(`hostname` == 'cheyenne5') then
+if(`hostname` == 'cheyenne1') then
   echo "setting up for Cheyenne"
   set inic="/glade/p/cgd/amp/pel/inic"
   set homedir="/glade/u/home"
@@ -86,23 +87,24 @@ if(`hostname` == 'cheyenne5') then
   #  81 SYPD with FHS94 ne30pg3_ne30pg3 using  900 PEs
   #
 #  set pecount="10800" 
-  set pecount="5400" 
-#  set pecount="2700" 
-#  set walltime="00:15:00"
-  set walltime="06:00:00"
+#  set pecount="5400" 
+  set pecount="1800" 
+  set walltime="00:15:00"
+#  set walltime="06:00:00"
 
   set machine="cheyenne"  
   set compiler="intel"
 endif
 
-set caze=nu0.5E15_nu_div5.0E15_nu_p_1.0E15
-#set caze=${cset}_${src}_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
+#set caze=nu0.5E15_nu_div5.0E15_nu_p_1.0E15
+set caze=${cset}_${src}_${res}_nlev${nlev}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 $homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime $walltime --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --machine $machine --run-unsupported
 
 cd $scratch/$USER/$caze
 ./xmlchange STOP_OPTION=$stopoption,STOP_N=$steps
 ./xmlchange DOUT_S=FALSE
-./xmlchange CAM_CONFIG_OPTS="-phys held_suarez -nlev 32" #very important: otherwise you get PS=1000hPa initial condition
+./xmlchange CAM_CONFIG_OPTS="-phys held_suarez -nlev "$nlev" " #very important: otherwise you get PS=1000hPa initial condition
+#./xmlchange CAM_CONFIG_OPTS="-phys held_suarez -nlev 32" #very important: otherwise you get PS=1000hPa initial condition
 #./xmlchange CAM_CONFIG_OPTS="-analytic_ic -phys held_suarez -nlev 32"
 ./xmlchange CASEROOT=$scratch/$USER/$caze
 ./xmlchange EXEROOT=$scratch/$USER/$caze/bld
@@ -168,7 +170,15 @@ if ($topo == "True") then
 #    echo "interpolate_nlon = 720,288,288" >> user_nl_cam    
     echo "bnd_topo = '$inputdir/topo/se/ne30np4_nc3000_Co060_Fi001_PF_nullRR_Nsw042_20171020.nc'">>user_nl_cam
 #  echo "bnd_topo = '/project/amp/pel/release/topo/old/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc'">>user_nl_cam
-    echo "ncdata = '$inputdir/inic/se/ape_topo_cam6_ne30np4_L32_c171023.nc'" >>user_nl_cam
+
+    if ($nlev == 110) then
+      echo "ncdata = '/glade/p/cgd/amp/pel/inic/waccm.nlev110.nc'" >>user_nl_cam
+    endif        
+    if ($nlev == 32) then
+      echo "ncdata = '$inputdir/inic/se/ape_topo_cam6_ne30np4_L32_c171023.nc'" >>user_nl_cam
+    endif        
+
+#    echo "ncdata = '$inputdir/inic/se/ape_topo_cam6_ne30np4_L32_c171023.nc'" >>user_nl_cam
     echo "se_nu     = 0.5E15" >>user_nl_cam
     echo "se_nu_div = 5.0E15" >>user_nl_cam
     echo "se_nu_p = 1.0E15"   >>user_nl_cam
@@ -219,7 +229,7 @@ endif
 if(`hostname` == 'izumi.unified.ucar.edu') then
   ./case.build
 endif  
-if(`hostname` == 'cheyenne5') then
+if(`hostname` == 'cheyenne1') then
   qcmd -- ./case.build
 endif
 ./case.submit

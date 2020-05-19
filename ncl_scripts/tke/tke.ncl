@@ -177,7 +177,7 @@ begin
   lasttime  = dimsizes(fall[:]->time)-1
   print("Total number of time samples "+lasttime)
 
-  plvl    =  200.                ; default  [hPa] 
+  plvl    =  0.01                ; default  [hPa] 
 
   timeinc   = 1
   cut =1 ;how many wavelengths are cut off
@@ -192,6 +192,8 @@ begin
 
   uplev   = fall[:]->U(firsttime:lasttime,0,:,:)
   vplev   = fall[:]->V(firsttime:lasttime,0,:,:)
+  pplev   = vplev(firsttime,:,:)
+  pplev = 100000.0
   ;
   ; map to pressure level
   ;
@@ -206,7 +208,8 @@ begin
     u   = fall[:]->U(nps,:,:,:)
     v   = fall[:]->V(nps,:,:,:)
 
-    ps  = fall[:]->PS(nps,:,:)
+;    ps  = fall[:]->PS(nps,:,:)
+    ps = pplev
     ps@units = "Pa"
 
     if (.not.(ps@units.eq."Pa" .or. ps@units.eq."Pascals") ) then
