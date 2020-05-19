@@ -27,6 +27,7 @@ set stopoption="ndays"
 set steps="1200"
 set topo="True"
 set nlev="110"
+#set nlev="32"
 #set steps="1"
 #
 # DO NOT MODIFY BELOW THIS LINE
@@ -35,27 +36,6 @@ set nlev="110"
 #
 # machine specific settings
 #
-if(`hostname` == 'hobart.cgd.ucar.edu') then
-  set inic="/scratch/cluster/pel/inic"
-  set homedir="/home"
-  set scratch="/scratch/cluster"
-  set inputdir="/fs/cgd/csm/inputdata/atm/cam/"  
-  set queue="monster"
-#  set pecount="480" #10 nodes
-#  set pecount="672"
-#  set walltime="99:00:00"
-    set pecount="960"
-  set walltime="99:00:00"
-#  set pecount="768" #16 nodes
-#  set pecount="672"
-  set machine="hobart"  
-  #
-  # mapping files (not in cime yet)
-  #
-#  set compiler="intel"
-  set compiler="nag"  
-#  set compiler="pgi"
-endif
 
 if(`hostname` == 'izumi.unified.ucar.edu') then
   set inic="/scratch/cluster/pel/inic"
@@ -63,14 +43,38 @@ if(`hostname` == 'izumi.unified.ucar.edu') then
   set inputdir="/fs/cgd/csm/inputdata/atm/cam/"
   set scratch="/scratch/cluster"
   set queue="monster"
+
 #  set pecount="672" #14 nodes (all of machine)
   set pecount="480"
-#  set pecount="192"  
+#  set pecount="240"
+#  set pecount="192"
+#  set pecount="48"    
   set walltime="24:00:00"
   set machine="izumi"
   #
   # mapping files (not in cime yet)
   #
+  set compiler="intel"
+endif
+if(`hostname` == 'hobart.cgd.ucar.edu') then
+  set inic="/scratch/cluster/pel/inic"
+  set homedir="/home"
+  set inputdir="/fs/cgd/csm/inputdata/atm/cam/"
+  set scratch="/scratch/cluster"
+  set queue="monster"
+  unset pecount  
+#  set pecount="1248"  
+  set pecount="480"
+#  set pecount="96"
+#  set pecount="960"
+#  set pecount="48"    
+  set walltime="24:00:00"
+#  set walltime="00:45:00"  
+  set machine="hobart"
+  #
+  # mapping files (not in cime yet)
+  #
+#  set compiler="nag"
   set compiler="intel"
 endif
 if(`hostname` == 'cheyenne1') then
@@ -96,15 +100,18 @@ if(`hostname` == 'cheyenne1') then
   set compiler="intel"
 endif
 
-#set caze=nu0.5E15_nu_div5.0E15_nu_p_1.0E15
 set caze=${cset}_${src}_${res}_nlev${nlev}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 $homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime $walltime --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --machine $machine --run-unsupported
 
 cd $scratch/$USER/$caze
 ./xmlchange STOP_OPTION=$stopoption,STOP_N=$steps
 ./xmlchange DOUT_S=FALSE
+
 ./xmlchange CAM_CONFIG_OPTS="-phys held_suarez -nlev "$nlev" " #very important: otherwise you get PS=1000hPa initial condition
 #./xmlchange CAM_CONFIG_OPTS="-phys held_suarez -nlev 32" #very important: otherwise you get PS=1000hPa initial condition
+#./xmlchange CAM_CONFIG_OPTS="-phys held_suarez -nlev 32" #very important: otherwise you get PS=1000hPa initial condition
+#./xmlchange CAM_CONFIG_OPTS="-phys held_suarez -nlev 32 -nadv_tt=5" #very important: otherwise you get PS=1000hPa initial condition
+#./xmlchange --append CAM_CONFIG_OPTS="-nadv_tt=194" #there are already 6 tracers in FKESSLER
 #./xmlchange CAM_CONFIG_OPTS="-analytic_ic -phys held_suarez -nlev 32"
 ./xmlchange CASEROOT=$scratch/$USER/$caze
 ./xmlchange EXEROOT=$scratch/$USER/$caze/bld
@@ -165,11 +172,12 @@ if ($topo == "True") then
 
   if ($res == "ne30_ne30_mg17") then
     echo "se_statefreq       = 256"        >> user_nl_cam
-    echo "interpolate_output = .true.,.true.,.false." >> user_nl_cam      
+    echo "interpolate_output = .true.,.true.,.false.,.false." >> user_nl_cam      
 #    echo "interpolate_nlat = 360,192,192" >> user_nl_cam
 #    echo "interpolate_nlon = 720,288,288" >> user_nl_cam    
     echo "bnd_topo = '$inputdir/topo/se/ne30np4_nc3000_Co060_Fi001_PF_nullRR_Nsw042_20171020.nc'">>user_nl_cam
 #  echo "bnd_topo = '/project/amp/pel/release/topo/old/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc'">>user_nl_cam
+
 
     if ($nlev == 110) then
       echo "ncdata = '/glade/p/cgd/amp/pel/inic/waccm.nlev110.nc'" >>user_nl_cam
@@ -182,16 +190,25 @@ if ($topo == "True") then
     echo "se_nu     = 0.5E15" >>user_nl_cam
     echo "se_nu_div = 5.0E15" >>user_nl_cam
     echo "se_nu_p = 1.0E15"   >>user_nl_cam
+
   endif
 
   if ($res == "ne30pg3_ne30pg3_mg17") then
     echo "se_statefreq       = 256"        >> user_nl_cam
-    echo "interpolate_output = .true.,.true.,.false." >> user_nl_cam      
+    echo "interpolate_output = .true.,.true.,.false.,.false." >> user_nl_cam          
     echo "interpolate_nlat = 192,192,192" >> user_nl_cam
     echo "interpolate_nlon = 288,288,288" >> user_nl_cam  
     echo "bnd_topo = '$inputdir/topo/se/ne30pg3_nc3000_Co060_Fi001_PF_nullRR_Nsw042_20171014.nc'">>user_nl_cam
 #  echo "bnd_topo = '/project/amp/pel/release/topo/old/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc'">>user_nl_cam
-    echo "ncdata = '$inputdir/inic/se/ape_topo_cam4_ne30np4_L30_c171020.nc'" >>user_nl_cam
+    if ($nlev == 30) then
+      echo "ncdata = '$inputdir/inic/se/ape_topo_cam4_ne30np4_L30_c171020.nc'" >>user_nl_cam
+    endif
+    if ($nlev == 32) then
+      echo "ncdata = '$inputdir/inic/se/ape_topo_cam6_ne30np4_L32_c171023.nc'" >>user_nl_cam        
+    endif    
+    if ($nlev == 110) then
+      echo "ncdata = '/project/amp/pel/inic/waccm.nlev110.nc'" >>user_nl_cam
+    endif            
   endif
 
   if ($res == "ne120_ne120_mg16") then
@@ -216,9 +233,42 @@ if ($topo == "True") then
   endif
 
 endif
+  echo "ndens=2,2,1,1" >> user_nl_cam
+  echo "fincl3 =   'SE_pBF','KE_pBF', ">> user_nl_cam 
+  echo "           'SE_pBP','KE_pBP', ">> user_nl_cam
+  echo "           'SE_pAP','KE_pAP', ">> user_nl_cam
+  echo "           'SE_pAM','KE_pAM', ">> user_nl_cam
+  echo "           'SE_dED','KE_dED', ">> user_nl_cam
+  echo "           'SE_dAF','KE_dAF', ">> user_nl_cam
+  echo "           'SE_dBD','KE_dBD', ">> user_nl_cam
+  echo "           'SE_dAD','KE_dAD', ">> user_nl_cam
+  echo "           'SE_dAR','KE_dAR', ">> user_nl_cam
+  echo "           'SE_dBF','KE_dBF', ">> user_nl_cam
+  echo "           'SE_dBH','KE_dBH', ">> user_nl_cam
+  echo "           'SE_dCH','KE_dCH', ">> user_nl_cam
+  echo "           'SE_dAH','KE_dAH', ">> user_nl_cam
+  echo "           'SE_dBS','KE_dBS', ">> user_nl_cam
+  echo "           'SE_dAS','KE_dAS', ">> user_nl_cam
+  echo "           'SE_p2d','KE_p2d'  ">> user_nl_cam
 
-echo "nhtfrq             = 0,0,0 " >> user_nl_cam
-echo "fincl1             = 'PS','T','Z3','U','V','OMEGA','PHIS','OMEGA500','OMEGA850','PSL','PHIS' ">> user_nl_cam
+  echo "fincl4 =   'MR_pBF:I','MO_pBF:I', ">> user_nl_cam 
+  echo "           'MR_pBP:I','MO_pBP:I', ">> user_nl_cam 
+  echo "           'MR_pAP:I','MO_pAP:I', ">> user_nl_cam 
+  echo "           'MR_pAM:I','MO_pAM:I', ">> user_nl_cam
+  echo "           'MR_dED:I','MO_dED:I', ">> user_nl_cam
+  echo "           'MR_dAF:I','MO_dAF:I', ">> user_nl_cam
+  echo "           'MR_dBD:I','MO_dBD:I', ">> user_nl_cam
+  echo "           'MR_dAD:I','MO_dAD:I', ">> user_nl_cam
+  echo "           'MR_dAR:I','MO_dAR:I', ">> user_nl_cam
+  echo "           'MR_dBF:I','MO_dBF:I', ">> user_nl_cam
+  echo "           'MR_dBH:I','MO_dBH:I', ">> user_nl_cam
+  echo "           'MR_dCH:I','MO_dCH:I', ">> user_nl_cam
+  echo "           'MR_dAH:I','MO_dAH:I', ">> user_nl_cam
+  echo "           'MR_dBS:I','MO_dBS:I', ">> user_nl_cam
+  echo "           'MR_dAS:I','MO_dAS:I'  ">> user_nl_cam
+  
+  echo "nhtfrq = 0,0,0,-24" >> user_nl_cam
+  echo "fincl1             = 'PS','T','Z3','U','V','OMEGA','PHIS','OMEGA500','OMEGA850','PSL','PHIS','FT','FU','FV' ">> user_nl_cam
 #echo "fincl2             = 'PS','T','Z3','U','V','OMEGA','PHIS','OMEGA500','OMEGA850','PSL' ">> user_nl_cam
 #echo "fincl3             = 'PS','T','Z3','U','V','OMEGA','PHIS','OMEGA500','OMEGA850','PSL' ">> user_nl_cam
 #echo "inithist           =  'MONTHLY'">>user_nl_cam
