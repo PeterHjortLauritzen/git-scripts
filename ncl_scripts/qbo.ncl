@@ -51,7 +51,7 @@ begin
 ;  res@tmBorderThicknessF = 4 ;axes thickness
 
 ;  ls_command = "ls "+"*cam.h0.200*-*.nc" ;dir+"/"+case+".cam."+h_number+".*.nc"
-  ls_command = "ls "+"*cam.h0.0*-*.nc" ;dir+"/"+case+".cam."+h_number+".*.nc"
+  ls_command = "ls "+"*cam.h0.*-*.nc" ;dir+"/"+case+".cam."+h_number+".*.nc"
 ;  ls_command = "ls "+"*cam.h0.00[0][2-4]-*.nc"
 ;  ls_command = "ls "+"*cam.h0.00[0][0-9]-*.nc" ; first 10 years
 ;  ls_command = "ls "+"*cam.h0.00[2][0-9]-*.nc" ;  year 20-29
@@ -147,7 +147,8 @@ begin
   ;resP@gsnPanelFigureStringsPerimOn     = True
   ;resP@gsnPanelFigureStringsBackgroundFillColor = "white"
   ;resP@amJust           = "TopRight"
-  resP@txString = "WACCM ne30pg3, COMPSET=FWsc2000climo, "+dimsizes(lev)+" levels"
+  resP@txString = "WACCM ne30pg3, COMPSET=FWscHIST, "+dimsizes(lev)+" levels"
+;  resP@txString = "WACCM ne30pg3, COMPSET=FWsc2000climo, "+dimsizes(lev)+" levels"
 ;  resP@txString = "WACCM fv09, COMPSET=FWsc2000climo, "+dimsizes(lev)+" levels"
   gsn_panel(wks,plot,(/1,1/),resP)               ; now draw as one plot
 

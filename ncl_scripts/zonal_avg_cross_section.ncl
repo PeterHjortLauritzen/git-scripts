@@ -1,4 +1,4 @@
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
+0load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 load "$ncl_dir/contour-levels.ncl"
@@ -270,17 +270,18 @@ begin
  
      ; create an array of desired pressure levels:
      if (vertical_height) then       
-       minP = 10.0;xxx
        minP = 30.0
+       minP = 0.0005;xxx
      else
        minP = 1.0;xxx
        minP = 30.0
+       minP = 0.0005;xxx
      end if
      maxP = 1000.0
      dp   = (maxP-minP)/(nlev-1)
      pnew = new(nlev,double)
      do k=0,nlev-1
-  ;     pnew(k) = hyam(k)*ps0+hybm(k)*ps0
+;       pnew(k) = hyam(k)*ps0+hybm(k)*ps0
         pnew(k) = minP+(k)*dp
      end do
      ;   pnew(0) = 100.0
@@ -374,11 +375,11 @@ begin
 ;      res@tiMainString         = case(i)       ; title
     end if
 
-    if (i.eq.0) then
-      setContourLevels (res, vname,False)
-    else
-      setContourLevels (res, vname,diff)
-    end if
+;    if (i.eq.0) then
+;      setContourLevels (res, vname,False)
+;    else
+;      setContourLevels (res, vname,diff)
+;    end if
 
 
 

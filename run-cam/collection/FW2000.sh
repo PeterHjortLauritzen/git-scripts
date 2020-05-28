@@ -38,7 +38,7 @@ set defaultIO="False"
 #
 #set cset="FWHIST"
 #set cset="FCHIST"
-set cset="FW2000climo"
+set cset="FWsc2000climo"
 #set cset="F2000climo"
 #set cset="FHS94"
 #
@@ -327,5 +327,5 @@ endif
 #echo "se_nu_p   =  0.1E17" >> user_nl_cam
 #echo "se_hypervis_subcycle = 3" >> user_nl_cam
 
-qcmd -- ./case.build
-./case.submit
+#qcmd -- ./case.build
+#./case.submit
