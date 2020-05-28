@@ -4,7 +4,7 @@ setenv PBS_ACCOUNT P93300642
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
 #set src="opt-se-cslam-pgf"
-set src="cam_pel_development"
+set src="cam_pel_development_trunk"
 #set src="trunk"
 #
 # number of test tracers
@@ -21,9 +21,9 @@ set res="ne30pg3_ne30pg3_mg17" #cslam
 #set res="f09_f09_mg17"
 
 set stopoption="ndays"
-set steps="10"
+set steps="6"
 #set stopoption="nsteps"
-#set steps="5"
+#set steps="2"
 #
 # DO NOT MODIFY BELOW THIS LINE
 #
@@ -36,7 +36,7 @@ if(`hostname` == 'hobart.cgd.ucar.edu') then
   set homedir="/home"
   set scratch="/scratch/cluster"
 #  set queue="monster"
-  set pecount="960"
+  set pecount="480"
   set queue="monster"
 #  set pecount="672"  
 #  set compiler="nag"
@@ -76,7 +76,7 @@ if(`hostname` == 'cheyenne5') then
   set compiler="intel"
 endif
 
-set caze=${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
+set caze=hobart_${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 $homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 00:20:00 --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --run-unsupported
 
 cd $scratch/$USER/$caze
@@ -91,7 +91,7 @@ cd $scratch/$USER/$caze
 ## timing detail
 ./xmlchange TIMER_LEVEL=10
 ##
-#./xmlchange --append CAM_CONFIG_OPTS="-nadv_tt=10" #there are already 6 tracers in FKESSLER
+./xmlchange --append CAM_CONFIG_OPTS="-nadv_tt=6" #there are already 6 tracers in FKESSLER
 #./xmlchange CAM_CONFIG_OPTS="-phys kessler -chem terminator -analytic_ic  -nlev $nlev"
 ##
 ./xmlquery CAM_CONFIG_OPTS
