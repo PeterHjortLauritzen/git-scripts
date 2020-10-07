@@ -4,23 +4,26 @@ begin
     if (vname.eq."U") then
       res@cnLevelSelectionMode = "ManualLevels"        ; manual contour levels
       if (diff) then
-        res@cnLevelSpacingF      = 1.0                   ; contour interval
-        res@cnMinLevelValF       =-8.0                  ; min level
-        res@cnMaxLevelValF       = 4.0                  ; max level
+        res@cnLevelSpacingF      = 2.0                   ; contour interval
+        res@cnMinLevelValF       =-20.0                  ; min level
+        res@cnMaxLevelValF       =20.0                  ; max level
       else
      ;
      ; AMIP - CAM
      ;
-;        res@cnLevelSpacingF      = 5.0                   ; contour interval
-;        res@cnMinLevelValF       =  -10.0                  ; min level
-;        res@cnMaxLevelValF       =  65.0                  ; max level
+        res@cnLevelSpacingF      = 5.0                   ; contour interval
+        res@cnMinLevelValF       =  -10.0                  ; min level
+        res@cnMaxLevelValF       =  65.0                  ; max level
+;        res@cnLevelSpacingF      = 10.0                   ; contour interval
+;        res@cnMinLevelValF       =  -40.0                  ; min level
+;        res@cnMaxLevelValF       =  200.0                  ; max level
 
 ;
 ; Held-Suarez
 ;
-        res@cnLevelSpacingF      = 5.0                   ; contour interval
-        res@cnMinLevelValF       =  -50.0                  ; min level
-        res@cnMaxLevelValF       =  50.0                  ; max level	
+;        res@cnLevelSpacingF      = 5.0                   ; contour interval
+;        res@cnMinLevelValF       =  -50.0                  ; min level
+;        res@cnMaxLevelValF       =  50.0                  ; max level	
      end if
    end if
 
@@ -121,13 +124,17 @@ begin
       res@cnLevelSelectionMode = "ManualLevels"        ; manual contour levels
       if (diff) then
           res@cnLevelSpacingF      =  0.5                   ; contour interval
-          res@cnMinLevelValF       = -1.0                  ; min level
-          res@cnMaxLevelValF       =  3.0                  ; max level
+          res@cnMinLevelValF       = -10.0                  ; min level
+          res@cnMaxLevelValF       = 10.0                  ; max level
         else
 ;          res@cnLevelSpacingF      =  5.0                   ; contour interval
 ;          res@cnMinLevelValF       =  185.0                  ; min level
 ;          res@cnMaxLevelValF       =  305.0                  ; max level
-          res@cnLevelSpacingF      =  10.0                   ; contour interval
+;
+; WACCM
+;
+
+          res@cnLevelSpacingF      =  5.0                   ; contour interval
           res@cnMinLevelValF       =  180.0                  ; min level
           res@cnMaxLevelValF       =  300.0                  ; max level
         end if

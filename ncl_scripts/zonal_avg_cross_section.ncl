@@ -1,4 +1,4 @@
-0load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
+load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 load "$ncl_dir/contour-levels.ncl"
@@ -253,9 +253,10 @@ begin
       hybm  = f->hybm
 
       nlev  = dimsizes(hyam)
+;      nlev = 1000;
 
 ;      ps0   = f->P0
-      ps0 =  100000.0
+      ps0 =  1000.0
       ; data must be on pressure levels
       P0mb =ps0/100.0
 
@@ -281,8 +282,8 @@ begin
      dp   = (maxP-minP)/(nlev-1)
      pnew = new(nlev,double)
      do k=0,nlev-1
-;       pnew(k) = hyam(k)*ps0+hybm(k)*ps0
-        pnew(k) = minP+(k)*dp
+       pnew(k) = hyam(k)*ps0+hybm(k)*ps0
+;        pnew(k) = minP+(k)*dp
      end do
      ;   pnew(0) = 100.0
      ;   pnew(nlev) = 100000.0
@@ -291,7 +292,6 @@ begin
      pnew@long_name = "pressure"               ; attach some attributes
      pnew@units     = "hPa"
      pnew@positive  = "down"
-  ;  pnew = pnew/100.0
      print(pnew)
   ;   pnew = (/ 850.0,700.0,500.0,300.0,200.0 /)
     ;************************************************
@@ -304,13 +304,14 @@ begin
     ;************************************************
     ;  calculate zonal average of 3d variable
   
-    zonal_fonP =  dim_avg(fonP)                             ; calculate zonal ave
+;    zonal_fonP =  dim_avg(fonP)                             ; calculate zonal ave WRONG!!!
+    zonal_fonP =  dim_avg(f3d)                             ; calculate zonal ave
 
     if (diff) then
       if (i.eq.0) then
          zonal_ref = zonal_fonP
       else
-         zonal_fonP = zonal_fonP-zonal_ref
+         zonal_fonP = zonal_ref-zonal_fonP
       end if
     end if
 
@@ -375,11 +376,11 @@ begin
 ;      res@tiMainString         = case(i)       ; title
     end if
 
-;    if (i.eq.0) then
-;      setContourLevels (res, vname,False)
-;    else
-;      setContourLevels (res, vname,diff)
-;    end if
+    if (i.eq.0) then
+      setContourLevels (res, vname,False)
+    else
+      setContourLevels (res, vname,diff)
+    end if
 
 
 
@@ -443,7 +444,7 @@ begin
       end if
 
         do k = 0 ,nlev-1
-          dum(k,i) = gsn_add_polyline(wks,plot(i),xcoord,hybrid_lev(:,k),plres)
+;xxx          dum(k,i) = gsn_add_polyline(wks,plot(i),xcoord,hybrid_lev(:,k),plres)
         end do
 ;      end if			
     

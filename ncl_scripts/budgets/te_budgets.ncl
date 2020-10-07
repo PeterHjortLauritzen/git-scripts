@@ -195,6 +195,8 @@ begin
   print("                 dCH   state after hyperviscosity                       |  |  |")
   print("                 dAH   state after hyperviscosity momentum heating      |  |  |")
   print("              end hyperviscosity loop -----------------------------------  |  |")
+  print("              dBS   state before del2 sponge                            |  |  |")
+  print("              dAS   state after del2+mom heating sponge                 |  |  |")
   print("          end of vertical Lagrangian dynamics loop -------------------------  |")
   print("      dAD  state after dynamics, before vertical remapping                    |")
   print("      dAR     state after vertical remapping                                  |")
@@ -229,8 +231,8 @@ begin
         subcycle      = (/1.0D0,1.0D0,1.0D0,1.0D0,1.0D0,1.0D0,1.0D0,1.0D0,nsplit,nsplit,nsplit,1.0D0/)
 ;        subcycle      = (/1D0  ,1D0  ,1D0  ,1D0  ,1.0D0,1.0D0,1.0D0,1D0,1D0,1D0,1D0/)	;averaging is not being done by CAM history
       else
-        str_stage     = (/"pBF","pBP","pAP","pAM","dED","dAF","dBD"  ,"dAD" ,"dAR" ,"dBF","dBH","dCH","dAH","dBS","dAS"/);,"dBZ","dAZ"/)
-        subcycle    =     (/1D0,1D0  ,1D0  ,1D0  ,1.0D0,nsplit,nsplit,nsplit,nsplit,1.0D0,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit,nsplit*rsplit/);,nsplit,nsplit/)	
+        str_stage     = (/"pBF","pBP","pAP","pAM","dED","dAF","dBD"  ,"dAD" ,"dAR" ,"dBF","dBH","dCH","dAH","dBS","dAS"/);,"dX1","dX2","dX3"/);,"dBZ","dAZ"/)
+        subcycle    =     (/1D0,1D0  ,1D0  ,1D0  ,1.0D0,nsplit,nsplit,nsplit,nsplit,1.0D0,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit,nsplit*rsplit/);,nsplit*rsplit,nsplit*rsplit,nsplit*rsplit/);
       end if	
       dycoreDiags = True
     else
@@ -425,6 +427,21 @@ begin
   else
     idAZ = -1
   end if                      
+  if (isfilevar(fall,"SE_dX1")) then
+    idX1 = str_match_ind(str_stage,"dX1")
+  else
+    idX1 = -1
+  end if                      
+  if (isfilevar(fall,"SE_dX2")) then
+    idX2 = str_match_ind(str_stage,"dX2")
+  else
+    idX2 = -1
+  end if                      
+  if (isfilevar(fall,"SE_dX3")) then
+    idX3 = str_match_ind(str_stage,"dX3")
+  else
+    idX3 = -1
+  end if                      
 
 
   if (ismissing(ipBF).or.ismissing(ipBF).or.ismissing(ipAM).or.ismissing(ipAP)) then
@@ -599,11 +616,20 @@ begin
 
       dadiab = (tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idBD,:))/dtime
 
+
+;      x1       = (tot_energy(t,idX2)-tot_energy(t,idX1))/dtime
+;      x2       = (tot_energy(t,idX3)-tot_energy(t,idX2))/dtime
+;      print("dE/dt x1 "+sprintf("%6.3g",x1)+" W/M^2")
+;      print("dE/dt x2 "+sprintf("%6.3g",x2)+" W/M^2")
+
+
       diffusion_del4       = (tot_energy(t,idCH)-tot_energy(t,idBH))/dtime
       diffusion_fric       = (tot_energy(t,idAH)-tot_energy(t,idCH))/dtime
       diffusion_del4_tot   = (tot_energy(t,idAH)-tot_energy(t,idBH))/dtime
       diffusion_sponge     = (tot_energy(t,idAS)-tot_energy(t,idBS))/dtime
+      diffusion_total      = diffusion_del4_tot+diffusion_sponge
 
+      print("dE/dt dyn total (dycore+phys tendency   (dBF-dED) "+sprintf("%6.3g",dyn_total)+" W/M^2")
 
       print("dE/dt total adiabatic dynamics (adiab)            "+sprintf("%6.3g",dADIA)+" W/M^2")    
       print("dE/dt 2D dynamics (2D)                  (dAD-dBD) "+sprintf("%6.3g",rate_of_change_2D_dyn)+" W/M^2")
@@ -619,15 +645,20 @@ begin
       hvis = (tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idBH,:))/dtime
       rate_of_change_hvis_sponge = (tot_energy(t,idAS)-tot_energy(t,idBS))/dtime
 
-      rate_of_change_hypervis_total           = diffusion_del4_tot+diffusion_sponge
-      print("      dE/dt hypervis del4 (hvis)             (dBH-dCH) "+sprintf("%6.3g",diffusion_del4)+" W/M^2")
-      print("      dE/dt hypervis frictional heating      (dAH-dCH) "+sprintf("%6.3g",diffusion_fric)+" W/M^2")
-      print("      dE/dt hypervis del4 total (hvis)       (dBH-dCH) "+sprintf("%6.3g",diffusion_del4_tot)+" W/M^2")
+      print("      dE/dt hypervis del4 (hvis)             (dCH-dBH) "+sprintf("%6.3g",diffusion_del4)+" W/M^2")
+      print("      dE/dt hypervis frictional heating del4 (dAH-dCH) "+sprintf("%6.3g",diffusion_fric)+" W/M^2")
+      print("      dE/dt hypervis del4 total (hvis)       (dAH-dBH) "+sprintf("%6.3g",diffusion_del4_tot)+" W/M^2")
       print("      dE/dt hypervis sponge total            (dAS-dBS) "+sprintf("%6.3g",diffusion_sponge)+" W/M^2")
+      print("                                                       ")
+      print("      dE/dt explicit diffusion total                   "+sprintf("%6.3g",diffusion_total)+" W/M^2")
 
-;      rate_of_change_two_dz           = (tot_energy(t,idAZ)-tot_energy(t,idBZ))/dtime
 
-      twoDresidual = rate_of_change_2D_dyn-rate_of_change_hypervis_total-rate_of_change_hvis_sponge
+;      consistency = diffusion_del4_tot-(diffusion_del4+diffusion_fric)
+;      print("      dE/dt hypervis consistency (dAH-dBH)=(dCH-dBH)+(dAH-dCH)="+sprintf("%6.3g",consistency)+" W/M^2")
+
+
+
+      twoDresidual = rate_of_change_2D_dyn-diffusion_total
       print("      dE/dt residual (res)                        "+sprintf("%6.3g",twoDresidual)+" W/M^2")
     end if
     print(" ")
@@ -701,7 +732,7 @@ begin
       str1 = str1 + " "+sprintf("%6.3g",pEFIX)+"&"
       str1 = str1 + " "+discr+"&"
       str1 = str1 + " "+sprintf("%6.3g",rate_of_change_2D_dyn)+"&"
-      str1 = str1 + " "+sprintf("%6.3g",rate_of_change_hypervis_total)+"&"
+      str1 = str1 + " "+sprintf("%6.3g",diffusion_total)+"&"
       str1 = str1 + " "+sprintf("%6.3g",rate_of_change_heating_term_put_back_in)+"&"
  ;      str1 = str1 + " "+sprintf("%6.3g",twoDresidual)+"&"
       str1 = str1 + " "+sprintf("%6.3g",twoDresidual)+"&"
