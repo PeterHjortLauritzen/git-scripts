@@ -72,19 +72,40 @@ begin
   vartmp = f[:]->$vname$
   printVarSummary (vartmp)
   nlev   = dimsizes(vartmp&lev)
-  PRESI  = f[:]->PMID
-  PRESI  = PRESI/100.0
+
   PSFC   = f[:]->PS
   PSFC   = PSFC/100.0
   P0mb   = 1000.0
   tbot   = f[:]->T(:,nlev-1,:,:)
   PHIS   = fphis->PHIS
-  hyam   = f[:]->hyam
-  hybm   = f[:]->hybm
+  hyam   = f[0]->hyam
+  hybm   = f[0]->hybm
   lev  = new(nlev,double)
   do k=0,nlev-1
     lev(k) = hyam(k)*P0mb+hybm(k)*P0mb
   end do
+  if (isfilevar(f[0], "PMID"))
+    PRESI  = f[:]->PMID
+    PRESI  = PRESI/100.0
+  else
+    print("PMID not present on file - deriving from hyam,hybm and PS")
+    PRESI   = f[:]->T(:,:,:,:)
+    P0TMP   = PSFC
+    nlon = dimsizes(PRESI(0,0,0,:))
+    nlat = dimsizes(PRESI(0,0,:,0))
+    ntim = dimsizes(PRESI(:,0,0,0))
+    print("asdfasdf")
+    printVarSummary(hyam)
+
+    do k=0,nlev-1
+        PRESI(:,k,:,:) = doubletofloat(hyam(k)*1000e0+hybm(k)*PSFC(:,:,:))
+      end do
+    delete(P0TMP)
+  end if
+
+
+
+
   intyp = 1                             ; 1=linear, 2=log, 3=log-log
   kxtrp = True                          ; True=extrapolate
   varflg = 0 
