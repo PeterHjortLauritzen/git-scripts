@@ -15,6 +15,7 @@ set NTHRDS="1"
 #set res="ne30pg3_ne30pg3_mg17" #cslam
 #set res="ne480pg3_ne480pg3_mg17" #cslam
 #set res="ne5_ne5_mg37" #
+#set res="ne5pg3_ne5pg3_mg37" #
 set res="ne5pg3_ne5pg3_mg37" #
 #set res="ne30_ne30_mg17"        #no cslam
 #set res="f19_f19_mg17"        #no cslam
