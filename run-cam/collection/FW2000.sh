@@ -11,7 +11,7 @@ setenv PBS_ACCOUNT "P93300642"
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-set src="CAM"
+set src="CESM2.2-updates"
 #set res="ne0CONUSne30x8_ne0CONUSne30x8_mg17"
 set res="ne30_ne30_mg17"      #no cslam
 #set res="ne30pg3_ne30pg3_mg17"      #cslam
@@ -31,8 +31,8 @@ set defaultIO="False"
 #
 #set cset="FWHIST"
 #set cset="FCHIST"
-#set cset="FWsc2000climo"
-set cset="F2000climo"
+set cset="FWsc2000climo"
+#set cset="F2000climo"
 #set cset="FW2000climo"
 #set cset="FHS94"
 #
@@ -100,7 +100,6 @@ endif
 ./xmlchange TIMER_LEVEL=10
 
 
-./xmlchange EPS_AAREA=1.0e-04
 
 ./xmlquery EXEROOT
 ./xmlquery CASEROOT
@@ -311,4 +310,4 @@ endif
 #echo "se_hypervis_subcycle = 3" >> user_nl_cam
 
 qcmd -- ./case.build
-./case.submit
+#./case.submit

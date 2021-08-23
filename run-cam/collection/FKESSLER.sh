@@ -1,149 +1,81 @@
 #!/bin/tcsh
-setenv PBS_ACCOUNT P93300642
+if ( "$#argv" != 1) then
+  echo "Wrong number of arguments specified:"
+  echo "  -arg 1 res"
+  echo "supported resolutions/dycores are"
+  echo "se-cslam: ne30pg3_ne30pg3_mg17"
+  echo "se      : ne30_ne30_mg17"
+  echo "fv3     : C96_C96_mg17"
+  echo "fv      : f09_f09_mg17"
+  echo "mpas    : mpasa120_mpasa120"
+endif
+set n = 1
+unset res
+set res = "$argv[$n]" 
+
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-#set src="opt-se-cslam-pgf"
-set src="cam_pel_development_trunk"
-#set src="trunk"
+set src="cam_development"
 #
 # number of test tracers
 #
 set NTHRDS="1"
-#
-# run with CSLAM or without
-#
-#set res="ne30pg2_ne30pg2_mg17" #cslam
-set res="ne30pg3_ne30pg3_mg17" #cslam
-#set res="ne30_ne30_mg17"        #no cslam
-#set res="ne0CONUSne30x8_ne0CONUSne30x8_mg17"
-#set res="ne5_ne5_mg37"
-#set res="f09_f09_mg17"
-
+set pw=`pwd`
 set stopoption="ndays"
-set steps="6"
-#set stopoption="nsteps"
-#set steps="2"
-#
-# DO NOT MODIFY BELOW THIS LINE
-#
+set steps="10"
 set cset="FKESSLER"
-#
-# location of initial condition file (not in CAM yet)
-#
-if(`hostname` == 'hobart.cgd.ucar.edu') then
-  set inic="/scratch/cluster/pel/inic"
-  set homedir="/home"
-  set scratch="/scratch/cluster"
-#  set queue="monster"
-  set pecount="480"
-  set queue="monster"
-#  set pecount="672"  
-#  set compiler="nag"
-#  set queue="short"
-#  set pecount="192"  
-#  set compiler="nag"
-  set compiler="intel"
-endif  
-if(`hostname` == 'izumi.unified.ucar.edu') then
-  set inic="/scratch/cluster/pel/inic"
-  set homedir="/home"
-  set scratch="/scratch/cluster"
-  set queue="monster"
-  set pecount="480"
-#  set pecount="384"
-#  set pecount="240"
-#  set pecount="192"  
-  
-#  set queue="short"  
-#  set pecount="94"
-  #
-  # mapping files (not in cime yet)
-  #
-  set compiler="nag"
-#  set compiler="intel"
+if ($res == "C96_C96_mg17") then
+  set pecount="384"
+else
+  set pecount="450"
+#  set pecount="144"
 endif
-if(`hostname` == 'cheyenne5') then
-  echo "setting up for Cheyenne"
-  set inic="/glade/p/cgd/amp/pel/inic"
-  set homedir="/glade/u/home"
-  set scratch="/glade/scratch"
-  set queue="regular"
-  #
-  # 900, 1800, 2700, 5400 (pecount should divide 6*30*30 evenly)
-  #
-  set pecount="900" 
-  set compiler="intel"
+if ($res == "mpasa120_mpasa120") then
+  set src="mpas" # remove when MPAS on cam_development
+#  set pecount = "36x1"
+  set pecount = "576x1"
 endif
+set pw=`pwd`
+source machine_settings.sh startup
+set PBS_ACCOUNT P93300642
+echo $PBS_ACCOUNT
 
-set caze=hobart_${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
-$homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 00:20:00 --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --run-unsupported
+set caze=${cset}_${res}
+$homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 00:10:00 --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --run-unsupported
+
 
 cd $scratch/$USER/$caze
 ./xmlchange STOP_OPTION=$stopoption,STOP_N=$steps
 ./xmlchange DOUT_S=FALSE
-./xmlchange CASEROOT=$scratch/$USER/$caze
-./xmlchange EXEROOT=$scratch/$USER/$caze/bld
-./xmlchange RUNDIR=$scratch/$USER/$caze/run
-#
 ./xmlchange DEBUG=FALSE
 ./xmlchange NTHRDS=$NTHRDS
-## timing detail
 ./xmlchange TIMER_LEVEL=10
-##
-./xmlchange --append CAM_CONFIG_OPTS="-nadv_tt=6" #there are already 6 tracers in FKESSLER
-#./xmlchange CAM_CONFIG_OPTS="-phys kessler -chem terminator -analytic_ic  -nlev $nlev"
-##
-./xmlquery CAM_CONFIG_OPTS
-./xmlquery EXEROOT
-./xmlquery CASEROOT
-
+./xmlchange CAM_CONFIG_OPTS="-phys kessler -chem terminator -analytic_ic -nadv_tt=30 -cppdefs -Dtracer_diags -nlev 32"
 ./case.setup
 
+#echo "test_tracer_names              = 'TT_SLOT1','TT_SLOT2','TT_SLOT3','TT_COSB','TT_CCOSB','TT_lCCOSB','TT_SLOT'" >> user_nl_cam
 
-#echo "avgflag_pertape(1) = 'I'" >> user_nl_cam
-#echo "nhtfrq             = -24,-24 " >> user_nl_cam
-#echo "ndens = 1,1 " >> user_nl_cam
-
-#echo "interpolate_output = .true.,.true.,.true." >> user_nl_cam
-if ($stopoption == 'nsteps') then
-  #
-  # likely debugging
-  #
-  echo "se_statefreq       = 1"   >> user_nl_cam
-  echo "se_statediag_numtrac = 99 "   >> user_nl_cam
-else  
-  echo "se_statefreq       = 144" >> user_nl_cam
-endif  
-
-
-echo "avgflag_pertape(1) = 'I'" >> user_nl_cam
-echo "avgflag_pertape(2) = 'I'" >> user_nl_cam
-echo "avgflag_pertape(3) = 'I'" >> user_nl_cam
-echo "avgflag_pertape(4) = 'I'" >> user_nl_cam
-echo "avgflag_pertape(5) = 'I'" >> user_nl_cam
-#echo "nhtfrq             = -24,-24,-24,-24,-24,-24" >> user_nl_cam
-#echo "ndens = 1,1,1,1,1 " >> user_nl_cam
-echo "interpolate_output = .true.,.true.,.true.,.false." >> user_nl_cam
-echo "se_statefreq       = 144" >> user_nl_cam
-echo "nhtfrq             = -24,-24,-24,-24,-24,-24" >> user_nl_cam
-#echo "interpolate_output = .true.,.true." >> user_nl_cam
-echo "mfilt=1" >> user_nl_cam
-
-echo "fincl1         = 'PS','ABS_dPSdt'" >> user_nl_cam
-#echo "fincl2         = 'Q','CLDLIQ','RAINQM','T','U','V','iCLy','iCL','iCL2','OMEGA'" >> user_nl_cam
-#echo "fincl3         = 'TT_SLOT', 'TT_SLOT2', 'TT_SLOT3','TT_COSB', 'TT_CCOSB', 'TT_mix_lr', 'TT_mix_lo'," >> user_nl_cam
-#echo "                 'TT_mix_lu','TT_COSB2', 'TT_CCOSB2','TT_SLOT_SUM'" >> user_nl_cam
-#echo "fincl4         = 'TT_SLOT', 'TT_SLOT2', 'TT_SLOT3','TT_COSB', 'TT_CCOSB', 'TT_mix_lr', 'TT_mix_lo'," >> user_nl_cam
-#echo "                 'TT_mix_lu','TT_COSB2', 'TT_CCOSB2','TT_SLOT_SUM'		 " >> user_nl_cam
-#echo "test_tracer_names = 'TT_SLOT','TT_SLOT2','TT_SLOT3','TT_COSB','TT_CCOSB','TT_COSB2', 'TT_CCOSB2','TT_EM8','TT_GBALL','TT_TANH'" >> user_nl_cam
-
-
-
-if ($cset == "FW2000") then
-  echo "ncdata = '$inic/20180516waccm_se_spinup_pe720_10days.cam.i.1974-01-02-00000.nc'"   >> user_nl_cam
+if ( $res == "ne30pg3_ne30pg3_mg17" || $res == "ne30_ne30_mg17" ) then
+  echo "se_statefreq       = 144"                     >> user_nl_cam
+#  echo "interpolate_output = .true.,.true.,.true."    >> user_nl_cam
+#  echo "interpolate_nlat   = 192,192,192"             >> user_nl_cam
+#  echo "interpolate_nlon   = 288,288,288"             >> user_nl_cam
 endif
-
+if ($res == "mpasa120_mpasa120") then
+  echo "ncdata='/project/amp/pel/inic/x1.40962.init.umjs.dry.32levels.nc'" >> user_nl_cam
+endif
+echo "empty_htapes       = .true." >> user_nl_cam
+#echo "avgflag_pertape(1) = 'I'" >> user_nl_cam#
+#echo "avgflag_pertape(2) = 'I'" >> user_nl_cam
+#echo "avgflag_pertape(5) = 'I'" >> user_nl_cam
+#echo "nhtfrq             = -24,-24,-24,-24,-24" >> user_nl_cam
+#echo "fincl2 = 'TT_SLOT1','TT_SLOT2','TT_SLOT3','TT_COSB','TT_CCOSB','TT_lCCOSB','TT_SLOT_SUM','TT_SLOT'"  >> user_nl_cam
+#echo "fincl3 = 'TT_COSB_850','TT_COSB_700','TT_COSB_600','TT_CCOSB_850','TT_CCOSB_700','TT_CCOSB_600','TT_SLOT_700','TT_SLOT_600','TT_SLOT_850'" >> user_nl_cam
+cd SourceMods/src.cam/
+ln -s $pw/src.cam/*.F90 .
+cd ../../
+source $pw/machine_settings.sh cleanup
 
 if(`hostname` == 'hobart.cgd.ucar.edu') then
   ./case.build
@@ -151,7 +83,7 @@ endif
 if(`hostname` == 'izumi.unified.ucar.edu') then
  ./case.build
 endif
-if(`hostname` == 'cheyenne5') then
+if(`hostname` == 'cheyenne1' || `hostname` == 'cheyenne2' || `hostname` == 'cheyenne3' || `hostname` == 'cheyenne4' || `hostname` == 'cheyenne5' || `hostname` == 'cheyenne6') then
 qcmd -- ./case.build
 endif
 ./case.submit

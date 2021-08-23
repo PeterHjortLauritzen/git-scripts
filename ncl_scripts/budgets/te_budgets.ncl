@@ -38,8 +38,16 @@ begin
     nt        = dimsizes(tmp(:,0))
     print("Number of time-levels = "+nt)
     ncol      = dimsizes(tmp(0,:))
-    lat1d_gll     = fall->lat          ; Pull off lat/lon variable and
-    lon1d_gll     = fall->lon          ; convert both to 1D.
+    lat1d         = fall->lat          ; Pull off lat/lon variable and
+    lon1d        = fall->lon          ; convert both to 1D.
+    if (pgx) then
+      lat1d_gll     = fall->lat_d          ; Pull off lat/lon variable and
+      lon1d_gll     = fall->lon_d          ; convert both to 1D.
+    else
+      lat1d_gll     = lat1d
+      lon1d_gll     = lon1d
+    end if
+
 
   end if
   if (dycore.eq."FV") then
@@ -67,6 +75,8 @@ begin
     ncol      = dimsizes(tmp(0,:))
     lat1d_gll     = fall->lat          ; Pull off lat/lon variable and
     lon1d_gll     = fall->lon          ; convert both to 1D.
+    lat1d         = fall->lat          ; Pull off lat/lon variable and
+    lon1d         = fall->lon          ; convert both to 1D.
 
   end if
 
@@ -86,7 +96,7 @@ begin
   g         = 9.80665D0
   PI        = get_pi("double")
   deg2rad   = PI/180.0
-  ncol_p    = 1
+  ncol_p    = ncol
   eps       = 1.0D-13
   area_sphere_p = eps
   if (latlon) then
@@ -132,10 +142,12 @@ begin
       print("ncol_p="+ncol_p)
     else
       area      = fall->area   (:  )
+      area_p    = area
       area_sphere = sum(area(0:ncol-1))          
+      area_sphere_p = sum(area_p(0:ncol_p-1))          
     end if  
   end if
-
+  print("xxx"+ncol+" "+ncol_p)
   
 
   ;
@@ -171,7 +183,8 @@ begin
 
   print(" ")
   print(" ")
-  if (wet) then
+
+
     print("suffix (parameterization side)")
     print("pBF: state passed to parameterizations, before energy fixer")
     print("pBP: after energy fixer, before parameterizations")
@@ -179,7 +192,6 @@ begin
     print("pAM: after dry mass correction calculate but not used in SE")
     print(" ")
     print("history files saved off here")
-  end if
 
   print(" ")
   print("suffix (dynamics)")
@@ -247,8 +259,12 @@ begin
     ;
     qsize = 0
     str_vars      = (/"SE","KE"/)
-    str_stage     = (/"dED","dAF","dBD","dAD","dAR","dBF","dBH","dCH","dAH"/)
-    subcycle    = (/1.0D0,nsplit,nsplit,nsplit,nsplit,1.0D0,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle/)    
+    str_stage     = (/"pBF","pBP","pAP","pAM","dED","dAF","dBD"  ,"dAD" ,"dAR" ,"dBF","dBH","dCH","dAH","dBS","dAS"/);,"dX1","dX2","dX3"/);,"dBZ","dAZ"/)
+    subcycle    =     (/1D0,1D0  ,1D0  ,1D0  ,1.0D0,nsplit,nsplit,nsplit,nsplit,1.0D0,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit,nsplit*rsplit/);,nsplit*rsplit,nsplit*rsplit,nsplit*rsplit/);
+
+
+;    str_stage     = (/"dED","dAF","dBD","dAD","dAR","dBF","dBH","dCH","dAH"/)
+;    subcycle    = (/1.0D0,nsplit,nsplit,nsplit,nsplit,1.0D0,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle,nsplit*rsplit*hypervis_subcycle/)    
     dycoreDiags = True
   end if
 
@@ -260,12 +276,18 @@ begin
     tracer_mass = new((/nt,3,nstage/),typeof(tmp(0,0,0)))
     int_vars  = new((/nvars,nstage,nt/)     ,typeof(tmp(0,0,0)))        
   else
-    vars        = new((/nvars,nstage,nt,ncol/),typeof(tmp(0,0)))
-;    vars        = new((/ncol/),typeof(tmp(0,0)))
-    vars_p      = new((/ncol_p/),typeof(tmp(0,0)))
-    tot_energy  = new((/nt,nstage/),typeof(tmp(0,0)))
-    tot_energy_t  = new((/nt,nstage/),typeof(tmp(0,0)))
-    tot_energy_2d = new((/nt,nstage,ncol/),typeof(tmp(0,0)))
+    if (ncol.ge.ncol_p) then
+      vars          = new((/nvars,nstage,nt,ncol/),typeof(tmp(0,0)))
+      tot_energy_2d = new((/nt,nstage,ncol/),typeof(tmp(0,0)))
+    else
+      vars        = new((/nvars,nstage,nt,ncol_p/),typeof(tmp(0,0)))
+      tot_energy_2d = new((/nt,nstage,ncol_p/),typeof(tmp(0,0)))
+    end if
+    vars = 0.0D0  
+    tot_energy_2d =  0.0D0
+
+    tot_energy  = new((/3,nt,nstage/),typeof(tmp(0,0)))
+
 
     tracer_mass = new((/nt,3,nstage/),typeof(tmp(0,0)))
     int_vars    = new((/nvars,nstage,nt/)     ,typeof(tmp(0,0)))    
@@ -290,14 +312,15 @@ begin
 	  end do
 	else
           fld = fall->$str$(:,:)
-;xxx          vars(variable,stage,:,:) = fall->$str$(:,:)	  
 	  if (dimsizes(fld(0,:)).eq.ncol_p) then
+            vars(variable,stage,:,0:ncol_p-1) = fall->$str$(:,:)
             do t=0,nt-1	      
               int_vars(variable,stage,t) = sum(area_p(0:ncol_p-1)*fld(t,0:ncol_p-1))*inv_area_sphere_p
 	    end do
           else
             do t=0,nt-1	      	  
               int_vars(variable,stage,t) = sum(area(0:ncol-1)*fld(t,0:ncol-1))*inv_area_sphere
+              vars(variable,stage,:,0:ncol-1) = fall->$str$(:,:)	  
 	    end do
 	  end if
 	  delete(fld)
@@ -454,13 +477,13 @@ begin
 
   do t=0,nt-1
     do j=0,nstage-1
-      tot_energy(t,j)     = subcycle(j)*(int_vars(0,j,t)+int_vars(1,j,t))
-;    tot_energy(t,j)  = subcycle(j)*int_vars(0,j,t) ; thermal energy only
-;     tot_energy(t,j)  = subcycle(j)*int_vars(1,j,t); K energy only	       
-;      print("t="+t": "+str_stage(j)+"   "+tot_energy(t,j))
+      tot_energy(0,t,j)     = subcycle(j)*(int_vars(0,j,t)+int_vars(1,j,t))
+      ;
+      ;
+      tot_energy(1,t,j)  = subcycle(j)*int_vars(0,j,t) ; thermal energy only
+      tot_energy(2,t,j)  = subcycle(j)*int_vars(1,j,t) ; K energy only	       
 
-      tot_energy_2d(t,j,:) = subcycle(j)*(vars(0,j,t,0:ncol-1)); themal energy only
-;     tot_energy_2d(t,j,:) = subcycle(j)*(vars(0,j,t,0:ncol-1)+vars(1,j,t,0:ncol-1))
+      tot_energy_2d(t,j,:) = subcycle(j)*(vars(0,j,t,:)+vars(1,j,t,:))
       if (wet) then
         idx = str_match_ind(str_vars,"WV")
         tracer_mass(t,0,j) = subcycle(j)*(int_vars(idx,j,t))
@@ -497,24 +520,32 @@ begin
     print("in dynamics (cp and dp includes all water variables) and physics (cp=cp_dry in internal energy).")
   end if
 
-
-
+  energy_names = new(3, string)
+  energy_names = (/"TOTAL ENERGY","THERMAL ENERGY","KINETIC ENERGY"/)
 
   do t=0,nt-1
     if (PhysDiags) then
-      pEFIX    = (tot_energy(t,ipBP)-tot_energy(t,ipBF))/dtime
-      pDMEA = (tot_energy(t,ipAM)-tot_energy(t,ipAP))/dtime
+      pEFIX  = new((/3/),typeof(tot_energy(0,0,0)))
+      pDMEA  = new((/3/),typeof(tot_energy(0,0,0)))
+      param  = new((/3/),typeof(tot_energy(0,0,0)))
+      phys_total  = new((/3/),typeof(tot_energy(0,0,0)))
+      do idx = 0,2   
+        pEFIX(idx) = (tot_energy(idx,t,ipBP)-tot_energy(idx,t,ipBF))/dtime
+        pDMEA(idx) = (tot_energy(idx,t,ipAM)-tot_energy(idx,t,ipAP))/dtime
+        param(idx) = (tot_energy(idx,t,ipAP)-tot_energy(idx,t,ipBP))/dtime
+        phys_total(idx) = (tot_energy(idx,t,ipAM)-tot_energy(idx,t,ipBF))/dtime
+      end do
+      
+
       pwork = (tot_energy_2d(t,ipAM,:)-tot_energy_2d(t,ipAP,:))/dtime
 
-      param   = (tot_energy(t,ipAP)-tot_energy(t,ipBP))/dtime
       dparam = (tot_energy_2d(t,ipAP,:)-tot_energy_2d(t,ipBP,:))/dtime  
 
-      phys_total      = (tot_energy(t,ipAM)-tot_energy(t,ipBF))/dtime
     end if
 
     if (dycoreDiags) then
-      dyn_total       = (tot_energy(t,idBF)-tot_energy(t,idED))/dtime
-      dyn_phys_total       = (tot_energy(t,idAD)-tot_energy(t,idAF))/dtime
+      dyn_total       = (tot_energy(0,t,idBF)-tot_energy(0,t,idED))/dtime
+      dyn_phys_total       = (tot_energy(0,t,idAD)-tot_energy(0,t,idAF))/dtime
     end if
    
 
@@ -526,15 +557,19 @@ begin
       print("| ANALYSIS OF ENERGY DIAGNOSTICS IN PHYSCS                                      |")
       print("|                                                                               |")
       print("=================================================================================")
-      print(" ")
-      print("dE/dt parameterizations (param)         (pAP-pBP) "+sprintf("%6.3g",param)     +" W/M^2")
-      print("dE/dt dry mass adjustment (pwork)       (pAM-pAP) "+sprintf("%6.3g",pDMEA)     +" W/M^2")
-      print("dE/dt energy fixer (efix)               (pBP-pBF) "+sprintf("%6.3g",pEFIX)     +" W/M^2")
-      print("dE/dt physics total (phys)              (pAM-pBF) "+sprintf("%6.3g",phys_total)+" W/M^2")
+      do idx=0,2
+        print(" ")
+        print(energy_names(idx))
+        print("                                                  "+"total E  " +"  thermal E  "+"  K E")
+        print("dE/dt parameterizations (param)         (pAP-pBP) "+sprintf("%4g",param(idx))+" W/M^2")
+        print("dE/dt dry mass adjustment (pwork)       (pAM-pAP) "+sprintf("%4g",pDMEA(idx))+" W/M^2")
+        print("dE/dt energy fixer (efix)               (pBP-pBF) "+sprintf("%4g",pEFIX(idx))+" W/M^2")
+        print("dE/dt physics total (phys)              (pAM-pBF) "+sprintf("%4g",phys_total(idx)) +" W/M^2")
+      end do
     end if
     if (dycore.eq."FV".or.dycore.eq."FV3") then
       print(" ")    
-      fv_dycore = -pEFIX-pDMEA
+      fv_dycore = -phys_total(0)-pDMEA(0)
       print("Dycore TE dissipation estimated from physics TE terms (assuming ftype=1 and no energy discretization errors is")
       print(sprintf("%6.3g",fv_dycore)     +" W/M^2")
       print(" ")      
@@ -548,16 +583,16 @@ begin
       print("|                                                                               |")
       print("=================================================================================")
       print(" ")
-      diff1 = (tot_energy(t,ipAM)-tot_energy(t,ipBF))/dtime
-      diff2 = (tot_energy(t,idAP)-tot_energy(t,idED))/dtime
+      diff1 = (tot_energy(0,t,ipAM)-tot_energy(0,t,ipBF))/dtime
+      diff2 = (tot_energy(0,t,idAP)-tot_energy(0,t,idED))/dtime
       
       diff  = diff2-diff1
       
-      param_dyn= (tot_energy(t,idAP)-tot_energy(t,idED))/dtime	
+      param_dyn= (tot_energy(0,t,idAP)-tot_energy(0,t,idED))/dtime	
       print("dE/dt parameterizations (param) in dyn on A-grid (dAP-dED) "+sprintf("%6.3g",param_dyn)     +" W/M^2")
-      param_dyn_D= (tot_energy(t,idBD)-tot_energy(t,idED))/dtime	
+      param_dyn_D= (tot_energy(0,t,idBD)-tot_energy(0,t,idED))/dtime	
       print("dE/dt parameterizations (param) in dyn on D-grid (dBD-dED) "+sprintf("%6.3g",param_dyn_D)     +" W/M^2")
-      param_dyn_DA = (tot_energy(t,idBD)-tot_energy(t,idAP))/dtime
+      param_dyn_DA = (tot_energy(0,t,idBD)-tot_energy(0,t,idAP))/dtime
       print("dE/dt mapping wind tendencies from A to D grid (and back to A-grid for TE computations (dBD-dAP) "+sprintf("%6.3g",param_dyn_DA)     +" W/M^2")
 
 
@@ -566,7 +601,7 @@ begin
       print(" ")
 
 
-      dDycore = (tot_energy(t,idBF)-tot_energy(t,idBD))/dtime      
+      dDycore = (tot_energy(0,t,idBF)-tot_energy(0,t,idBD))/dtime      
       dadiab  = (tot_energy_2d(t,idBF,:)-tot_energy_2d(t,idBD,:))/dtime      
 
       print(" dE/dt dynamical core total (dBF-dBD) = "+dDycore)
@@ -574,14 +609,14 @@ begin
       print(" Breakdown of dycore dE/dt:")
       print(" ")      
 
-      Rayleigh = (tot_energy(t,idAT)-tot_energy(t,idBD))/dtime      
+      Rayleigh = (tot_energy(0,t,idAT)-tot_energy(0,t,idBD))/dtime      
       print(" dE/dt Rayleigh friction (dAT-dBD) = "+Rayleigh)
 
 
-      dDycore2d = (tot_energy(t,idAD)-tot_energy(t,idAF))/dtime
+      dDycore2d = (tot_energy(0,t,idAD)-tot_energy(0,t,idAF))/dtime
       print(" dE/dt 2D dynamical core (dAD-dAF) = "+dDycore2d)      
 
-      dRemap = (tot_energy(t,idAR)-tot_energy(t,idAD))/dtime
+      dRemap = (tot_energy(0,t,idAR)-tot_energy(0,t,idAD))/dtime
       remap  = (tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idAD,:))/dtime
       print(" dE/dt vertical remapping(dAR-dAD) = "+dRemap)      
       print(" ")
@@ -606,9 +641,9 @@ begin
       print(" ")
 
 
-      rate_of_change_2D_dyn = (tot_energy(t,idAD)-tot_energy(t,idBD))/dtime
+      rate_of_change_2D_dyn = (tot_energy(0,t,idAD)-tot_energy(0,t,idBD))/dtime
 
-      rate_of_change_vertical_remapping = (tot_energy(t,idAR)-tot_energy(t,idAD))/dtime
+      rate_of_change_vertical_remapping = (tot_energy(0,t,idAR)-tot_energy(0,t,idAD))/dtime
 
       remap = (tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idAD,:))/dtime
 
@@ -617,16 +652,16 @@ begin
       dadiab = (tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idBD,:))/dtime
 
 
-;      x1       = (tot_energy(t,idX2)-tot_energy(t,idX1))/dtime
-;      x2       = (tot_energy(t,idX3)-tot_energy(t,idX2))/dtime
+;      x1       = (tot_energy(0,t,idX2)-tot_energy(0,t,idX1))/dtime
+;      x2       = (tot_energy(0,t,idX3)-tot_energy(0,t,idX2))/dtime
 ;      print("dE/dt x1 "+sprintf("%6.3g",x1)+" W/M^2")
 ;      print("dE/dt x2 "+sprintf("%6.3g",x2)+" W/M^2")
 
 
-      diffusion_del4       = (tot_energy(t,idCH)-tot_energy(t,idBH))/dtime
-      diffusion_fric       = (tot_energy(t,idAH)-tot_energy(t,idCH))/dtime
-      diffusion_del4_tot   = (tot_energy(t,idAH)-tot_energy(t,idBH))/dtime
-      diffusion_sponge     = (tot_energy(t,idAS)-tot_energy(t,idBS))/dtime
+      diffusion_del4       = (tot_energy(0,t,idCH)-tot_energy(0,t,idBH))/dtime
+      diffusion_fric       = (tot_energy(0,t,idAH)-tot_energy(0,t,idCH))/dtime
+      diffusion_del4_tot   = (tot_energy(0,t,idAH)-tot_energy(0,t,idBH))/dtime
+      diffusion_sponge     = (tot_energy(0,t,idAS)-tot_energy(0,t,idBS))/dtime
       diffusion_total      = diffusion_del4_tot+diffusion_sponge
 
       print("dE/dt dyn total (dycore+phys tendency   (dBF-dED) "+sprintf("%6.3g",dyn_total)+" W/M^2")
@@ -634,16 +669,16 @@ begin
       print("dE/dt total adiabatic dynamics (adiab)            "+sprintf("%6.3g",dADIA)+" W/M^2")    
       print("dE/dt 2D dynamics (2D)                  (dAD-dBD) "+sprintf("%6.3g",rate_of_change_2D_dyn)+" W/M^2")
       print("dE/dt vertical remapping (remap)        (dAR-dAD) "+sprintf("%6.3g",rate_of_change_vertical_remapping)+" W/M^2")
-      rate_of_change_physics = (tot_energy(t,idBD)-tot_energy(t,idAF))/dtime
+      rate_of_change_physics = (tot_energy(0,t,idBD)-tot_energy(0,t,idAF))/dtime
       print("dE/dt physics tendency in dynamics      (dBD-dAF) "+sprintf("%6.3g",rate_of_change_physics)+" W/M^2")
       print(" ")
       print("Breakdown of 2D dynamics:")
       print(" ")
-      rate_of_change_heating_term_put_back_in = (tot_energy(t,idAH)-tot_energy(t,idCH))/dtime
+      rate_of_change_heating_term_put_back_in = (tot_energy(0,t,idAH)-tot_energy(0,t,idCH))/dtime
       fheat = (tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idCH,:))/dtime
 
       hvis = (tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idBH,:))/dtime
-      rate_of_change_hvis_sponge = (tot_energy(t,idAS)-tot_energy(t,idBS))/dtime
+      rate_of_change_hvis_sponge = (tot_energy(0,t,idAS)-tot_energy(0,t,idBS))/dtime
 
       print("      dE/dt hypervis del4 (hvis)             (dCH-dBH) "+sprintf("%6.3g",diffusion_del4)+" W/M^2")
       print("      dE/dt hypervis frictional heating del4 (dAH-dCH) "+sprintf("%6.3g",diffusion_fric)+" W/M^2")
@@ -672,7 +707,7 @@ begin
       print("|                                                                               |")
       print("=================================================================================")
       print(" ")
-      value_pdc = phys_total-rate_of_change_physics
+      value_pdc = phys_total(0)-rate_of_change_physics
       if (te_consistent_version.eq."True") then
         print("Your model is energy consistent (qsize_condensate_loading=1 and cpdry)")
         if (ftype .eq. "1") then
@@ -705,18 +740,24 @@ begin
       print("Energy fixer fixes dme_adjust (pDMEA), lack of energy conservation in adiabatic")
       print("dynamical core (dADIA), energy discrepancy (EDIFF) and energy lost/gained in physics-dynamics coupling")
       print(" ")
+      print("dADIA                     "+sprintf("%6.3g",dADIA    )+" W/M^2")    
+      print("pDMEA                     "+sprintf("%6.3g",pDMEA(0) )+" W/M^2")    
+      print("physics-dynamics coupling "+sprintf("%6.3g",value_pdc)+" W/M^2")
+      print(" ")
       str="dPDC+EDIFF"
       print(" ")
-      print("		-pEFIX = pDMEA+dADIA+"+str)
+      print("		-energy fixer = DME_adjust+adaib dycore+phys-dyn errors+discr")
       print("            ")
-      dPDC = -pEFIX-pDMEA-dADIA
-      print("          => "+str+" = -pEFIX-pDMEA-dADIA = "+sprintf("%6.3g",dPDC))
-      if (te_consistent_version.eq."False") then
-        discr = sprintf("%6.3g",dPDC)
-      end if
+      ttt = -pDMEA(0)-dADIA-value_pdc
+      discr = -99.0
+      print("          DME_adjust+adaib dycore+phys-dyn errors+discr = "+sprintf("%6.3g",ttt))
+      print("          Energy fixer                                  = "+sprintf("%6.3g",pEFIX(0)))
+      print(" ")
+      fff = ttt-pEFIX(0)
+      print("          Difference                                    = "+sprintf("%6.3g",fff))     
 
 
-      qneg  = (tot_energy(t,ipBF)-tot_energy(t,idED))/dtime
+      qneg  = (tot_energy(0,t,ipBF)-tot_energy(0,t,idED))/dtime
       print(" ")
       print(" qneg: "+qneg)
       print(" ")
@@ -727,9 +768,9 @@ begin
       str1 = qsize_condensate_loading+"                       &"
       str1 = str1 + " "+lcp_moist+"   &"      
       str1 = str1 + " "+ftype+"   &"      
-      str1 = str1 + " "+sprintf("%6.3g",param)+"&"
-      str1 = str1 + " "+sprintf("%6.3g",pDMEA)+"&"
-      str1 = str1 + " "+sprintf("%6.3g",pEFIX)+"&"
+      str1 = str1 + " "+sprintf("%6.3g",param(0))+"&"
+      str1 = str1 + " "+sprintf("%6.3g",pDMEA(0))+"&"
+      str1 = str1 + " "+sprintf("%6.3g",phys_total(0))+"&"
       str1 = str1 + " "+discr+"&"
       str1 = str1 + " "+sprintf("%6.3g",rate_of_change_2D_dyn)+"&"
       str1 = str1 + " "+sprintf("%6.3g",diffusion_total)+"&"
@@ -738,7 +779,7 @@ begin
       str1 = str1 + " "+sprintf("%6.3g",twoDresidual)+"&"
       str1 = str1 + " "+sprintf("%6.3g",rate_of_change_vertical_remapping)+"&"
       str1 = str1 + " "+sprintf("%6.3g",dADIA)+"&"
-       str1 = str1 + " "+sprintf("%6.3g",value_pdc)
+      str1 = str1 + " "+sprintf("%6.3g",value_pdc)
       str1 = str1 + " "+str_pdc
 
       if (fileexists(diags_fname)) then
@@ -778,21 +819,21 @@ begin
         print("---------")
       end if
       print(" ")
-      pEFIX    = (tracer_mass(t,m_cnst,ipBP)-tracer_mass(t,m_cnst,ipBF))
-      pDMEA = (tracer_mass(t,m_cnst,ipAM)-tracer_mass(t,m_cnst,ipAP))
-      param           = (tracer_mass(t,m_cnst,ipAP)-tracer_mass(t,m_cnst,ipBP))
+      phys_total(0)    = (tracer_mass(t,m_cnst,ipBP)-tracer_mass(t,m_cnst,ipBF))
+      pDMEA(0) = (tracer_mass(t,m_cnst,ipAM)-tracer_mass(t,m_cnst,ipAP))
+      param(0)           = (tracer_mass(t,m_cnst,ipAP)-tracer_mass(t,m_cnst,ipBP))
       dyn_total       = (tracer_mass(t,m_cnst,idBF)-tracer_mass(t,m_cnst,idED))
       phys_total      = (tracer_mass(t,m_cnst,ipAM)-tracer_mass(t,m_cnst,ipBF))
 
-      print("dMASS/dt energy fixer                      (pBP-pBF) "+sprintf("%6.3g",pEFIX)+" Pa")
-      print("dMASS/dt parameterizations                 (pAP-pBP) "+sprintf("%6.3g",param)+" Pa")
-      print("dMASS/dt dry mass adjustment               (pAM-pAP) "+sprintf("%6.3g",pDMEA)+" Pa")
+      print("dMASS/dt energy fixer                      (pBP-pBF) "+sprintf("%6.3g",phys_total(0))+" Pa")
+      print("dMASS/dt parameterizations                 (pAP-pBP) "+sprintf("%6.3g",param(0))+" Pa")
+      print("dMASS/dt dry mass adjustment               (pAM-pAP) "+sprintf("%6.3g",pDMEA(0))+" Pa")
       print(" ")
-      value = pEFIX+pDMEA
+      value = phys_total(0)+pDMEA(0)
       print("=> dMASS/dt dynamical core (estimated from physics)  ")
       print("   dMASS/dt energy fixer + dMASS/dt dry mass adjustment "+sprintf("%6.3g",value)+" Pa")
 
-      print("=> dMASS/dt physics total                   (pAM-pBF)"+sprintf("%6.3g",phys_total)+" Pa")
+      print("=> dMASS/dt physics total                   (pAM-pBF)"+sprintf("%6.3g",phys_total(0))+" Pa")
  
 
       print("  ")
@@ -825,7 +866,7 @@ begin
       if (idBD.ge.0.and.idAF.ge.0) then
         mass_change__physics = (tracer_mass(t,m_cnst,idBD)-tracer_mass(t,m_cnst,idAF))
         print("dE/dt physics tendency in dynamics      (dBD-dAF) "+sprintf("%6.3g",mass_change__physics)+" Pa")
-        value = phys_total-mass_change__physics
+        value = phys_total(0)-mass_change__physics
       end if
       if (idBD.ge.0.and.idAF.ge.0) then
         if (ftype .eq. "1") then
@@ -866,7 +907,7 @@ begin
   ;----------------------------------------------------------------------------------------------------------------
   ;
   output_format = "pdf"
-  wks = gsn_open_wks(output_format,"te")
+  wks = gsn_open_wks(output_format,panelTitle)
   gsn_define_colormap(wks,"NCV_jaisnd");3gauss")      
 ; gsn_define_colormap(wks,"BlAqGrYeOrReVi200")   ; choose colormap
 ; gsn_define_colormap(wks,"GMT_polar")
@@ -908,41 +949,47 @@ begin
 
   res@lbBoxLinesOn = False
 
+  res_p=res
+
   plot = new(6,graphic) 
 
-  res@sfXArray            = lon1d_gll
-  res@sfYArray            = lat1d_gll
 
-  res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
+
+  res_p@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
   fmin = -150.
       fmax = 150.
-  res@cnMinLevelValF  = fmin                        ; set the minimum contour level
-  res@cnMaxLevelValF  = fmax                   ; set the maximum contour level
-  res@cnLevelSpacingF = (fmax-fmin)/50.0                  ; set the interval between contours
-  res@gsnLeftString        = "Total physics TE tendency"      
+  res_p@cnMinLevelValF  = fmin                        ; set the minimum contour level
+  res_p@cnMaxLevelValF  = fmax                   ; set the maximum contour level
+  res_p@cnLevelSpacingF = (fmax-fmin)/50.0                  ; set the interval between contours
+  res_p@gsnLeftString        = "Total physics TE tendency"      
 
-;  res@tiMainString        = " [W/m^2]"
+;  res_p@tiMainString        = " [W/m^2]"
       ;-148.2925226269828   max=1770.210548306306
 
 
-  min_f = min(dparam)
-  max_f = max(dparam)
-  res@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
-  plot(0) = gsn_csm_contour_map_ce(wks,dparam,res)
+  min_f = min(dparam(0:ncol_p-1))
+  max_f = max(dparam(0:ncol_p-1))
+  print("dparam "+min_f+" "+max_f)
+  res_p@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
+  res_p@sfXArray            = lon1d
+  res_p@sfYArray            = lat1d
+  plot(0) = gsn_csm_contour_map_ce(wks,dparam(0:ncol_p-1),res_p)
 
-  res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
-  res@cnMinLevelValF  =-20.                        ; set the minimum contour level
-  res@cnMaxLevelValF  = 20.                   ; set the maximum contour level
-  res@cnLevelSpacingF = 0.50                  ; set the interval between contours
-  res@gsnRightString       = "W/m~S~2~N"
-  res@gsnLeftString        = "Pressure work error TE tendency (pwork)"
+  res_p@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
+  res_p@cnMinLevelValF  =-20.                        ; set the minimum contour level
+  res_p@cnMaxLevelValF  = 20.                   ; set the maximum contour level
+  res_p@cnLevelSpacingF = 0.50                  ; set the interval between contours
+  res_p@gsnRightString       = "W/m~S~2~N"
+  res_p@gsnLeftString        = "Pressure work error TE tendency (pwork)"
 ;  res@tiMainString        = "Pressure work error (pwork) [W/m^2]"
 
 
-  min_f = min(pwork)
-  max_f = max(pwork)
-  res@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
-  plot(1) = gsn_csm_contour_map_ce(wks,pwork,res)
+  min_f = min(pwork(0:ncol_p-1))
+  max_f = max(pwork(0:ncol_p-1))
+  res_p@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
+  res_p@sfXArray            = lon1d
+  res_p@sfYArray            = lat1d
+  plot(1) = gsn_csm_contour_map_ce(wks,pwork(0:ncol_p-1),res_p)
 
   res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
   fmin   = -150.
@@ -952,11 +999,13 @@ begin
   res@cnLevelSpacingF = (fmax-fmin)/50.0                  ; set the interval between contours
 
   res@gsnLeftString        = "Adiabatic dycore TE tendency (adiab)"      
-  min_f = min((tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idBD,:))/dtime)
-  max_f = max((tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idBD,:))/dtime)
+  min_f = min((tot_energy_2d(t,idAR,0:ncol-1)-tot_energy_2d(t,idBD,0:ncol-1))/dtime)
+  max_f = max((tot_energy_2d(t,idAR,0:ncol-1)-tot_energy_2d(t,idBD,0:ncol-1))/dtime)
 
   res@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
-  plot(2) = gsn_csm_contour_map_ce(wks,dadiab,res)
+  res@sfXArray            = lon1d_gll
+  res@sfYArray            = lat1d_gll
+  plot(2) = gsn_csm_contour_map_ce(wks,dadiab(0:ncol-1),res)
       printMinMax((tot_energy_2d(t,idAR,:)-tot_energy_2d(t,idBD,:))/dtime,False)
       ;min=-1489.836497456233   max=122.200959737036
 
@@ -969,18 +1018,18 @@ begin
 
 
 
-  min_f = min(hvis)
-  max_f = max(hvis)
+  min_f = min(hvis(0:ncol-1))
+  max_f = max(hvis(0:ncol-1))
   res@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
 
-  plot(3) = gsn_csm_contour_map_ce(wks,hvis,res)	
+  plot(3) = gsn_csm_contour_map_ce(wks,hvis(0:ncol-1),res)	
 
 ;      average_hvis = sum(area(:)*(tot_energy_2d(t,idAH,:)-tot_energy_2d(t,idBH,:))/dtime)/(4.0*PI)
 ;      print("ave_hvis = "+average_hvis)
   res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
  if (dycore.eq."SE") then
-  res@cnMinLevelValF  = -0.1                        ; set the minimum contour level
-  res@cnMaxLevelValF  = 0.1                   ; set the maximum contour level
+  res@cnMinLevelValF  = -0.8                        ; set the minimum contour level
+  res@cnMaxLevelValF  = 0.03                   ; set the maximum contour level
   res@cnLevelSpacingF = 0.005                  ; set the interval between contours 
 else
   res@cnMinLevelValF  = -10.0                        ; set the minimum contour level
@@ -989,24 +1038,27 @@ else
 end if
   res@gsnLeftString        = "Vertical remapping TE tendency (remap)"      
 
-  min_f = min(remap)
-  max_f = max(remap)
+  min_f = min(remap(0:ncol-1))
+  max_f = max(remap(0:ncol-1))
   res@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
 
-  plot(4) = gsn_csm_contour_map_ce(wks,remap,res)
+  plot(4) = gsn_csm_contour_map_ce(wks,remap(0:ncol-1),res)
 
 
   res@cnLevelSelectionMode = "ManualLevels"    ; manually set the contour levels with the following 3 resources
-  res@cnMinLevelValF  = -10.0                        ; set the minimum contour level
-  res@cnMaxLevelValF  = 10.0                   ; set the maximum contour level
-  res@cnLevelSpacingF = 0.5                  ; set the interval between contours
+;  res@cnMinLevelValF  = -10.0                        ; set the minimum contour level
+;  res@cnMaxLevelValF  = 10.0                   ; set the maximum contour level
+;  res@cnLevelSpacingF = 0.5                  ; set the interval between contours
+  res@cnMinLevelValF  = -50.0                        ; set the minimum contour level
+  res@cnMaxLevelValF  = 50.0                   ; set the maximum contour level
+  res@cnLevelSpacingF = 1.0                  ; set the interval between contours
   res@gsnLeftString        = "Frictional heating TE tendency (fheat)"  
 
-  min_f = min(fheat)
-  max_f = max(fheat)
+  min_f = min(fheat(0:ncol-1))
+  max_f = max(fheat(0:ncol-1))
   res@lbTitleString    = "global min = "+sprintf("%6.4g",min_f)+"  global  max="+sprintf("%6.4g",max_f)
 
-  plot(5) = gsn_csm_contour_map_ce(wks,fheat,res)
+  plot(5) = gsn_csm_contour_map_ce(wks,fheat(0:ncol-1),res)
  
 
   resP                  = True                   ; modify the panel plot
@@ -1023,7 +1075,7 @@ end if
   if (dycore.eq."SE") then    
      resP@txString   = "TE tendencies for the default CAM-SE configuration (AMIP)"
   end if
-
+  resP@txString   = panelTitle
      gsn_panel(wks,plot,(/3,2/),resP)               ; now draw as one plot
 
 
@@ -1044,7 +1096,7 @@ end if
     print("Sampling error will be very small if working with long averages ...")
     print(" ")
     do t=0,nt-2
-      yyy = (tot_energy(t,idBF)-tot_energy(t+1,ipBF))/dtime ;tot_energy(t,idBF) xxxx
+      yyy = (tot_energy(0,t,idBF)-tot_energy(0,t+1,ipBF))/dtime ;tot_energy(0,t,idBF) xxxx
       print("t="+t+": normalized difference between states (should be zero) = "+yyy)      
     end do
  
@@ -1058,7 +1110,7 @@ end if
     print(" ")
     do t=0,nt-1
       print("t="+t+" "+ipAM+" "+idAP)
-      diff1 = (tot_energy(t,ipAM)-tot_energy(t,idAP))/dtime ;tot_energy(t,ipAM) xxx
+      diff1 = (tot_energy(0,t,ipAM)-tot_energy(0,t,idAP))/dtime ;tot_energy(0,t,ipAM) xxx
       print("t="+t+": normalized difference between states (should be zero) = "+diff1)
     end do
     print(" ")
@@ -1069,8 +1121,8 @@ end if
     print("Check if physics increment in physics is the same as in dynamics")
     print(" ")     
     do t=0,nt-1   
-      diff1 = (tot_energy(t,ipAM)-tot_energy(t,ipBF))/dtime
-      diff2 = (tot_energy(t,idAP)-tot_energy(t,idED))/dtime
+      diff1 = (tot_energy(0,t,ipAM)-tot_energy(0,t,ipBF))/dtime
+      diff2 = (tot_energy(0,t,idAP)-tot_energy(0,t,idED))/dtime
       print("Physics increment is             "+diff1)
       print("Physics increment in dynamics is "+diff2)
       diff=diff2-diff1
@@ -1079,23 +1131,23 @@ end if
     end do
     print(" ")
     print("**************************************************")
-    print("Budget check: pEFIX = dDycore+pDMEA")
+    print("Budget check: phys_total = dDycore+pDMEA")
     print("**************************************************")
     print(" ")
     print("Note: if not working with instantaneous data there will be a sampling error!")
     print("Sampling error will be very small if working with long averages ...")
     print(" ")     
     do t=1,nt-1
-      pEFIX   = (tot_energy(t,ipBP)-tot_energy(t,ipBF))/dtime
-      pDMEA   = (tot_energy(t-1,ipAM)-tot_energy(t-1,ipAP))/dtime
-      dDycore = (tot_energy(t-1,idBF)-tot_energy(t-1,idAP))/dtime
+      phys_total(0)   = (tot_energy(0,t,ipBP)-tot_energy(0,t,ipBF))/dtime
+      pDMEA(0)   = (tot_energy(0,t-1,ipAM)-tot_energy(0,t-1,ipAP))/dtime
+      dDycore = (tot_energy(0,t-1,idBF)-tot_energy(0,t-1,idAP))/dtime
       print("dE/dt dycore (from previous time-step) ="+dDycore)
-      print("dE/dt pDMEA  (from previous time-step) ="+pDMEA)
-      print("dE/dt energy fixer                     ="+pEFIX)
+      print("dE/dt pDMEA  (from previous time-step) ="+pDMEA(0))
+      print("dE/dt energy fixer                     ="+phys_total(0))
       print(" ")
-      print("Budget equation: -pEFIX(t)=dDycore(t-1)+pDMEA(t-1)")
+      print("Budget equation: -phys_total(t)=dDycore(t-1)+pDMEA(t-1)")
       print(" ")
-      diff = pEFIX+dDycore+pDMEA
+      diff = phys_total(0)+dDycore+pDMEA(0)
       print("t="+t+": Is budget equation fullfilled? "+diff)
       print(" ")       
     end do

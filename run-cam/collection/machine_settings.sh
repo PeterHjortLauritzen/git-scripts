@@ -7,13 +7,7 @@ set n   = 1
 set arg = "$argv[$n]"
 set argumentSupported="False"
 
-#setenv PBS_ACCOUNT "P93300007" #If you put all of this request together it comes to 714 K-hr, 0.71 M-hr.
-#
-#P93300607 is overspent
-#
-unset PBS_ACCOUNT
-setenv PBS_ACCOUNT "CESM0013"
-#set PBS_ACCOUNT="P93300642"
+
 
 
 if ( $arg == "startup" ) then   
@@ -36,12 +30,12 @@ if ( $arg == "startup" ) then
 #    set compiler="nag"
     set machine="izumi"
   endif
-  if(`hostname` == 'cheyenne1' || `hostname` == 'cheyenne2' || `hostname` == 'cheyenne3' || `hostname` == 'cheyenne4' || `hostname` == 'cheyenne5' || `hostname` == 'cheyenne6') then
+  if(`hostname` == 'cheyenne2.ib0.cheyenne.ucar.edu' || `hostname` == 'cheyenne1' || `hostname` == 'cheyenne2' || `hostname` == 'cheyenne3' || `hostname` == 'cheyenne4' || `hostname` == 'cheyenne5' || `hostname` == 'cheyenne6') then
     echo "setting up for Cheyenne"
     set inic="/glade/p/cgd/amp/pel/inic"
     set homedir="/glade/u/home"
     set scratch="/glade/scratch"
-    set queue="premium"
+    set queue="regular"
     set compiler="intel"
     set machine="cheyenne"
     set inputdata="/glade/p/cesmdata/cseg/inputdata/"

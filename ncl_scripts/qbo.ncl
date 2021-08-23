@@ -50,7 +50,13 @@ begin
 ;  res@tmBorderThicknessF = 4 ;axes thickness
 
 ;  ls_command = "ls "+"*cam.h0.200*-*.nc" ;dir+"/"+case+".cam."+h_number+".*.nc"
-
+;
+; MPAS
+;
+;  ls_command = "ls "+"*cam.h0.*-*lat-lon.nc" ;dir+"/"+case+".cam."+h_number+".*.nc" ;default
+;
+; SE
+;
   ls_command = "ls "+"*cam.h0.*-*.nc" ;dir+"/"+case+".cam."+h_number+".*.nc" ;default
 ;  ls_command = "ls "+"*cam.h0.1996-*.nc" ;dir+"/"+case+".cam."+h_number+".*.nc" ;default
 
@@ -64,7 +70,13 @@ begin
   print("addfiles "+all_files)
   f  = addfiles (all_files,"r")
   ListSetType(f,"cat")
-
+;
+; MPAS
+;
+;  fphis  = addfile ("PHIS.nc","r")
+;
+; SE
+;
   fphis  = addfile ("/glade/p/cesmdata/cseg/inputdata/atm/cam/topo/fv_0.9x1.25_nc3000_Nsw042_Co060_Fi001_GRNL_c170405.nc","r")
   ;
   ; interpolate to pressure levels
@@ -72,7 +84,7 @@ begin
   vartmp = f[:]->$vname$
   printVarSummary (vartmp)
   nlev   = dimsizes(vartmp&lev)
-
+  print("====")
   PSFC   = f[:]->PS
   PSFC   = PSFC/100.0
   P0mb   = 1000.0

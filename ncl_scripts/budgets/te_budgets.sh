@@ -1,8 +1,9 @@
 #!/bin/tcsh
-if ( "$#argv" != 2) then
+if ( "$#argv" != 3) then
   echo "Wrong number of arguments specified:"
   echo "  -arg 1 file with energy diagnostics (averaged)"
   echo "  -arg 2 SE,FV,FV3"
+  echo "  -arg panel title"
   exit
 endif
 set n = 1
@@ -37,6 +38,10 @@ set n = 2
 set dycore = "$argv[$n]"
 echo "Dycore="$dycore
 
+set n = 3
+set panelTitle = "$argv[$n]" 
+echo "Panel title "$panelTitle
+
 grep "atm_cpl_dt[[:space:]]"            drv_in >> tmp_file
 set dtime = `sed -r 's/([^0-9]*([0-9]*)){1}.*/\2/' tmp_file`
 rm tmp_file
@@ -44,6 +49,7 @@ rm tmp_file
 echo "dtime ="$dtime
 
 set supportedDycore="False"
+set n = 2
 if ($argv[$n] == "SE") then
   set supportedDycore=True
   touch tmp_file
@@ -118,5 +124,5 @@ echo "hypervis_subcycle="$hyper
 echo "hypervis_subcycle_sponge="$hyper_sponge
 echo "lcp_moist ="$lcp_moist
 #ncl 'dir="'$PWD'"' 'fname="'$file'"' 'rsplit='$rsplit'' 'nsplit='$nsplit'' 'hypervis_subcycle='$hyper'' 'hypervis_subcycle_sponge='$hyper_sponge'' 'ftype='$ftype'' 'qsize_condensate_loading='$qsize_condensate_loading'' 'dtime='$dtime'' 'lcp_moist="'$lcp_moist'"' 'dycore="'$dycore'"' $ncl_dir/te_budgets.ncl  
-ncl 'dir="'$PWD'"' 'fname="'$file'"' 'rsplit='$rsplit'' 'nsplit='$nsplit'' 'hypervis_subcycle='$hyper'' 'hypervis_subcycle_sponge='$hyper_sponge'' 'ftype='$ftype'' 'qsize_condensate_loading='$qsize_condensate_loading'' 'dtime='$dtime'' 'lcp_moist="'$lcp_moist'"' 'dycore="'$dycore'"' $ncl_dir/te_budgets.ncl  
+ncl 'dir="'$PWD'"' 'fname="'$file'"' 'rsplit='$rsplit'' 'nsplit='$nsplit'' 'hypervis_subcycle='$hyper'' 'hypervis_subcycle_sponge='$hyper_sponge'' 'ftype='$ftype'' 'qsize_condensate_loading='$qsize_condensate_loading'' 'dtime='$dtime'' 'lcp_moist="'$lcp_moist'"' 'dycore="'$dycore'"' 'panelTitle="'$panelTitle'"' $ncl_dir/te_budgets.ncl  
 

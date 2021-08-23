@@ -16,7 +16,7 @@ set res = "$argv[$n]"
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-set src="cam_development_phl"
+set src="cam_development"
 #
 # number of test tracers
 #

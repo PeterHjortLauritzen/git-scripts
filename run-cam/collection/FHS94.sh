@@ -1,12 +1,12 @@
 #!/bin/tcsh
-setenv PBS_ACCOUNT NACM0003
+setenv PBS_ACCOUNT "P93300642"
 #
 # P93300642
 #
 #
 # source code (assumed to be in /glade/u/home/$USER/src)
 #
-set src="opt-se-cslam-new"
+set src="CESM2.2-updates"
 #set src="trunk"
 set cset="FHS94"
 #
@@ -17,7 +17,8 @@ set NTHRDS="1"
 #set res="f09_f09_mg17"
 #set res="ne30pg2_ne30pg2_mg17" #cslam
 #set res="ne30pg3_ne30pg3_mg17" #cslam
-set res="ne30_ne30_mg17"        #no cslam
+#set res="ne30_ne30_mg17"        #no cslam
+set res="ne16_ne16_mg17"        #no cslam
 
 #set stopoption="nsteps"
 #set steps="3"
@@ -62,7 +63,7 @@ if(`hostname` == 'izumi.unified.ucar.edu') then
   set pg3map="/scratch/cluster/pel/cslam-mapping-files"
   set compiler="intel"
 endif
-if(`hostname` == 'cheyenne5') then
+if(`hostname` == 'cheyenne4') then
   echo "setting up for Cheyenne"
   set inic="/glade/p/cgd/amp/pel/inic"
   set homedir="/glade/u/home"
@@ -71,14 +72,14 @@ if(`hostname` == 'cheyenne5') then
   #
   # 900, 1800, 2700, 5400 (pecount should divide 6*30*30 evenly)
   #
-  set pecount="2700" # 637 SYPD with FHS94 ne30_ne30; runs in 8min
-  set walltime="00:10:00"
+  set pecount="450" # 637 SYPD with FHS94 ne30_ne30; runs in 8min
+  set walltime="00:20:00"
 
   set machine="cheyenne"  
   set compiler="intel"
 endif
 
-set caze=${machine}_${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
+set caze=jablo #${machine}_${src}_${cset}_CAM_${res}_${pecount}_NTHRDS${NTHRDS}_${steps}${stopoption}
 $homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime $walltime --pecount $pecount  --project $PBS_ACCOUNT --compiler $compiler --machine $machine --run-unsupported
 
 cd $scratch/$USER/$caze
@@ -102,24 +103,24 @@ cd $scratch/$USER/$caze
 
 ./case.setup
 
-echo "se_statefreq       = 244"        >> user_nl_cam
+echo "se_statefreq       = 1"        >> user_nl_cam
 #echo "avgflag_pertape(1) = 'I'" >> user_nl_cam
-echo "nhtfrq             = 0,0 " >> user_nl_cam
+echo "nhtfrq             = -1,0 " >> user_nl_cam
 #echo "ndens = 1,1 " >> user_nl_cam
 echo "interpolate_output = .true.,.true.,.true.,.true.,.true." >> user_nl_cam
 #echo "se_nu_top = 1.25e5"  >> user_nl_cam
 #echo "se_hypervis_on_plevs           = .false." >> user_nl_cam
 #echo "ncdata='/scratch/cluster/pel/nu_top_0.25_trunk_FHS94_CAM_ne30_ne30_mg17_480_NTHRDS1_1200ndays/run/nu_top_0.25_trunk_FHS94_CAM_ne30_ne30_mg17_480_NTHRDS1_1200ndays.cam.i.0002-01-01-00000.nc'"
 
-echo "se_nu              =   0.4e15  ">> user_nl_cam
-echo "se_nu_div          =   2.0e15  ">> user_nl_cam
-echo "se_nu_p            =   1.0e15  ">> user_nl_cam
-echo "use_topo_file      =  .true.   ">>user_nl_cam
-echo "se_hypervis_subcycle        = 3">>user_nl_cam
+#echo "se_nu              =   0.4e15  ">> user_nl_cam
+#echo "se_nu_div          =   2.0e15  ">> user_nl_cam
+#echo "se_nu_p            =   1.0e15  ">> user_nl_cam
+#echo "use_topo_file      =  .true.   ">>user_nl_cam
+#echo "se_hypervis_subcycle        = 3">>user_nl_cam
 
-echo "bnd_topo = '/fs/cgd/csm/inputdata/atm/cam/topo/se/ne30np4_nc3000_Co060_Fi001_PF_nullRR_Nsw042_20171020.nc'">>user_nl_cam
+#echo "bnd_topo = '/fs/cgd/csm/inputdata/atm/cam/topo/se/ne30np4_nc3000_Co060_Fi001_PF_nullRR_Nsw042_20171020.nc'">>user_nl_cam
 #echo "bnd_topo = '/project/amp/pel/release/topo/old/ne30np4_nc3000_Co092_Fi001_MulG_PF_nullRR_Nsw064_20170510.nc'">>user_nl_cam
-echo "ncdata = '/fs/cgd/csm/inputdata/atm/cam/inic/se/ape_topo_cam4_ne30np4_L30_c171020.nc'" >>user_nl_cam
+#echo "ncdata = '/fs/cgd/csm/inputdata/atm/cam/inic/se/ape_topo_cam4_ne30np4_L30_c171020.nc'" >>user_nl_cam
 #echo "ncdata = '/scratch/cluster/pel/opt-se-cslam-pgf_FHS94_CAM_ne30_ne30_mg17_480_NTHRDS1_1200ndays/run/opt-se-cslam-pgf_FHS94_CAM_ne30_ne30_mg17_480_NTHRDS1_1200ndays.cam.i.0001-02-01-00000.nc'">>user_nl_cam
 
 echo "inithist          =  'MONTHLY'">>user_nl_cam
@@ -130,8 +131,8 @@ endif
 if(`hostname` == 'izumi.unified.ucar.edu') then
   ./case.build
 endif  
-if(`hostname` == 'cheyenne5') then
+if(`hostname` == 'cheyenne4') then
   qcmd -- ./case.build
 endif
-./case.submit
+#./case.submit
 
