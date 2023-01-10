@@ -44,7 +44,7 @@ module load python/3.7.9
 ncar_pylib
 
 unset caze
-setenv caze perf_${comp}_${cam_phys}_${res}_${pes}
+setenv caze perf_${comp}_#{cam_phys}_${res}_${pes}
 if ($comp == "QPC7") then
   $src/create_newcase --case /glade/scratch/$USER/$caze --compset QPC6 --res $res --driver $drv --walltime $wall --mach cheyenne --pecount $pes --project $proj --compiler intel --queue regular --run-unsupported
 else

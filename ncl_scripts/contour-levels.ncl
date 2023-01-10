@@ -121,12 +121,12 @@ begin
     end if
 
     if (vname.eq."T") then
-      res@cnLevelSelectionMode = "ManualLevels"        ; manual contour levels
-      if (diff) then
-          res@cnLevelSpacingF      =  0.5                   ; contour interval
-          res@cnMinLevelValF       = -10.0                  ; min level
-          res@cnMaxLevelValF       = 10.0                  ; max level
-        else
+;      res@cnLevelSelectionMode = "ManualLevels"        ; manual contour levels
+;      if (diff) then
+;          res@cnLevelSpacingF      =  0.5                   ; contour interval
+;          res@cnMinLevelValF       = -10.0                  ; min level
+;          res@cnMaxLevelValF       = 10.0                  ; max level
+;        else
 ;          res@cnLevelSpacingF      =  5.0                   ; contour interval
 ;          res@cnMinLevelValF       =  185.0                  ; min level
 ;          res@cnMaxLevelValF       =  305.0                  ; max level
@@ -134,10 +134,10 @@ begin
 ; WACCM
 ;
 
-          res@cnLevelSpacingF      =  5.0                   ; contour interval
-          res@cnMinLevelValF       =  180.0                  ; min level
-          res@cnMaxLevelValF       =  300.0                  ; max level
-        end if
+;          res@cnLevelSpacingF      =  5.0                   ; contour interval
+;          res@cnMinLevelValF       =  180.0                  ; min level
+;          res@cnMaxLevelValF       =  300.0                  ; max level
+;        end if
     end if
 
 

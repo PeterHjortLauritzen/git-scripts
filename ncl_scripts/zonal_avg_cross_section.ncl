@@ -279,7 +279,7 @@ begin
        minP = 0.0005;xxx
      end if
      maxP = 1000.0
-     dp   = (maxP-minP)/(nlev-1)
+
      pnew = new(nlev,double)
      do k=0,nlev-1
        pnew(k) = hyam(k)*ps0+hybm(k)*ps0
@@ -305,7 +305,13 @@ begin
     ;  calculate zonal average of 3d variable
   
 ;    zonal_fonP =  dim_avg(fonP)                             ; calculate zonal ave WRONG!!!
-    zonal_fonP =  dim_avg(f3d)                             ; calculate zonal ave
+
+    lon = f->lon
+
+    ilon = ind_nearest_coord (90.0, lon, 0)
+    print("xxx ilon="+ilon+"   "+lon(ilon))
+
+    zonal_fonP =  f3d(:,:,0);xxx ;dim_avg(f3d)                             ; calculate zonal ave
 
     if (diff) then
       if (i.eq.0) then
@@ -369,7 +375,8 @@ begin
       res@trXMaxF=plot_lat_section_max
     end if
     if (fnum_files.eq.1) then
-      res@tiMainString         = "Zonal-time averaged "+vname +" ("+case(i)+")"       ; title
+      res@tiMainString         = "Lon=+"+lon(ilon)+"  "+vname +" ("+case(i)+")"       ; title
+;      res@tiMainString         = "Zonal-time averaged "+vname +" ("+case(i)+")"       ; title
 ;       res@gsnCenterString = "Zonal-time averaged "+vname +" ("+case(i)+")"
     else
        res@gsnLeftString = case(i)
@@ -394,9 +401,9 @@ begin
 
 
 ;  res@cnLevelSelectionMode = "ManualLevels"        ; manual contour levels
-;  res@cnLevelSpacingF      = 4.0                   ; contour interval
-;  res@cnMinLevelValF       = -24.                  ; min level
-;  res@cnMaxLevelValF       =  32.                  ; max level
+;  res@cnLevelSpacingF      = 0.1E-8                   ; contour interval
+;  res@cnMinLevelValF       = 2.0E-9                  ; min level
+;  res@cnMaxLevelValF       = 2.6E-8                  ; max level
 
 ;   res@cnLevelSelectionMode = "ManualLevels"        ; manual contour levels
 ;   res@cnLevelSpacingF      = 5.0                   ; contour interval
