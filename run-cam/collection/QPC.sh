@@ -20,10 +20,10 @@ setenv proj "P93300642"
 unset src
 setenv src "/glade/u/home/$USER/src/cam_development/cime/scripts/"
 unset res
-setenv res "ne30pg3_ne30pg3_mg17"
-#setenv res "ne16_ne16_mg17"
+#setenv res "ne30pg3_ne30pg3_mg17"
+setenv res "ne16pg3_ne16pg3_mg17"
 unset comp
-setenv comp "F2000climo"
+setenv comp "QPC6"
 unset cam_phys
 setenv cam_phys
 setenv comp "cam_dev" #one month in 7 minutes with 1800 PE's
