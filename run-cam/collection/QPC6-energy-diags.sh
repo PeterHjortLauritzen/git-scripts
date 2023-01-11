@@ -8,7 +8,8 @@ setenv PBS_ACCOUNT P93300642
 #
 #set src="ebudget_dev_update" #cam6_3_072_ebudget_dev_update"
 set src="ebudget_dev_update"
-set mach="cheyenne"
+#set mach="cheyenne"
+set mach="izumi"
 set cset="QPC6"
 #set dycore = "mpas"
 #set dycore = "se"
@@ -104,7 +105,11 @@ if ($dycore == "mpas") then
   echo "          'WV_dBF' ,'WL_dBF' ,'WI_dBF' ,'SE_dBF' ,'KE_dBF' ,"      >> user_nl_cam
   echo "          'WV_dAP' ,'WL_dAP' ,'WI_dAP' ,'SE_dAP' ,'KE_dAP' ,"      >> user_nl_cam
   echo "          'WV_dAM' ,'WL_dAM' ,'WI_dAM' ,'SE_dAM' ,'KE_dAM'"        >> user_nl_cam
-  echo "ncdata = '/glade/p/cesmdata/inputdata/atm/cam/inic/mpas/mpasa480_L32_notopo_grid_c201125.nc'" >> user_nl_cam
+  if ($mach == "cheyenne") then
+    echo "ncdata = '/glade/p/cesmdata/inputdata/atm/cam/inic/mpas/mpasa480_L32_notopo_grid_c201125.nc'" >> user_nl_cam
+  else
+    echo "ncdata = '/fs/cgd/csm/inputdata/atm/cam/inic/mpas/mpasa480_L32_notopo_grid_c201125.nc'"  >> user_nl_cam
+  endif
   echo "analytic_ic_type = 'moist_baroclinic_wave_dcmip2016'"              >> user_nl_cam
 endif
 if ($dycore == "se" || $dycore == "cslam") then
