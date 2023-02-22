@@ -7,13 +7,13 @@ setenv PBS_ACCOUNT P93300642
 # On Izumi with NAG a clean build takes about 28 minutes!
 #
 #set src="ebudget_dev_update" #cam6_3_072_ebudget_dev_update"
-set src="ebudget_dev_update"
-#set mach="cheyenne"
-set mach="izumi"
+set src="ebudget_dev_update_latest"
+set mach="cheyenne"
+#set mach="izumi"
 set cset="QPC6"
-#set dycore = "mpas"
+set dycore = "mpas"
 #set dycore = "se"
-set dycore = "cslam"
+#set dycore = "cslam"
 #set dycore = "fv"
 #set proj="P93300642"
 set proj="P03010039"
@@ -60,7 +60,7 @@ endif
 #set caze=ebudget_ifdef_camdev_${cset}_${res}
 set caze=ebudget_latest_${cset}_${res}
 
-$homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 00:45:00 --pecount $pecount   --compiler $compiler --project $proj --walltime $wall  --run-unsupported
+$homedir/$USER/src/$src/cime/scripts/create_newcase --case $scratch/$USER/$caze --compset $cset --res $res  --q $queue --walltime 00:05:00 --pecount $pecount   --compiler $compiler --project $proj --walltime $wall  --run-unsupported
 
 cd $scratch/$USER/$caze
 ./xmlchange STOP_OPTION=$stopoption,STOP_N=$steps
@@ -137,7 +137,8 @@ if ($dycore == "se" || $dycore == "cslam") then
     echo "! for energy consistency"                                        >> user_nl_cam
     echo "!"                                                               >> user_nl_cam
     echo "se_ftype     = 1"                                                >> user_nl_cam
-    echo "se_lcp_moist =  .false."                                         >> user_nl_cam
+    echo "print_energy_errors = .true."                                    >> user_nl_cam
+#    echo "se_lcp_moist =  .false."                                         >> user_nl_cam
 #    echo "water_species_in_air = 'Q'"                                      >> user_nl_cam
 endif
 echo "fincl3 = 'BP_phy_params'"                                            >> user_nl_cam
@@ -147,4 +148,3 @@ else
   ./case.build
 endif  
 ./case.submit
-
