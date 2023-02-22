@@ -7,13 +7,13 @@ setenv PBS_ACCOUNT P93300642
 # On Izumi with NAG a clean build takes about 28 minutes!
 #
 #set src="ebudget_dev_update" #cam6_3_072_ebudget_dev_update"
-set src="ebudget_dev_update_latest"
-set mach="cheyenne"
-#set mach="izumi"
+set src="ebudget_dev_update"
+#set mach="cheyenne"
+set mach="izumi"
 set cset="QPC6"
-set dycore = "mpas"
+#set dycore = "mpas"
 #set dycore = "se"
-#set dycore = "cslam"
+set dycore = "cslam"
 #set dycore = "fv"
 #set proj="P93300642"
 set proj="P03010039"
@@ -145,6 +145,17 @@ echo "fincl3 = 'BP_phy_params'"                                            >> us
 if ($mach == "cheyenne") then
   qcmd -A $proj -- ./case.build 
 else
-  ./case.build
+echo "#PBS -q long                                      " >> get_compute
+echo "# Number of nodes (CHANGE THIS if needed)         " >> get_compute
+echo "#PBS -l walltime=1:00:00,nodes=1:ppn=16           " >> get_compute
+echo "# output file base name                           " >> get_compute
+echo "#PBS -N interactive                               " >> get_compute
+echo "# Put standard error and standard out in same file" >> get_compute
+echo "#PBS -j oe                                        " >> get_compute
+echo "# Export all Environment variables                " >> get_compute
+echo "#PBS -V                                           " >> get_compute
+
+qsub -X -I get_compute
+#  ./case.build
 endif  
-./case.submit
+#./case.submit
