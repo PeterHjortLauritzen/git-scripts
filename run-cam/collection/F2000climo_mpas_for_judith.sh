@@ -76,4 +76,3 @@ echo "fsurdat = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/surfdata
 
 qcmd -A $proj -- ./case.build 
 ./case.submit
-
