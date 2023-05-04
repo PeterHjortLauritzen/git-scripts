@@ -6,17 +6,17 @@ setenv PBS_ACCOUNT P93300642
 #
 # On Izumi with NAG a clean build takes about 28 minutes!
 #
-#set src="cam_development"
-set src="ebudget_dev_update"
-set mach="cheyenne"
-#set mach="izumi"
-#set cset="QPC6"
+set src="cam_development"
+#set src="ebudget_dev_update"
+#set mach="cheyenne"
+set mach="izumi"
+set cset="QPC6"
 #set cset="FKESSLER"
-set cset="F2000climo"
+#set cset="F2000climo"
 #set dycore = "mpas"
-set dycore = "se"
+#set dycore = "se"
 #set dycore = "cslam"
-#set dycore = "fv"
+set dycore = "fv"
 #set proj="P93300642"
 set proj="P03010039"
 #set proj="P93300042"  #production account
